@@ -36,6 +36,7 @@ import type {
   Ville,
 } from './data-types';
 import { conjonctureInitiale, type Conjoncture } from './economy';
+import { appliquerScenario, scenarioParId } from './scenarios';
 import { COMPTES_IMMOBILISATIONS } from './immobilisations';
 import { saisonLigne, type Offre } from './market';
 import { payer } from './ecritures';
@@ -579,16 +580,110 @@ const NOMS_PRETS: Record<IdSourceFinancement, string> = {
 // Création de la partie
 // ---------------------------------------------------------------------------
 
-export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): EtatPartie {
+/** Nombre maximal d'équipes sur le même marché (mode équipes en alternance). */
+export const MAX_EQUIPES = 4;
+
+/**
+ * Taille du marché selon le nombre d'équipes : chaque équipe ajoute un commerce dans la
+ * ville, et le marché grandit un peu pour que chacune ait sa chance (la concurrence entre
+ * les équipes reste réelle).
+ */
+export function facteurMarcheEquipes(nombre: number): number {
+  return Math.pow(Math.max(1, nombre), 0.18);
+}
+
+/**
+ * Crée la partie : une entreprise par équipe (une seule en solo), toutes sur le même
+ * marché, face aux 5 concurrents.
+ */
+export function creerPartie(
+  config: ConfigPartie,
+  parametres: ParametresDemarrage | ParametresDemarrage[],
+): EtatPartie {
+  const liste = Array.isArray(parametres) ? parametres : [parametres];
+  if (liste.length < 1 || liste.length > MAX_EQUIPES)
+    throw new Error(`Nombre d’équipes invalide : ${liste.length}`);
   const secteur = secteurParId(config.secteurId);
   const ville = villeParId(config.villeId);
-  const erreurs = validerDemarrage(params, secteur, ville);
-  if (erreurs.length > 0) throw new Error(`Démarrage invalide : ${erreurs.join(', ')}`);
-
   const rng = new Rng(config.graine);
   const diff = DIFFICULTES[config.difficulte];
   const conjoncture = conjonctureInitiale();
   const salaireMinimum = SALAIRE_MINIMUM.general;
+  const contexte = { secteur, ville, rng, diff, conjoncture, salaireMinimum };
+  const entreprises = liste.map((params, i) => {
+    const ent = creerEntreprise(params, `joueur-${i + 1}`, contexte);
+    if (liste.length > 1) ent.equipe = params.nomEquipe?.trim() || `Équipe ${i + 1}`;
+    return ent;
+  });
+  const nombre = liste.length;
+
+  const saisonMoyenne = secteur.saisonnalite.reduce((a, x) => a + x, 0) / 12;
+  const potentielMoyen =
+    (ville.marchePotentielMensuel[secteur.id] ?? 0) *
+    saisonMoyenne *
+    diff.marche *
+    facteurMarcheEquipes(nombre);
+  // Cinq concurrents (le Nouveau joueur arrive en cours de partie).
+  const concurrents = PERSONNALITES.map((p) =>
+    creerConcurrent(p, {
+      secteur,
+      ville,
+      potentiel: potentielMoyen,
+      agressivite: diff.agressivite,
+      rng,
+      dureeMois: config.dureeMois,
+    }),
+  );
+  calibrerConcurrents(
+    concurrents,
+    personnaliteParId,
+    secteur,
+    potentielMoyen,
+    entreprises.map((e) => ({ ...offreReference(secteur, potentielMoyen), id: e.id })),
+    {
+      segments: segmentsMarche(secteur),
+      livraison: {
+        part: secteur.partLivraison,
+        majoration: PARAMETRES_MARKETING.livraison.majorationClient,
+        panier: secteur.panierLivraison,
+      },
+    },
+  );
+
+  const etat: EtatPartie = {
+    version: VERSION_ETAT,
+    config,
+    moisCourant: 0,
+    rngState: rng.state,
+    conjoncture,
+    salaireMinimum,
+    entreprises,
+    concurrents,
+    terminee: false,
+  };
+  const scenario = config.scenarioId ? scenarioParId(config.scenarioId) : null;
+  if (scenario) appliquerScenario(etat, scenario);
+  return etat;
+}
+
+interface ContexteEntreprise {
+  secteur: Secteur;
+  ville: Ville;
+  rng: Rng;
+  diff: (typeof DIFFICULTES)[Difficulte];
+  conjoncture: Conjoncture;
+  salaireMinimum: number;
+}
+
+/** Crée l'entreprise d'une équipe : employés, stocks, financement et écritures d'ouverture. */
+function creerEntreprise(
+  params: ParametresDemarrage,
+  id: string,
+  ctx: ContexteEntreprise,
+): Entreprise {
+  const { secteur, ville, rng, diff, conjoncture, salaireMinimum } = ctx;
+  const erreurs = validerDemarrage(params, secteur, ville);
+  if (erreurs.length > 0) throw new Error(`Démarrage invalide : ${erreurs.join(', ')}`);
   const forme = params.formeJuridique;
   const emplacement = emplacementDe(ville, params.emplacementId);
   const equipement = equipementDe(secteur, params.equipementId);
@@ -656,7 +751,7 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
   );
 
   const entreprise: Entreprise = {
-    id: 'joueur-1',
+    id,
     nom: params.nomEntreprise.trim(),
     proprietaire: params.nomProprietaire.trim() || 'Propriétaire',
     ageProprietaire: params.ageProprietaire,
@@ -944,48 +1039,8 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
   for (const immo of entreprise.immobilisations)
     ajouterAcquisition(entreprise.fiscal, immo.classeDpa, immo.cout);
 
-  // Cinq concurrents (le Nouveau joueur arrive en cours de partie).
-  const saisonMoyenne = secteur.saisonnalite.reduce((a, x) => a + x, 0) / 12;
-  const potentielMoyen =
-    (ville.marchePotentielMensuel[secteur.id] ?? 0) * saisonMoyenne * diff.marche;
-  const concurrents = PERSONNALITES.map((p) =>
-    creerConcurrent(p, {
-      secteur,
-      ville,
-      potentiel: potentielMoyen,
-      agressivite: diff.agressivite,
-      rng,
-      dureeMois: config.dureeMois,
-    }),
-  );
-  calibrerConcurrents(
-    concurrents,
-    personnaliteParId,
-    secteur,
-    potentielMoyen,
-    offreReference(secteur, potentielMoyen),
-    {
-      segments: segmentsMarche(secteur),
-      livraison: {
-        part: secteur.partLivraison,
-        majoration: PARAMETRES_MARKETING.livraison.majorationClient,
-        panier: secteur.panierLivraison,
-      },
-    },
-  );
-
   entreprise.prochainId = prochainId;
-  return {
-    version: VERSION_ETAT,
-    config,
-    moisCourant: 0,
-    rngState: rng.state,
-    conjoncture,
-    salaireMinimum,
-    entreprises: [entreprise],
-    concurrents,
-    terminee: false,
-  };
+  return entreprise;
 }
 
 /**

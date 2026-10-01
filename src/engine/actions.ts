@@ -33,11 +33,13 @@ import {
   DIFFICULTES,
   amenagementDe,
   dateDuMois,
+  facteurMarcheEquipes,
   parId,
   politiqueParDefaut,
   validerDecisions,
   visitesEstimees,
 } from './creation';
+import { corrigerQuiz, utiliserRabais } from './quiz';
 import type { IdTypeEtude, LigneProduit } from './data-types';
 import { chomageVille, conjonctureInitiale, tauxPreferentiel } from './economy';
 import { payer } from './ecritures';
@@ -690,7 +692,7 @@ export function formerEmploye(
       ent,
       `Formation : ${f.nom} (${employe.prenom} ${employe.nom})`,
       'formation',
-      f.cout,
+      utiliserRabais(ent, f.cout),
       true,
       'formationAvantages',
     );
@@ -752,6 +754,10 @@ export function repondreDilemme(
       contexteEffets(ent, d.employeId, indexCourant(e), rng, { etat: e, dilemme: d }),
     );
     ent.dilemmes = ent.dilemmes.filter((x) => x.id !== dilemmeId);
+    ent.journalChoix = [
+      ...(ent.journalChoix ?? []),
+      { index: indexCourant(e), defId: d.defId, choixId: choix.id },
+    ];
     e.rngState = rng.state;
     // Vente de l'entreprise : la partie se termine pour ce joueur.
     if (ent.vente && e.entreprises.every((x) => x.enFaillite || x.vente)) {
@@ -782,7 +788,7 @@ export function commanderEtude(
       ent,
       `Étude de marché : ${type.nom}`,
       'etudesMarche',
-      type.cout,
+      utiliserRabais(ent, type.cout),
       true,
       'publicite',
     );
@@ -796,7 +802,8 @@ export function commanderEtude(
           ville,
           conj: e.conjoncture,
           concurrents: e.concurrents,
-          facteurMarche: DIFFICULTES[e.config.difficulte].marche,
+          facteurMarche:
+            DIFFICULTES[e.config.difficulte].marche * facteurMarcheEquipes(e.entreprises.length),
           ambiance: Math.min(
             0.95,
             amenagementDe(secteur, ent.amenagementId).ambiance + effets.ambiance,
@@ -1210,4 +1217,15 @@ export function majAnnuelleExigee(anneeDepart: number, ent: Entreprise, annee: n
   return (
     annee > anneeDepart && (ent.demarches.req || immatriculationObligatoire(ent.formeJuridique))
   );
+}
+
+/** Répond au quiz du trimestre : chaque bonne réponse donne un rabais pédagogique. */
+export function repondreQuiz(
+  etat: EtatPartie,
+  entrepriseId: string,
+  reponses: Record<string, number>,
+): EtatPartie {
+  return action(etat, entrepriseId, (ent, e) => {
+    corrigerQuiz(e, ent, reponses);
+  });
 }

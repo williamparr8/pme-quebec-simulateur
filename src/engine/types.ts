@@ -23,6 +23,10 @@ export interface ConfigPartie {
   villeId: string;
   /** Première année de la partie (l'exercice financier suit l'année civile). */
   anneeDepart: number;
+  /** Tutoriel guidé pendant les 3 premiers mois. */
+  tutoriel?: boolean;
+  /** Scénario choisi (mode Prof / Scénario), avec ses objectifs. */
+  scenarioId?: string;
 }
 
 /** Mini plan d'affaires présenté aux prêteurs. */
@@ -66,6 +70,8 @@ export interface ParametresDemarrage {
   financements: Partial<Record<IdSourceFinancement, number>>;
   planAffaires: PlanAffaires | null;
   methodeInventaire: MethodeInventaire;
+  /** Nom de l'équipe (mode équipes en alternance). */
+  nomEquipe?: string;
 }
 
 /**
@@ -629,6 +635,39 @@ export interface MoisArchive {
   messages: Message[];
   /** Concurrents : ventes et parts publiques estimées. */
   concurrents: { id: string; part: number; prixIndice: number; note: number; notoriete: number }[];
+  /** Résumé des décisions du mois (sert au rapport de fin : meilleures et pires décisions). */
+  resume?: ResumeDecisions;
+}
+
+/** Résumé chiffré des décisions d'un mois, comparé d'un mois à l'autre. */
+export interface ResumeDecisions {
+  indicePrix: number;
+  qualite: string;
+  publicite: number;
+  heuresOuverture: number;
+  nbEmployes: number;
+  masseSalarialeHoraire: number;
+  promotion: boolean;
+  fidelite: boolean;
+  livraison: boolean;
+  eco: number;
+  immobilisations: number;
+  prets: number;
+  produits: number;
+}
+
+/** Choix fait devant un événement (journal pour le rapport de fin). */
+export interface ChoixJournal {
+  index: number;
+  defId: string;
+  choixId: string;
+}
+
+/** Résultats aux quiz et bonus pédagogique accumulé. */
+export interface EtatPedagogie {
+  quiz: { index: number; questions: string[]; bonnes: number }[];
+  /** Rabais sur la prochaine formation ou étude de marché (0 à 0,5). */
+  rabais: number;
 }
 
 export interface Bail {
@@ -691,6 +730,10 @@ export interface Entreprise {
   modificateurs: Modificateur[];
   /** Vente de l'entreprise (fin de partie) : prix reçu et mois de la vente. */
   vente: { prix: number; index: number; acheteur: string } | null;
+  /** Nom de l'équipe (mode équipes en alternance). */
+  equipe?: string;
+  journalChoix?: ChoixJournal[];
+  pedagogie?: EtatPedagogie;
 }
 
 export interface EtatPartie {

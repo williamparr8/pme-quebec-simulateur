@@ -13,6 +13,8 @@ import type {
   PersonnaliteConcurrent,
   PlateformeRecrutement,
   Poste,
+  QuestionQuiz,
+  Scenario,
   Secteur,
   SourceFinancement,
   TraitPersonnalite,
@@ -27,8 +29,10 @@ import fournisseursJson from './fournisseurs.json';
 import marketingJson from './marketing.json';
 import nomsJson from './noms.json';
 import personasJson from './personas.json';
+import quizJson from './quiz.json';
 import rhJson from './rh.json';
 import salairesJson from './salaires.json';
+import scenariosJson from './scenarios.json';
 import secteursJson from './secteurs.json';
 import villesJson from './villes.json';
 
@@ -67,6 +71,10 @@ export const TYPES_PLACEMENTS: readonly {
 /** Événements et dilemmes (au moins 60), tous départements confondus. */
 export const DILEMMES: readonly DefinitionDilemme[] =
   evenementsJson.evenements as unknown as DefinitionDilemme[];
+/** Scénarios du mode Prof (mises en situation avec objectifs). */
+export const SCENARIOS: readonly Scenario[] = scenariosJson.scenarios as Scenario[];
+/** Questions des quiz offerts entre les trimestres. */
+export const QUESTIONS_QUIZ: readonly QuestionQuiz[] = quizJson.questions;
 
 function trouver<T extends { id: string }>(liste: readonly T[], id: string, type: string): T {
   const element = liste.find((e) => e.id === id);
@@ -91,6 +99,7 @@ export const traitParId = (id: string): TraitPersonnalite => trouver(TRAITS, id,
 export const typeEtudeParId = (id: string): TypeEtude => trouver(TYPES_ETUDES, id, 'Étude');
 export const sourceFinancementParId = (id: string): SourceFinancement =>
   trouver(SOURCES_FINANCEMENT, id, 'Source de financement');
+export const scenarioParId = (id: string): Scenario => trouver(SCENARIOS, id, 'Scénario');
 export const dilemmeParId = (id: string): DefinitionDilemme => trouver(DILEMMES, id, 'Dilemme');
 
 /** Postes offerts dans un secteur. */

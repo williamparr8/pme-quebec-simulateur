@@ -1,0 +1,613 @@
+{
+  "_source": "Questions rédigées pour le jeu à partir des valeurs de src/data (fiscalité 2026, normes du travail) et des notions du glossaire. Vérifiées le 01/10/2026.",
+  "questions": [
+    {
+      "id": "tps-taux",
+      "categorie": "Fiscalité",
+      "question": "Quel est le taux de la TPS (taxe fédérale) au Québec?",
+      "choix": ["5 %", "9,975 %", "13 %", "14,975 %"],
+      "bonne": 0,
+      "explication": "La TPS est de 5 %. La TVQ, provinciale, est de 9,975 %. Ensemble, elles donnent environ 14,975 % sur un achat taxable."
+    },
+    {
+      "id": "tvq-taux",
+      "categorie": "Fiscalité",
+      "question": "Quel est le taux de la TVQ?",
+      "choix": ["5 %", "7,5 %", "9,975 %", "15 %"],
+      "bonne": 2,
+      "explication": "La TVQ est de 9,975 %. Elle se calcule sur le prix avant taxes, comme la TPS."
+    },
+    {
+      "id": "petit-fournisseur",
+      "categorie": "Fiscalité",
+      "question": "À partir de quel montant de ventes taxables une entreprise doit-elle s’inscrire à la TPS et à la TVQ?",
+      "choix": [
+        "10 000 $ par année",
+        "30 000 $ sur quatre trimestres consécutifs",
+        "50 000 $ par trimestre",
+        "100 000 $ par année"
+      ],
+      "bonne": 1,
+      "explication": "Au-delà de 30 000 $ de ventes taxables sur quatre trimestres consécutifs (ou en un seul trimestre), on n’est plus un « petit fournisseur » : l’inscription devient obligatoire."
+    },
+    {
+      "id": "cti",
+      "categorie": "Fiscalité",
+      "question": "À quoi servent les CTI et les RTI?",
+      "choix": [
+        "À payer moins d’impôt sur le revenu",
+        "À récupérer les taxes payées sur les achats de l’entreprise",
+        "À rembourser les cotisations au RRQ",
+        "À obtenir une subvention à l’embauche"
+      ],
+      "bonne": 1,
+      "explication": "Le crédit de taxe sur les intrants (TPS) et le remboursement de la taxe sur les intrants (TVQ) permettent à une entreprise inscrite de récupérer les taxes payées sur ses achats. Elle ne remet que la différence."
+    },
+    {
+      "id": "taxes-pas-revenu",
+      "categorie": "Comptabilité",
+      "question": "Ton café perçoit 1 500 $ de TPS et de TVQ ce mois-ci. Comment ces taxes apparaissent-elles dans tes livres?",
+      "choix": [
+        "Comme un revenu à l’état des résultats",
+        "Comme une dette envers les gouvernements",
+        "Comme une dépense",
+        "Elles n’apparaissent pas"
+      ],
+      "bonne": 1,
+      "explication": "Les taxes perçues n’appartiennent pas à l’entreprise : elle les garde temporairement pour les gouvernements. C’est un passif (taxes à payer), pas un revenu."
+    },
+    {
+      "id": "dpe",
+      "categorie": "Fiscalité",
+      "question": "La déduction pour petite entreprise (DPE) réduit l’impôt d’une société sur quelle portion de son revenu d’entreprise?",
+      "choix": [
+        "Les 50 000 premiers $",
+        "Les 100 000 premiers $",
+        "Les 500 000 premiers $",
+        "Tout son revenu"
+      ],
+      "bonne": 2,
+      "explication": "Une société privée sous contrôle canadien profite d’un taux réduit sur les 500 000 premiers $ de revenu d’entreprise. Au Québec, il faut aussi respecter le critère des 5 500 heures rémunérées."
+    },
+    {
+      "id": "dpa",
+      "categorie": "Fiscalité",
+      "question": "Quelle est la différence entre l’amortissement comptable et la DPA?",
+      "choix": [
+        "Il n’y en a pas : ce sont deux noms pour la même chose",
+        "L’amortissement suit la durée de vie réelle du bien; la DPA suit des taux fixés par le fisc",
+        "La DPA s’applique seulement aux véhicules",
+        "L’amortissement est facultatif, la DPA est obligatoire"
+      ],
+      "bonne": 1,
+      "explication": "Aux états financiers, on amortit un bien selon sa durée de vie utile. Dans la déclaration de revenus, on utilise la déduction pour amortissement (DPA), dont les taux par catégorie sont fixés par les lois fiscales."
+    },
+    {
+      "id": "acomptes",
+      "categorie": "Fiscalité",
+      "question": "Qu’est-ce qu’un acompte provisionnel?",
+      "choix": [
+        "Un versement d’impôt fait d’avance, en cours d’année",
+        "Un dépôt exigé par le propriétaire du local",
+        "Une avance sur le salaire d’un employé",
+        "Un prêt à court terme de la banque"
+      ],
+      "bonne": 0,
+      "explication": "Quand l’impôt à payer dépasse un certain seuil, le fisc exige des versements d’avance (mensuels ou trimestriels) plutôt qu’un seul paiement à la fin de l’année."
+    },
+    {
+      "id": "releves",
+      "categorie": "Fiscalité",
+      "question": "Quels relevés l’employeur remet-il à ses employés chaque année pour leur déclaration de revenus?",
+      "choix": ["Le T2 et le CO-17", "Le T4 et le RL-1", "Le T1 et le TP-1", "Le NEQ et le TPS-1"],
+      "bonne": 1,
+      "explication": "Le T4 (fédéral) et le relevé 1 (Québec) résument le salaire versé et les retenues à la source. Ils doivent être remis au plus tard à la fin de février."
+    },
+    {
+      "id": "salaire-dividende",
+      "categorie": "Fiscalité",
+      "question": "Pour le propriétaire d’une société par actions, quel est un avantage de se verser un salaire plutôt que des dividendes?",
+      "choix": [
+        "Le salaire n’est jamais imposé",
+        "Le salaire donne droit au RRQ et crée de l’espace REER",
+        "Le salaire n’est pas déductible pour la société",
+        "Le salaire évite toutes les cotisations de l’employeur"
+      ],
+      "bonne": 1,
+      "explication": "Un salaire est déductible pour la société, ouvre des droits au RRQ et crée de l’espace REER, mais il entraîne des cotisations. Le dividende n’en entraîne pas, mais il ne donne pas ces droits."
+    },
+    {
+      "id": "individuelle-responsabilite",
+      "categorie": "Juridique",
+      "question": "Dans une entreprise individuelle, qui est responsable des dettes de l’entreprise?",
+      "choix": [
+        "Personne : l’entreprise est une personne distincte",
+        "Le propriétaire, avec ses biens personnels",
+        "La banque qui a prêté l’argent",
+        "Seulement les clients qui n’ont pas payé"
+      ],
+      "bonne": 1,
+      "explication": "L’entreprise individuelle n’est pas distincte de son propriétaire : en cas de faillite, ses biens personnels (auto, épargnes…) peuvent être saisis pour payer les dettes de l’entreprise."
+    },
+    {
+      "id": "societe-actions",
+      "categorie": "Juridique",
+      "question": "Quel est le principal avantage juridique de la société par actions (entreprise incorporée)?",
+      "choix": [
+        "Elle ne paie jamais d’impôt",
+        "La responsabilité des actionnaires est limitée à leur mise de fonds",
+        "Elle n’a pas besoin de tenir de comptabilité",
+        "Elle ne peut pas faire faillite"
+      ],
+      "bonne": 1,
+      "explication": "La société par actions est une personne morale distincte. En principe, les actionnaires ne risquent que l’argent investi (sauf s’ils ont donné une caution personnelle à la banque)."
+    },
+    {
+      "id": "senc",
+      "categorie": "Juridique",
+      "question": "Dans une société en nom collectif (SENC), comment les associés répondent-ils des dettes?",
+      "choix": [
+        "Chacun seulement selon sa part",
+        "Solidairement : un créancier peut réclamer toute la dette à un seul associé",
+        "Ils n’en répondent pas",
+        "Seul l’associé le plus jeune en répond"
+      ],
+      "bonne": 1,
+      "explication": "Les associés d’une SENC sont solidairement responsables : si l’un ne paie pas, un créancier peut se tourner vers l’autre pour la totalité."
+    },
+    {
+      "id": "neq",
+      "categorie": "Juridique",
+      "question": "Quel organisme attribue le numéro d’entreprise du Québec (NEQ)?",
+      "choix": ["Revenu Québec", "Le Registraire des entreprises", "La CNESST", "La municipalité"],
+      "bonne": 1,
+      "explication": "Le Registraire des entreprises immatricule les entreprises et leur attribue un NEQ. L’immatriculation est obligatoire pour une société, ou pour une entreprise individuelle qui n’utilise pas le nom complet de son propriétaire."
+    },
+    {
+      "id": "charte-langue",
+      "categorie": "Juridique",
+      "question": "Selon la Charte de la langue française, comment doit être l’affichage public d’un commerce?",
+      "choix": [
+        "Uniquement en anglais",
+        "En français, avec une nette prédominance du français s’il y a une autre langue",
+        "Dans la langue de son choix",
+        "Bilingue, avec les deux langues de même taille"
+      ],
+      "bonne": 1,
+      "explication": "L’affichage commercial doit être en français. Une autre langue est permise si le français y est nettement prédominant. L’OQLF traite les plaintes."
+    },
+    {
+      "id": "loi25",
+      "categorie": "Juridique",
+      "question": "Une boutique en ligne conserve les adresses de ses clients. Que lui impose la Loi 25?",
+      "choix": [
+        "Rien, car les données appartiennent à l’entreprise",
+        "Protéger ces renseignements personnels et désigner une personne responsable",
+        "Les vendre au gouvernement",
+        "Les publier sur son site"
+      ],
+      "bonne": 1,
+      "explication": "La Loi 25 oblige les entreprises à protéger les renseignements personnels, à désigner un responsable et à signaler les incidents de confidentialité à la Commission d’accès à l’information."
+    },
+    {
+      "id": "vacances",
+      "categorie": "Ressources humaines",
+      "question": "Selon la Loi sur les normes du travail, quelle indemnité de vacances reçoit un employé qui a moins de 3 ans de service?",
+      "choix": ["2 % du salaire", "4 % du salaire", "6 % du salaire", "8 % du salaire"],
+      "bonne": 1,
+      "explication": "Moins de 3 ans de service continu : 2 semaines de vacances et 4 % du salaire brut. Après 3 ans : 3 semaines et 6 %."
+    },
+    {
+      "id": "heures-sup",
+      "categorie": "Ressources humaines",
+      "question": "Au-delà de combien d’heures par semaine un employé est-il payé à taux et demi (150 %) au Québec?",
+      "choix": ["35 heures", "37,5 heures", "40 heures", "44 heures"],
+      "bonne": 2,
+      "explication": "La semaine normale de travail est de 40 heures. Les heures au-delà sont payées à 150 % du salaire horaire (ou compensées par un congé, à la demande de l’employé)."
+    },
+    {
+      "id": "salaire-minimum",
+      "categorie": "Ressources humaines",
+      "question": "Quel est le taux général du salaire minimum au Québec depuis le 1er mai 2026?",
+      "choix": ["15,25 $ l’heure", "15,75 $ l’heure", "16,10 $ l’heure", "16,60 $ l’heure"],
+      "bonne": 3,
+      "explication": "Le taux général est passé à 16,60 $ l’heure le 1er mai 2026. Il est révisé chaque année au 1er mai."
+    },
+    {
+      "id": "preavis",
+      "categorie": "Ressources humaines",
+      "question": "Tu mets fin à l’emploi d’une employée qui travaille pour toi depuis 2 ans (sans faute grave). Quel préavis minimal lui dois-tu?",
+      "choix": ["Aucun", "1 semaine", "2 semaines", "8 semaines"],
+      "bonne": 2,
+      "explication": "Le préavis minimal dépend de la durée du service : 1 semaine (3 mois à 1 an), 2 semaines (1 à 5 ans), 4 semaines (5 à 10 ans), 8 semaines (10 ans et plus). Sinon, on verse une indemnité équivalente."
+    },
+    {
+      "id": "cout-employe",
+      "categorie": "Ressources humaines",
+      "question": "Pourquoi un employé payé 20 $ l’heure coûte-t-il plus que 20 $ l’heure à l’employeur?",
+      "choix": [
+        "Parce que l’employeur paie aussi l’impôt de l’employé",
+        "À cause des cotisations de l’employeur (RRQ, RQAP, AE, FSS, CNESST…) et des vacances",
+        "Parce que la TPS s’applique aux salaires",
+        "Ce n’est pas le cas"
+      ],
+      "bonne": 1,
+      "explication": "L’employeur paie ses propres cotisations (RRQ, RQAP, assurance-emploi, FSS, CNT, CNESST) et l’indemnité de vacances. Le vrai coût dépasse souvent le salaire de 15 % ou plus."
+    },
+    {
+      "id": "retenues",
+      "categorie": "Ressources humaines",
+      "question": "Les impôts retenus sur la paie de tes employés…",
+      "choix": [
+        "Appartiennent à l’entreprise",
+        "Doivent être remis aux gouvernements, avec tes cotisations d’employeur",
+        "Sont remis aux employés à la fin de l’année",
+        "Sont facultatifs"
+      ],
+      "bonne": 1,
+      "explication": "Les retenues à la source sont l’argent des employés : l’employeur les remet à Revenu Québec et à l’ARC, habituellement chaque mois. Ne pas les remettre entraîne des pénalités sévères."
+    },
+    {
+      "id": "harcelement",
+      "categorie": "Ressources humaines",
+      "question": "Que doit obligatoirement avoir tout employeur québécois au sujet du harcèlement psychologique?",
+      "choix": [
+        "Rien, si l’entreprise compte moins de 10 employés",
+        "Une politique de prévention et de traitement des plaintes",
+        "Une assurance spéciale",
+        "Un comité syndical"
+      ],
+      "bonne": 1,
+      "explication": "La Loi sur les normes du travail oblige tous les employeurs à adopter et à rendre disponible une politique de prévention du harcèlement psychologique et de traitement des plaintes."
+    },
+    {
+      "id": "roulement",
+      "categorie": "Ressources humaines",
+      "question": "Pourquoi un taux de roulement élevé coûte-t-il cher?",
+      "choix": [
+        "Il n’a aucun effet sur les coûts",
+        "Il faut recruter et former souvent, et les nouveaux sont moins productifs au début",
+        "Parce que les employés qui partent emportent les stocks",
+        "Parce qu’il augmente le loyer"
+      ],
+      "bonne": 1,
+      "explication": "Chaque départ entraîne des frais de recrutement, de formation et une période où la personne est moins efficace. Garder ses employés est souvent plus rentable que de payer le salaire le plus bas."
+    },
+    {
+      "id": "marge-brute",
+      "categorie": "Finance",
+      "question": "Ventes : 40 000 $. Coût des marchandises vendues : 14 000 $. Quel est le taux de marge brute?",
+      "choix": ["35 %", "54 %", "65 %", "74 %"],
+      "bonne": 2,
+      "explication": "Marge brute = (40 000 − 14 000) ÷ 40 000 = 26 000 ÷ 40 000 = 65 %. Elle mesure ce qui reste des ventes pour payer les autres charges, après le coût de ce qu’on a vendu."
+    },
+    {
+      "id": "seuil-rentabilite",
+      "categorie": "Finance",
+      "question": "Tes charges fixes sont de 12 000 $ par mois et ta marge sur coûts variables est de 60 %. Quel est ton seuil de rentabilité mensuel?",
+      "choix": ["7 200 $", "12 000 $", "19 200 $", "20 000 $"],
+      "bonne": 3,
+      "explication": "Seuil = charges fixes ÷ taux de marge sur coûts variables = 12 000 ÷ 0,60 = 20 000 $ de ventes. En dessous, tu perds de l’argent."
+    },
+    {
+      "id": "liquidite",
+      "categorie": "Finance",
+      "question": "Comment calcule-t-on le ratio de liquidité générale (fonds de roulement)?",
+      "choix": [
+        "Actif à court terme ÷ passif à court terme",
+        "Bénéfice net ÷ ventes",
+        "Dettes totales ÷ capitaux propres",
+        "Ventes ÷ actif total"
+      ],
+      "bonne": 0,
+      "explication": "Ce ratio indique si l’entreprise peut payer ses dettes des 12 prochains mois avec ses actifs à court terme. Sous 1, c’est un signal d’alarme."
+    },
+    {
+      "id": "benefice-encaisse",
+      "categorie": "Finance",
+      "question": "Ton entreprise est rentable, mais ton encaisse diminue. Laquelle de ces raisons peut l’expliquer?",
+      "choix": [
+        "C’est impossible",
+        "Tu rembourses le capital d’un prêt et tu as acheté du stock",
+        "Tes ventes sont trop élevées",
+        "Ton amortissement est trop élevé"
+      ],
+      "bonne": 1,
+      "explication": "Le bénéfice n’est pas de l’argent dans le compte. Le remboursement du capital d’un prêt, l’achat de stocks ou d’équipement et les comptes clients réduisent l’encaisse sans réduire le bénéfice."
+    },
+    {
+      "id": "fonds-roulement",
+      "categorie": "Finance",
+      "question": "Qu’est-ce que le fonds de roulement?",
+      "choix": [
+        "Le montant du prêt de démarrage",
+        "L’actif à court terme moins le passif à court terme",
+        "Le total des ventes de l’année",
+        "La valeur de l’équipement"
+      ],
+      "bonne": 1,
+      "explication": "Le fonds de roulement est le coussin qui permet de payer les dépenses courantes en attendant les encaissements. Une PME qui en manque est à la merci du moindre imprévu."
+    },
+    {
+      "id": "taux-variable",
+      "categorie": "Finance",
+      "question": "Tu as un prêt à taux variable. La Banque du Canada hausse son taux directeur. Que se passe-t-il?",
+      "choix": [
+        "Rien",
+        "Ton taux d’intérêt et tes intérêts à payer augmentent",
+        "Ton prêt est annulé",
+        "Ton taux baisse"
+      ],
+      "bonne": 1,
+      "explication": "Le taux variable suit le taux préférentiel des banques, qui suit le taux directeur. Le taux fixe protège contre les hausses, mais il est souvent un peu plus élevé au départ."
+    },
+    {
+      "id": "amortissement-pret",
+      "categorie": "Finance",
+      "question": "Avec des versements mensuels égaux sur un prêt, comment évolue la part des intérêts dans chaque versement?",
+      "choix": [
+        "Elle augmente avec le temps",
+        "Elle diminue avec le temps",
+        "Elle reste toujours la même",
+        "Elle est nulle la première année"
+      ],
+      "bonne": 1,
+      "explication": "Les intérêts sont calculés sur le solde restant. Comme le solde baisse, la part des intérêts diminue et la part de capital remboursé augmente à chaque versement."
+    },
+    {
+      "id": "levier",
+      "categorie": "Finance",
+      "question": "Qu’est-ce que l’effet de levier financier?",
+      "choix": [
+        "Utiliser des dettes pour augmenter le rendement des capitaux propres (et le risque)",
+        "Augmenter ses prix pour couvrir l’inflation",
+        "Réduire ses stocks au minimum",
+        "Vendre des actions à ses employés"
+      ],
+      "bonne": 0,
+      "explication": "Emprunter permet d’investir plus que sa mise de fonds. Si l’investissement rapporte plus que le taux d’intérêt, le rendement du propriétaire augmente; sinon, les pertes sont amplifiées."
+    },
+    {
+      "id": "equation-comptable",
+      "categorie": "Comptabilité",
+      "question": "Quelle est l’équation comptable de base?",
+      "choix": [
+        "Actif = Passif + Capitaux propres",
+        "Ventes − Charges = Actif",
+        "Actif + Passif = Capitaux propres",
+        "Encaisse = Bénéfice net"
+      ],
+      "bonne": 0,
+      "explication": "Tout ce que l’entreprise possède (actif) est financé soit par des dettes (passif), soit par les propriétaires (capitaux propres). C’est pourquoi le bilan est toujours équilibré."
+    },
+    {
+      "id": "partie-double",
+      "categorie": "Comptabilité",
+      "question": "Tu achètes une machine de 5 000 $ comptant. Quelle écriture est juste?",
+      "choix": [
+        "Débit Équipement 5 000 $; Crédit Encaisse 5 000 $",
+        "Débit Charges 5 000 $; Crédit Ventes 5 000 $",
+        "Débit Encaisse 5 000 $; Crédit Équipement 5 000 $",
+        "Aucune écriture : ce n’est pas une dépense"
+      ],
+      "bonne": 0,
+      "explication": "En partie double, l’actif Équipement augmente (débit) et l’actif Encaisse diminue (crédit). L’achat d’un bien durable n’est pas une charge : il sera amorti sur sa durée de vie."
+    },
+    {
+      "id": "etats-financiers",
+      "categorie": "Comptabilité",
+      "question": "Quel état financier montre la situation de l’entreprise à une date précise (ce qu’elle possède et ce qu’elle doit)?",
+      "choix": [
+        "L’état des résultats",
+        "Le bilan",
+        "L’état des flux de trésorerie",
+        "Le journal général"
+      ],
+      "bonne": 1,
+      "explication": "Le bilan est une photo à une date donnée. L’état des résultats et l’état des flux de trésorerie décrivent plutôt une période (un mois, une année)."
+    },
+    {
+      "id": "peps",
+      "categorie": "Opérations",
+      "question": "Que signifie la méthode PEPS pour évaluer les stocks?",
+      "choix": [
+        "Premier entré, premier sorti",
+        "Prix égal pour tous les stocks",
+        "Produits en promotion seulement",
+        "Paiement en espèces, paiement sûr"
+      ],
+      "bonne": 0,
+      "explication": "Avec PEPS, on considère que les premières unités achetées sont les premières vendues. C’est aussi une bonne pratique physique pour éviter que les produits périssables se perdent."
+    },
+    {
+      "id": "stock-securite",
+      "categorie": "Opérations",
+      "question": "À quoi sert un stock de sécurité?",
+      "choix": [
+        "À éviter les ruptures si la demande ou les délais de livraison varient",
+        "À réduire les impôts",
+        "À augmenter la marge brute",
+        "À payer moins de loyer"
+      ],
+      "bonne": 0,
+      "explication": "Le stock de sécurité absorbe les surprises : un fournisseur en retard ou une journée plus achalandée. Trop de stock coûte cher (argent immobilisé, pertes), trop peu fait perdre des ventes."
+    },
+    {
+      "id": "qec",
+      "categorie": "Opérations",
+      "question": "La quantité économique de commande (QEC) cherche l’équilibre entre…",
+      "choix": [
+        "Le prix de vente et le prix d’achat",
+        "Les frais de commande et les frais de possession des stocks",
+        "Les salaires et le loyer",
+        "La TPS et la TVQ"
+      ],
+      "bonne": 1,
+      "explication": "Commander souvent en petites quantités multiplie les frais de commande; commander rarement en grosses quantités fait grimper les frais de possession (espace, pertes, argent immobilisé). La QEC minimise le total."
+    },
+    {
+      "id": "rotation-stocks",
+      "categorie": "Opérations",
+      "question": "Une rotation des stocks plus élevée signifie généralement…",
+      "choix": [
+        "Que les produits restent longtemps en tablette",
+        "Que les stocks se vendent et se renouvellent rapidement",
+        "Que l’entreprise perd de l’argent",
+        "Que les prix sont trop élevés"
+      ],
+      "bonne": 1,
+      "explication": "Rotation = coût des marchandises vendues ÷ stock moyen. Plus elle est élevée, moins l’argent dort dans l’entrepôt et moins il y a de pertes, surtout pour les produits périssables."
+    },
+    {
+      "id": "capacite",
+      "categorie": "Opérations",
+      "question": "Ta demande dépasse ta capacité de service à l’heure du dîner. Quelle conséquence est la plus probable?",
+      "choix": [
+        "Plus de profit, car tous les clients attendent",
+        "Des clients perdus et une baisse de la satisfaction",
+        "Une baisse des impôts",
+        "Aucune conséquence"
+      ],
+      "bonne": 1,
+      "explication": "Quand la file est trop longue, des clients partent et d’autres repartent insatisfaits, ce qui nuit aux avis en ligne. Il faut ajuster le personnel, les heures ou l’équipement."
+    },
+    {
+      "id": "quatre-p",
+      "categorie": "Marketing",
+      "question": "Quels sont les « 4 P » du marketing mix?",
+      "choix": [
+        "Produit, prix, place (distribution), promotion",
+        "Profit, personnel, partenaires, publicité",
+        "Prix, paie, plan, prêt",
+        "Patron, public, presse, panneau"
+      ],
+      "bonne": 0,
+      "explication": "Le marketing mix combine le produit, le prix, la distribution (place) et la promotion (communication). Les quatre doivent être cohérents avec la clientèle visée."
+    },
+    {
+      "id": "persona",
+      "categorie": "Marketing",
+      "question": "Qu’est-ce qu’un persona en marketing?",
+      "choix": [
+        "Un portrait type d’un segment de clientèle",
+        "Le logo de l’entreprise",
+        "Un employé du service à la clientèle",
+        "Une vedette qui fait de la publicité"
+      ],
+      "bonne": 0,
+      "explication": "Un persona décrit un client type (âge, budget, habitudes, attentes). Il aide à choisir les bons produits, les bons prix et les bons canaux de publicité."
+    },
+    {
+      "id": "cac",
+      "categorie": "Marketing",
+      "question": "Tu dépenses 3 000 $ en publicité et tu attires 150 nouveaux clients. Quel est ton coût d’acquisition client (CAC)?",
+      "choix": ["5 $", "20 $", "50 $", "450 $"],
+      "bonne": 1,
+      "explication": "CAC = dépenses de marketing ÷ nouveaux clients = 3 000 ÷ 150 = 20 $. Il faut le comparer à la valeur à vie d’un client : si un client rapporte moins que ce qu’il coûte à attirer, la croissance détruit de la valeur."
+    },
+    {
+      "id": "clv",
+      "categorie": "Marketing",
+      "question": "Pourquoi un programme de fidélité peut-il être rentable même s’il coûte des rabais?",
+      "choix": [
+        "Parce qu’il augmente la valeur à vie des clients qui reviennent plus souvent",
+        "Parce que les rabais ne sont pas des dépenses",
+        "Parce qu’il élimine les concurrents",
+        "Il ne peut jamais être rentable"
+      ],
+      "bonne": 0,
+      "explication": "Garder un client coûte généralement moins cher que d’en attirer un nouveau. Si la fidélité augmente assez la fréquence des visites, les rabais sont plus que compensés."
+    },
+    {
+      "id": "rendements-decroissants",
+      "categorie": "Marketing",
+      "question": "Tu doubles ton budget de publicité. Tes ventes vont-elles doubler?",
+      "choix": [
+        "Oui, toujours",
+        "Rarement : chaque dollar additionnel rapporte moins (rendements décroissants)",
+        "Non, elles vont baisser",
+        "Oui, mais seulement en hiver"
+      ],
+      "bonne": 1,
+      "explication": "Les premiers dollars de publicité rejoignent les clients les plus réceptifs. Ensuite, on rejoint des gens déjà au courant ou moins intéressés : l’effet de chaque dollar diminue."
+    },
+    {
+      "id": "nps",
+      "categorie": "Marketing",
+      "question": "Le NPS (indice de recommandation net) se calcule comment?",
+      "choix": [
+        "Pourcentage de promoteurs moins pourcentage de détracteurs",
+        "Nombre de ventes divisé par le nombre de clients",
+        "Moyenne des notes sur 5",
+        "Nombre d’abonnés sur les réseaux sociaux"
+      ],
+      "bonne": 0,
+      "explication": "On demande « Recommanderiez-vous l’entreprise? » sur 10. Les 9 et 10 sont des promoteurs, les 0 à 6 des détracteurs. NPS = % promoteurs − % détracteurs (de −100 à +100)."
+    },
+    {
+      "id": "elasticite",
+      "categorie": "Marketing",
+      "question": "Si tes clients sont très sensibles au prix (forte élasticité), une hausse de prix de 10 %…",
+      "choix": [
+        "Fera baisser les ventes en quantité de plus de 10 %",
+        "N’aura aucun effet",
+        "Fera augmenter les ventes en quantité",
+        "Réduira le coût des marchandises"
+      ],
+      "bonne": 0,
+      "explication": "Quand la demande est élastique, les clients réagissent fortement au prix : la baisse des quantités vendues dépasse la hausse du prix, et le chiffre d’affaires diminue."
+    },
+    {
+      "id": "etude-marge-erreur",
+      "categorie": "Marketing",
+      "question": "Une étude de marché faite auprès d’un plus grand échantillon de clients…",
+      "choix": [
+        "Coûte moins cher",
+        "A une marge d’erreur plus petite",
+        "Est toujours fausse",
+        "Remplace les états financiers"
+      ],
+      "bonne": 1,
+      "explication": "Plus l’échantillon est grand, plus le résultat est précis (la marge d’erreur diminue), mais l’étude coûte plus cher. Il faut choisir la précision dont on a vraiment besoin."
+    },
+    {
+      "id": "taux-directeur",
+      "categorie": "Économie",
+      "question": "Pourquoi la Banque du Canada hausse-t-elle généralement son taux directeur?",
+      "choix": [
+        "Pour freiner l’inflation",
+        "Pour faire baisser le chômage",
+        "Pour aider les entreprises à emprunter",
+        "Pour augmenter la TPS"
+      ],
+      "bonne": 0,
+      "explication": "Un taux plus élevé rend le crédit plus cher, ce qui ralentit les dépenses et aide à ramener l’inflation vers la cible de 2 %. Pour une PME endettée à taux variable, cela augmente les intérêts."
+    },
+    {
+      "id": "recession-cyclique",
+      "categorie": "Économie",
+      "question": "En récession, quel type d’entreprise voit habituellement ses ventes baisser le plus?",
+      "choix": [
+        "Une épicerie de produits de base",
+        "Un commerce de biens non essentiels (vêtements de mode, rénovation, sorties)",
+        "Une pharmacie",
+        "Toutes baissent autant"
+      ],
+      "bonne": 1,
+      "explication": "Les dépenses non essentielles sont les premières coupées quand les ménages s’inquiètent. On dit que ces secteurs sont plus « cycliques »."
+    },
+    {
+      "id": "chomage-recrutement",
+      "categorie": "Économie",
+      "question": "Dans une région où le chômage est très bas, à quoi un employeur doit-il s’attendre?",
+      "choix": [
+        "À recevoir beaucoup de candidatures",
+        "À une pénurie de main-d’œuvre et à des salaires plus élevés pour recruter",
+        "À payer moins d’impôt",
+        "À des loyers plus bas"
+      ],
+      "bonne": 1,
+      "explication": "Quand presque tout le monde travaille déjà, les candidats sont rares. Il faut offrir un meilleur salaire, de meilleures conditions ou former des personnes moins expérimentées."
+    }
+  ]
+}

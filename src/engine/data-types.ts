@@ -552,3 +552,55 @@ export interface SourceFinancement {
   secteurs?: string[];
   conditions: string;
 }
+
+/** Objectif mesurable d'un scénario (mode Prof / Scénario). */
+export type TypeObjectif =
+  | 'survie'
+  | 'beneficeCumule'
+  | 'ventesCumulees'
+  | 'encaisseFinale'
+  | 'partMarche'
+  | 'noteClients'
+  | 'satisfaction'
+  | 'moral'
+  | 'valeurEntreprise';
+
+export interface ObjectifScenario {
+  type: TypeObjectif;
+  /** Valeur à atteindre ($, proportion de 0 à 1, note sur 5 ou moral sur 100). */
+  cible: number;
+}
+
+/** Scénario prédéfini : une mise en situation avec des objectifs et une note finale. */
+export interface Scenario {
+  id: string;
+  nom: string;
+  resume: string;
+  description: string;
+  secteurId: string;
+  villeId: string;
+  difficulte: 'facile' | 'realiste' | 'expert';
+  dureeMois: 12 | 24 | 36 | 60;
+  /** Situation de départ différente d'une ouverture ordinaire. */
+  depart: {
+    notoriete?: number;
+    note?: number;
+    nbAvis?: number;
+    phase?: 'expansion' | 'stable' | 'ralentissement' | 'recession' | 'reprise';
+    /** Notoriété de départ de certains concurrents (par personnalité). */
+    concurrents?: Record<string, number>;
+  };
+  objectifs: ObjectifScenario[];
+  lecon: string;
+}
+
+/** Question de quiz (entre les trimestres). */
+export interface QuestionQuiz {
+  id: string;
+  categorie: string;
+  question: string;
+  choix: string[];
+  /** Index de la bonne réponse dans `choix`. */
+  bonne: number;
+  explication: string;
+}

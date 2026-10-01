@@ -1,0 +1,149 @@
+{
+  "_source": "Scénarios pédagogiques conçus pour le jeu (mises en situation fictives). Les cibles sont calibrées par simulation (voir DECISIONS.md).",
+  "scenarios": [
+    {
+      "id": "cafe-relance",
+      "nom": "Relancer un café mal-aimé",
+      "resume": "Café · Trois-Rivières · 24 mois · Réaliste",
+      "description": "Tu reprends le local d’un café du centre-ville qui a fermé après une pluie de mauvaises critiques. Les gens du quartier se souviennent du service lent et du café tiède. Ton défi : rebâtir la réputation de l’endroit sans couler.",
+      "secteurId": "cafe",
+      "villeId": "troisRivieres",
+      "difficulte": "realiste",
+      "dureeMois": 24,
+      "depart": {
+        "notoriete": 0.05,
+        "note": 2.9,
+        "nbAvis": 60
+      },
+      "objectifs": [
+        {
+          "type": "survie",
+          "cible": 1
+        },
+        {
+          "type": "noteClients",
+          "cible": 4.1
+        },
+        {
+          "type": "beneficeCumule",
+          "cible": 0
+        }
+      ],
+      "lecon": "Une mauvaise réputation se répare lentement : chaque nouvel avis ne pèse qu’un peu dans la moyenne. La qualité, le service et la patience comptent plus qu’une grosse campagne de publicité."
+    },
+    {
+      "id": "recession",
+      "nom": "Ouvrir avant la tempête",
+      "resume": "Boutique de vêtements · Laval · 24 mois · Réaliste",
+      "description": "Les économistes annoncent un ralentissement. Les consommateurs commencent à couper dans les dépenses non essentielles, comme les vêtements. Ton défi : traverser la période difficile en gardant assez de liquidités et une équipe motivée.",
+      "secteurId": "vetements",
+      "villeId": "laval",
+      "difficulte": "realiste",
+      "dureeMois": 24,
+      "depart": {
+        "phase": "ralentissement"
+      },
+      "objectifs": [
+        {
+          "type": "survie",
+          "cible": 1
+        },
+        {
+          "type": "encaisseFinale",
+          "cible": 40000
+        },
+        {
+          "type": "moral",
+          "cible": 60
+        }
+      ],
+      "lecon": "En récession, l’encaisse est reine : les entreprises qui survivent sont celles qui contrôlent leurs frais fixes, gardent un coussin de liquidités et évitent de s’endetter pour couvrir des pertes."
+    },
+    {
+      "id": "enligne-region",
+      "nom": "Vendre partout depuis Rimouski",
+      "resume": "Boutique en ligne · Rimouski · 12 mois · Réaliste",
+      "description": "Tu lances une boutique en ligne depuis le Bas-Saint-Laurent. Le loyer est bas, mais les clients ne passent pas devant ta porte : tout repose sur ta publicité, tes avis et tes frais de livraison. Ton défi : percer en un an.",
+      "secteurId": "enLigne",
+      "villeId": "rimouski",
+      "difficulte": "realiste",
+      "dureeMois": 12,
+      "depart": {},
+      "objectifs": [
+        {
+          "type": "survie",
+          "cible": 1
+        },
+        {
+          "type": "ventesCumulees",
+          "cible": 400000
+        },
+        {
+          "type": "noteClients",
+          "cible": 4.3
+        }
+      ],
+      "lecon": "En commerce en ligne, le coût d’acquisition d’un client (CAC) est le nerf de la guerre. Les bons avis et la fidélisation réduisent ce coût, car un client satisfait revient sans qu’on paie de nouveau pour l’attirer."
+    },
+    {
+      "id": "paysagement-saison",
+      "nom": "Une saison pour faire ses preuves",
+      "resume": "Paysagement et déneigement · Sherbrooke · 12 mois · Facile",
+      "description": "Tu démarres une entreprise de paysagement l’hiver venu. Le déneigement paie les factures jusqu’au printemps, puis la saison des aménagements arrive d’un coup. Ton défi : terminer l’année avec un profit, des clients satisfaits et une équipe qui a envie de revenir.",
+      "secteurId": "paysagement",
+      "villeId": "sherbrooke",
+      "difficulte": "facile",
+      "dureeMois": 12,
+      "depart": {},
+      "objectifs": [
+        {
+          "type": "survie",
+          "cible": 1
+        },
+        {
+          "type": "beneficeCumule",
+          "cible": 70000
+        },
+        {
+          "type": "satisfaction",
+          "cible": 0.75
+        },
+        {
+          "type": "moral",
+          "cible": 65
+        }
+      ],
+      "lecon": "Une entreprise saisonnière doit planifier sa trésorerie et son personnel sur toute l’année : embaucher et former avant le gros de la saison, puis garder assez d’encaisse pour les mois creux."
+    },
+    {
+      "id": "epicerie-geant",
+      "nom": "David contre Goliath",
+      "resume": "Épicerie fine · Québec · 36 mois · Expert",
+      "description": "Une grande chaîne est bien installée dans ton quartier : tout le monde la connaît et ses prix sont bas. Tu ouvres une épicerie fine indépendante. Ton défi : te tailler une place grâce à ce que le géant ne peut pas offrir.",
+      "secteurId": "epicerie",
+      "villeId": "quebec",
+      "difficulte": "expert",
+      "dureeMois": 36,
+      "depart": {
+        "concurrents": {
+          "geant": 0.85
+        }
+      },
+      "objectifs": [
+        {
+          "type": "survie",
+          "cible": 1
+        },
+        {
+          "type": "partMarche",
+          "cible": 0.18
+        },
+        {
+          "type": "valeurEntreprise",
+          "cible": 50000
+        }
+      ],
+      "lecon": "Face à un concurrent plus gros, une PME gagne rarement sur le prix. Elle se différencie : qualité, produits locaux, service personnalisé, expérience en magasin. C’est une stratégie de niche."
+    }
+  ]
+}

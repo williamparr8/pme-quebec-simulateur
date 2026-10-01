@@ -222,14 +222,14 @@ export function calibrerConcurrents(
   personnalite: (id: string) => PersonnaliteConcurrent,
   secteur: Secteur,
   potentiel: number,
-  offreJoueur: Offre,
+  offresJoueurs: Offre | Offre[],
   options: OptionsMarche,
 ): void {
   // Les frais fixes sont estimés pour un marché où le Nouveau joueur est déjà installé
   // (avant son arrivée, les concurrents font un peu plus de profit), en moyenne sur les
   // 12 mois de l'année (certaines lignes ne se vendent qu'en saison).
   const offres = [
-    offreJoueur,
+    ...(Array.isArray(offresJoueurs) ? offresJoueurs : [offresJoueurs]),
     ...concurrents.map((c) =>
       c.statut === 'aVenir' ? { ...offreConcurrent(c), notoriete: 0.35 } : offreConcurrent(c),
     ),

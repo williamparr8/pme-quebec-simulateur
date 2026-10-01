@@ -18,7 +18,8 @@ import {
   soumettre,
 } from '../src/engine/simulation';
 import type { Decisions, EtatPartie } from '../src/engine/types';
-import { nouvellePartie } from './helpers';
+import { configScenario, creerPartie, rapportFinPartie, SCENARIOS } from '../src/engine/simulation';
+import { demarrageSecteur, nouvellePartie } from './helpers';
 
 const actif = process.env.CALIBRATION === '1';
 const N = Number(process.env.PARTIES ?? 10);
@@ -28,8 +29,9 @@ const N = Number(process.env.PARTIES ?? 10);
  * production déborde; réduire l'équipe quand elle est sous-utilisée (saison creuse). Les
  * événements sont tranchés avec le choix par défaut.
  */
-function gererPersonnel(etat: EtatPartie): EtatPartie {
-  const ent = etat.entreprises[0];
+function gererPersonnel(etat: EtatPartie, idx = 0): EtatPartie {
+  const ent = etat.entreprises[idx];
+  if (ent.enFaillite || ent.vente) return etat;
   const i = ent.archives.at(-1)?.indicateurs;
   if (!i || etat.terminee) return etat;
   const secteur = secteurParId(etat.config.secteurId);
@@ -38,7 +40,7 @@ function gererPersonnel(etat: EtatPartie): EtatPartie {
   let e = etat;
   for (const d of ent.dilemmes)
     e = repondreDilemme(e, ent.id, d.id, dilemmeParId(d.defId).choixParDefaut);
-  const de = (poste?: string) => e.entreprises[0].employes.filter((x) => x.posteId === poste);
+  const de = (poste?: string) => e.entreprises[idx].employes.filter((x) => x.posteId === poste);
   if (service && i.demande > 0 && i.perduesCapacite / i.demande > 0.02) {
     const n = i.perduesCapacite / i.demande > 0.15 ? 2 : 1;
     for (let k = 0; k < n; k++) e = embaucher(e, ent.id, undefined, service);
@@ -208,6 +210,71 @@ describe.runIf(actif)('calibration', () => {
     for (const s of strategies) {
       const parties = Array.from({ length: N }, (_, g) => jouer(g + 1, s));
       console.log(resume(s.nom, parties, false));
+    }
+  });
+});
+
+/** Joue une partie où chaque équipe suit la stratégie du gestionnaire actif. */
+function jouerEquipes(etat0: EtatPartie): EtatPartie {
+  let etat = etat0;
+  while (!etat.terminee) {
+    etat = simulerMois(etat);
+    for (let k = 0; k < etat.entreprises.length; k++) etat = gererPersonnel(etat, k);
+  }
+  return etat;
+}
+
+describe.runIf(process.env.EQUIPES === '1')('calibration du mode équipes', () => {
+  it('2 à 4 équipes sur le même marché', () => {
+    const choisis = process.env.SECTEURS?.split(',') ?? ['cafe', 'vetements'];
+    for (const secteurId of choisis)
+      for (const n of [1, 2, 3, 4]) {
+        let total = 0;
+        let faillites = 0;
+        let concurrentsFermes = 0;
+        for (let g = 1; g <= N; g++) {
+          const params = Array.from({ length: n }, (_, k) => ({
+            ...demarrageSecteur(secteurId),
+            nomEntreprise: `Équipe ${k + 1}`,
+          }));
+          const config = { ...nouvellePartie(g, 36, secteurId).config };
+          const etat = jouerEquipes(creerPartie(config, params));
+          for (const ent of etat.entreprises) {
+            total += etatsFinanciers(ent, { type: 'cumul' }).resultats.beneficeNet;
+            if (ent.enFaillite) faillites++;
+          }
+          concurrentsFermes += etat.concurrents.filter(
+            (c) => c.statut === 'faillite' || c.statut === 'rachete',
+          ).length;
+        }
+        console.log(
+          `${secteurId} – ${n} équipe(s) : BN moyen par équipe ${Math.round(total / (N * n))} $, faillites ${faillites}/${N * n}, concurrents fermés ${(concurrentsFermes / N).toFixed(1)} par partie`,
+        );
+      }
+  });
+});
+
+describe.runIf(process.env.SCENARIOS === '1')('calibration des scénarios', () => {
+  it('objectifs atteints par le gestionnaire actif', () => {
+    for (const sc of SCENARIOS) {
+      const atteints = sc.objectifs.map(() => 0);
+      let notes = 0;
+      const valeurs: string[] = [];
+      for (let g = 1; g <= N; g++) {
+        const etat = jouerEquipes(
+          creerPartie(configScenario(sc, g), demarrageSecteur(sc.secteurId)),
+        );
+        const r = rapportFinPartie(etat, etat.entreprises[0]);
+        r.scenario?.objectifs.forEach((o, k) => (atteints[k] += o.atteint ? 1 : 0));
+        if (g <= 3)
+          valeurs.push(
+            r.scenario?.objectifs.map((o) => Math.round(o.valeur * 100) / 100).join('/') ?? '',
+          );
+        notes += r.note;
+      }
+      console.log(
+        `${sc.id} : ${sc.objectifs.map((o, k) => `${o.type} ${atteints[k]}/${N}`).join(', ')} · note moyenne ${Math.round(notes / N)} · valeurs ${valeurs.join(' | ')}`,
+      );
     }
   });
 });

@@ -79,11 +79,13 @@ import {
   dateDuMois,
   emplacementDe,
   equipementDe,
+  facteurMarcheEquipes,
   politiqueParDefaut,
   qualiteDe,
   typeCapitaux,
   validerDecisions,
 } from './creation';
+import { resumeDecisions } from './bilan';
 import { noteCible, noteDuMois, nouvelleNote, satisfactionClients } from './customers';
 import type { FraisFixesMensuels, LigneProduit, Secteur, Ville } from './data-types';
 import {
@@ -199,6 +201,10 @@ import { SEMAINES_PAR_MOIS, borner, lisser, versCents, versDollars } from './uti
 export * from './creation';
 export * from './actions';
 export { conformeHygiene } from './hr';
+export * from './bilan';
+export * from './conseiller';
+export * from './quiz';
+export * from './scenarios';
 
 // ---------------------------------------------------------------------------
 // Règles
@@ -2239,7 +2245,9 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
 
   // 2. Potentiel du marché ce mois-ci (saison, conjoncture, tendance, difficulté)
   const potentiel = Math.round(
-    potentielDuMois(secteur, ville, conj, index, mois, diff.marche) * (1 + rng.normal(0, 0.02)),
+    potentielDuMois(secteur, ville, conj, index, mois, diff.marche) *
+      facteurMarcheEquipes(etat.entreprises.length) *
+      (1 + rng.normal(0, 0.02)),
   );
 
   // 3. Les concurrents : arrivées, faillites et rachats, puis décisions (en voyant les
@@ -2337,6 +2345,7 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
     const prep = preparations.get(ent.id) as Preparation;
     simulerEntreprise(ent, prep, marche.resultats[ent.id] ?? resultatVide(), ctx);
     const archive = ent.archives.at(-1) as MoisArchive;
+    archive.resume = resumeDecisions(ent, archive);
     archive.concurrents = etat.concurrents
       .filter((c) => c.statut !== 'aVenir')
       .map((c) => ({
