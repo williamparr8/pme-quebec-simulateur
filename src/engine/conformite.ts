@@ -36,7 +36,8 @@ export function demarche(id: IdDemarche): Demarche {
 }
 
 export const estSocieteActions = (f: FormeJuridique): boolean => FORMES_SOCIETE_ACTIONS.includes(f);
-export const estSocietePersonnes = (f: FormeJuridique): boolean => FORMES_SOCIETE_PERSONNES.includes(f);
+export const estSocietePersonnes = (f: FormeJuridique): boolean =>
+  FORMES_SOCIETE_PERSONNES.includes(f);
 
 /** Frais de constitution ou d'immatriculation au démarrage selon la forme juridique. */
 export function fraisImmatriculation(forme: FormeJuridique): number {

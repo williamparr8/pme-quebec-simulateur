@@ -10,8 +10,20 @@ import {
   modifierDecisions,
   modifierHeuresEmploye,
   simulerMois,
+  inscrireTaxes,
+  changerFrequenceTaxes,
+  regulariserDemarche,
+  produireMiseAJourAnnuelle,
+  planifierIncorporation,
 } from '../engine/simulation';
-import type { ConfigPartie, Decisions, EtatPartie, ParametresDemarrage } from '../engine/types';
+import type {
+  ConfigPartie,
+  Decisions,
+  EtatPartie,
+  FrequenceTaxes,
+  IdDemarche,
+  ParametresDemarrage,
+} from '../engine/types';
 import { sauvegarder, type IdEmplacement } from './sauvegarde';
 
 export type Ecran = 'accueil' | 'creation' | 'jeu';
@@ -53,6 +65,11 @@ interface StoreJeu {
   embaucherEmploye: (heures?: number) => void;
   congedierEmploye: (id: string) => void;
   changerHeuresEmploye: (id: string, heures: number) => void;
+  inscrireAuxTaxes: () => void;
+  changerFrequence: (f: FrequenceTaxes) => void;
+  regulariser: (id: IdDemarche) => void;
+  produireDeclarationReq: () => void;
+  planifierIncorporationSociete: (type: 'inc-qc' | 'inc-federal' | null) => void;
   sauvegarderDans: (emplacement: IdEmplacement) => boolean;
 }
 
@@ -111,6 +128,11 @@ export const useJeu = create<StoreJeu>((set, get) => {
     congedierEmploye: (employeId) => appliquer((e, id) => congedier(e, id, employeId)),
     changerHeuresEmploye: (employeId, heures) =>
       appliquer((e, id) => modifierHeuresEmploye(e, id, employeId, heures)),
+    inscrireAuxTaxes: () => appliquer((e, id) => inscrireTaxes(e, id)),
+    changerFrequence: (f) => appliquer((e, id) => changerFrequenceTaxes(e, id, f)),
+    regulariser: (d) => appliquer((e, id) => regulariserDemarche(e, id, d)),
+    produireDeclarationReq: () => appliquer((e, id) => produireMiseAJourAnnuelle(e, id)),
+    planifierIncorporationSociete: (t) => appliquer((e, id) => planifierIncorporation(e, id, t)),
 
     sauvegarderDans: (emplacement) => {
       const { etat } = get();

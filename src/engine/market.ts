@@ -41,7 +41,11 @@ export interface Offre {
 const FACTEUR_TAXES_MARCHE = 1.14975;
 
 /** Indice du prix payé par le client (taxes comprises) par rapport au marché. */
-export function indicePrixClient(offre: Pick<Offre, 'prix' | 'facteurPrixClient'>, secteur: Secteur, indicePrix = 1): number {
+export function indicePrixClient(
+  offre: Pick<Offre, 'prix' | 'facteurPrixClient'>,
+  secteur: Secteur,
+  indicePrix = 1,
+): number {
   return (
     indicePrixOffre(offre.prix, secteur, indicePrix) *
     ((offre.facteurPrixClient ?? FACTEUR_TAXES_MARCHE) / FACTEUR_TAXES_MARCHE)

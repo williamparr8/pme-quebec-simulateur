@@ -18,7 +18,8 @@ export const MESSAGES_JALON2: Record<string, (p: Params) => { titre: string; tex
   }),
   sinistreNonAssure: (p) => ({
     titre: `Sinistre non assuré : ${argentRond(n(p, 'montant'))}`,
-    texte: 'Un dégât d’eau ou une réclamation d’un client a dû être payé par l’entreprise, faute d’assurance. Une assurance coûte peu par mois comparé à ce risque.',
+    texte:
+      'Un dégât d’eau ou une réclamation d’un client a dû être payé par l’entreprise, faute d’assurance. Une assurance coûte peu par mois comparé à ce risque.',
   }),
   demarcheDecouverte: (p) => ({
     titre: `Contrôle : ${s(p, 'nom')}`,
@@ -40,15 +41,18 @@ export const MESSAGES_JALON2: Record<string, (p: Params) => { titre: string; tex
   }),
   remiseTaxes: (p) => ({
     titre: `Remise de TPS et de TVQ : ${argent(n(p, 'montant'))}`,
-    texte: 'Tu as remis aux gouvernements les taxes perçues sur tes ventes, moins celles payées sur tes achats (CTI et RTI). Cet argent ne t’appartenait pas : garde-le de côté!',
+    texte:
+      'Tu as remis aux gouvernements les taxes perçues sur tes ventes, moins celles payées sur tes achats (CTI et RTI). Cet argent ne t’appartenait pas : garde-le de côté!',
   }),
   remboursementTaxes: (p) => ({
     titre: `Remboursement de TPS et de TVQ : ${argent(n(p, 'montant'))}`,
-    texte: 'Tes CTI et RTI (taxes payées sur tes achats, comme l’équipement) dépassent les taxes perçues : les gouvernements te remboursent la différence.',
+    texte:
+      'Tes CTI et RTI (taxes payées sur tes achats, comme l’équipement) dépassent les taxes perçues : les gouvernements te remboursent la différence.',
   }),
   soldeImpotPaye: (p) => ({
     titre: `Solde d’impôt de la société payé : ${argentRond(n(p, 'montant'))}`,
-    texte: 'L’impôt de l’an dernier dépassait les acomptes versés. Des acomptes provisionnels mensuels évitent cette grosse sortie d’argent et les intérêts.',
+    texte:
+      'L’impôt de l’an dernier dépassait les acomptes versés. Des acomptes provisionnels mensuels évitent cette grosse sortie d’argent et les intérêts.',
   }),
   remboursementImpot: (p) => ({
     titre: `Remboursement d’impôt de la société : ${argentRond(n(p, 'montant'))}`,
@@ -56,11 +60,13 @@ export const MESSAGES_JALON2: Record<string, (p: Params) => { titre: string; tex
   }),
   dividendeVerse: (p) => ({
     titre: `Dividende versé : ${argentRond(n(p, 'montant'))}`,
-    texte: 'Un dividende n’est pas une dépense de la société : il est payé à même les bénéfices après impôt et réduit les bénéfices non répartis. Il sera imposé dans ta déclaration personnelle.',
+    texte:
+      'Un dividende n’est pas une dépense de la société : il est payé à même les bénéfices après impôt et réduit les bénéfices non répartis. Il sera imposé dans ta déclaration personnelle.',
   }),
   rappelMajAnnuelle: (p) => ({
     titre: `Rappel : déclaration de mise à jour annuelle ${s(p, 'annee')} au REQ`,
-    texte: 'Tu dois la produire avant la fin de juin (département Juridique). En retard, une pénalité de 50 % des droits s’ajoute.',
+    texte:
+      'Tu dois la produire avant la fin de juin (département Juridique). En retard, une pénalité de 50 % des droits s’ajoute.',
   }),
   majAnnuelleEnRetard: (p) => ({
     titre: `Déclaration annuelle ${s(p, 'annee')} produite en retard`,
@@ -76,6 +82,7 @@ export const MESSAGES_JALON2: Record<string, (p: Params) => { titre: string; tex
   }),
   failliteSociete: () => ({
     titre: 'Faillite de la société',
-    texte: 'Trois mois de suite à découvert : la société cesse ses activités. Grâce à la responsabilité limitée, tes biens personnels sont protégés… sauf si tu as signé une caution personnelle pour le prêt, ce que les banques exigent presque toujours des petites sociétés.',
+    texte:
+      'Trois mois de suite à découvert : la société cesse ses activités. Grâce à la responsabilité limitée, tes biens personnels sont protégés… sauf si tu as signé une caution personnelle pour le prêt, ce que les banques exigent presque toujours des petites sociétés.',
   }),
 };

@@ -187,7 +187,12 @@ export function bilan(soldes: Soldes, portionCouranteDette: Cents = 0): Bilan {
   let totalActifCourt = Math.max(0, encaisse);
   for (const id of courants) {
     if (s(id) > 0) {
-      ajouter(actifCourt, id, s(id), PLAN_COMPTABLE[id].classe === 'passif' ? nomsInverses[id] : undefined);
+      ajouter(
+        actifCourt,
+        id,
+        s(id),
+        PLAN_COMPTABLE[id].classe === 'passif' ? nomsInverses[id] : undefined,
+      );
       totalActifCourt += s(id);
     }
   }
@@ -259,7 +264,10 @@ export function bilan(soldes: Soldes, portionCouranteDette: Cents = 0): Bilan {
   poste('Capital – associé', -s('capitalAssocie'));
   poste('Capital-actions', -s('capitalActions'));
   poste('Bénéfices non répartis au début de l’exercice', -s('benefNonRepartis'));
-  lignesCapitaux.push({ libelle: 'Bénéfice net de l’exercice', montant: versDollars(resultatExercice) });
+  lignesCapitaux.push({
+    libelle: 'Bénéfice net de l’exercice',
+    montant: versDollars(resultatExercice),
+  });
   poste('Moins : prélèvements du propriétaire', -prelevements);
   poste('Moins : prélèvements de l’associé', -s('prelevementsAssocie'));
   poste('Moins : dividendes déclarés', -s('dividendes'));

@@ -94,7 +94,15 @@ export interface DeclarationAnnuelle {
   pertesReportees: number;
   heuresRemunerees: number;
   /** Société par actions (T2 et CO-17). */
-  societe?: { revenuImposable: number; facteurDpeQuebec: number; impotFederal: number; impotQuebec: number; total: number; acomptesVerses: number; solde: number };
+  societe?: {
+    revenuImposable: number;
+    facteurDpeQuebec: number;
+    impotFederal: number;
+    impotQuebec: number;
+    total: number;
+    acomptesVerses: number;
+    solde: number;
+  };
   /** Propriétaire (T1 et TP-1) : revenu d'entreprise ou salaire et dividendes. */
   personnel: {
     revenuEntreprise: number;

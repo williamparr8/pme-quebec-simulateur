@@ -48,10 +48,23 @@ export interface DeclarationTaxes {
   solde: number;
 }
 
-export function declarationTaxes(tpsPercue: number, tvqPercue: number, cti: number, rti: number): DeclarationTaxes {
+export function declarationTaxes(
+  tpsPercue: number,
+  tvqPercue: number,
+  cti: number,
+  rti: number,
+): DeclarationTaxes {
   const tpsNette = arrondi(tpsPercue - cti);
   const tvqNette = arrondi(tvqPercue - rti);
-  return { tpsPercue, tvqPercue, cti, rti, tpsNette, tvqNette, solde: arrondi(tpsNette + tvqNette) };
+  return {
+    tpsPercue,
+    tvqPercue,
+    cti,
+    rti,
+    tpsNette,
+    tvqNette,
+    solde: arrondi(tpsNette + tvqNette),
+  };
 }
 
 /** L'inscription devient obligatoire si les ventes taxables des 4 derniers trimestres dépassent 30 000 $. */
@@ -112,7 +125,8 @@ export function impotPersonnel(r: RevenusPersonnels): ImpotPersonnel {
   const I = IMPOT_PARTICULIERS_2026;
   const emploi = Math.max(0, r.emploi ?? 0);
   const entreprise = r.entreprise ?? 0;
-  const divND = Math.max(0, r.dividendesNonDetermines ?? 0) * (1 + I.dividendes.nonDetermines.majoration);
+  const divND =
+    Math.max(0, r.dividendesNonDetermines ?? 0) * (1 + I.dividendes.nonDetermines.majoration);
   const divD = Math.max(0, r.dividendesDetermines ?? 0) * (1 + I.dividendes.determines.majoration);
   const revenuImposable = Math.max(0, emploi + entreprise + divND + divD);
 
@@ -131,10 +145,14 @@ export function impotPersonnel(r: RevenusPersonnels): ImpotPersonnel {
   const impotQuebec = arrondi(Math.max(0, qcBrut));
 
   const c = COTISATIONS_2026;
-  const baseRrq = Math.max(0, Math.min(entreprise, c.rrq.maximumGainsAdmissibles) - c.rrq.exemptionGenerale);
+  const baseRrq = Math.max(
+    0,
+    Math.min(entreprise, c.rrq.maximumGainsAdmissibles) - c.rrq.exemptionGenerale,
+  );
   const cotisationsAutonome = arrondi(
     baseRrq * I.travailleurAutonome.tauxRrq +
-      Math.max(0, Math.min(entreprise, c.rqap.maximumRevenuAssurable)) * I.travailleurAutonome.tauxRqap,
+      Math.max(0, Math.min(entreprise, c.rqap.maximumRevenuAssurable)) *
+        I.travailleurAutonome.tauxRqap,
   );
 
   const total = arrondi(impotFederal + impotQuebec + cotisationsAutonome);
@@ -144,9 +162,11 @@ export function impotPersonnel(r: RevenusPersonnels): ImpotPersonnel {
     impotQuebec,
     cotisationsAutonome,
     total,
-    tauxMoyen: emploi + entreprise + (r.dividendesNonDetermines ?? 0) + (r.dividendesDetermines ?? 0) > 0
-      ? total / (emploi + entreprise + (r.dividendesNonDetermines ?? 0) + (r.dividendesDetermines ?? 0))
-      : 0,
+    tauxMoyen:
+      emploi + entreprise + (r.dividendesNonDetermines ?? 0) + (r.dividendesDetermines ?? 0) > 0
+        ? total /
+          (emploi + entreprise + (r.dividendesNonDetermines ?? 0) + (r.dividendesDetermines ?? 0))
+        : 0,
     tauxMarginalCombine:
       tauxMarginal(revenuImposable, I.federal.paliers) * (1 - I.federal.abattementQuebec) +
       tauxMarginal(revenuImposable, I.quebec.paliers),
@@ -172,21 +192,45 @@ export interface RetenuesEmploye {
  * d'annualisation (salaire du mois × 12), comme le font les tables de retenues.
  * @param assurable faux pour un actionnaire qui contrôle plus de 40 % des actions (exclu de l'AE)
  */
-export function retenuesEmploye(brut: number, cumulAvant: number, assurable = true): RetenuesEmploye {
+export function retenuesEmploye(
+  brut: number,
+  cumulAvant: number,
+  assurable = true,
+): RetenuesEmploye {
   const c = COTISATIONS_2026;
   const t = RETENUES_EMPLOYE_2026;
   if (brut <= 0) {
-    return { rrq: 0, rqap: 0, assuranceEmploi: 0, impotFederal: 0, impotQuebec: 0, total: 0, net: 0 };
+    return {
+      rrq: 0,
+      rqap: 0,
+      assuranceEmploi: 0,
+      impotFederal: 0,
+      impotQuebec: 0,
+      total: 0,
+      net: 0,
+    };
   }
   const sous = (plafond: number) => Math.max(0, Math.min(brut, plafond - cumulAvant));
-  const rrq = arrondi(Math.max(0, sous(c.rrq.maximumGainsAdmissibles) - c.rrq.exemptionGenerale / 12) * t.rrq);
+  const rrq = arrondi(
+    Math.max(0, sous(c.rrq.maximumGainsAdmissibles) - c.rrq.exemptionGenerale / 12) * t.rrq,
+  );
   const rqap = arrondi(sous(c.rqap.maximumRevenuAssurable) * t.rqap);
-  const assuranceEmploi = assurable ? arrondi(sous(c.assuranceEmploi.maximumRemunerationAssurable) * t.assuranceEmploi) : 0;
+  const assuranceEmploi = assurable
+    ? arrondi(sous(c.assuranceEmploi.maximumRemunerationAssurable) * t.assuranceEmploi)
+    : 0;
   const annuel = impotPersonnel({ emploi: brut * 12 });
   const impotFederal = arrondi(annuel.impotFederal / 12);
   const impotQuebec = arrondi(annuel.impotQuebec / 12);
   const total = arrondi(rrq + rqap + assuranceEmploi + impotFederal + impotQuebec);
-  return { rrq, rqap, assuranceEmploi, impotFederal, impotQuebec, total, net: arrondi(brut - total) };
+  return {
+    rrq,
+    rqap,
+    assuranceEmploi,
+    impotFederal,
+    impotQuebec,
+    total,
+    net: arrondi(brut - total),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -215,14 +259,21 @@ export function facteurHeuresQuebec(heuresRemunerees: number): number {
  * Impôt d'une société privée sous contrôle canadien (SPCC).
  * @param dpe faux pour calculer l'impôt sans la déduction pour petite entreprise
  */
-export function impotSociete(revenuImposable: number, heuresRemunerees: number, dpe = true): ImpotSociete {
+export function impotSociete(
+  revenuImposable: number,
+  heuresRemunerees: number,
+  dpe = true,
+): ImpotSociete {
   const s = IMPOT_SOCIETES;
   const revenu = Math.max(0, revenuImposable);
   const admissible = dpe ? Math.min(revenu, s.plafondAffaires) : 0;
   const reste = revenu - admissible;
-  const impotFederal = arrondi(admissible * s.federal.tauxPetiteEntreprise + reste * s.federal.tauxGeneral);
+  const impotFederal = arrondi(
+    admissible * s.federal.tauxPetiteEntreprise + reste * s.federal.tauxGeneral,
+  );
   const facteur = dpe ? facteurHeuresQuebec(heuresRemunerees) : 0;
-  const tauxQcPme = s.quebec.tauxGeneral - (s.quebec.tauxGeneral - s.quebec.tauxPetiteEntreprise) * facteur;
+  const tauxQcPme =
+    s.quebec.tauxGeneral - (s.quebec.tauxGeneral - s.quebec.tauxPetiteEntreprise) * facteur;
   const impotQuebec = arrondi(admissible * tauxQcPme + reste * s.quebec.tauxGeneral);
   const total = arrondi(impotFederal + impotQuebec);
   return {
@@ -276,10 +327,14 @@ export function scenarioRemuneration(
   const heures = heuresRemunereesAutres + (salaire > 0 ? 2080 : 0);
   const impotSoc = impotSociete(benefice - coutSociete, heures);
   const dividendes = arrondi(Math.max(0, benefice - coutSociete - impotSoc.total));
-  const retenues = Array.from({ length: 12 }, (_, m) => retenuesEmploye(salaire / 12, (salaire / 12) * m, false));
+  const retenues = Array.from({ length: 12 }, (_, m) =>
+    retenuesEmploye(salaire / 12, (salaire / 12) * m, false),
+  );
   const cotisationsEmploye = retenues.reduce((a, r) => a + r.rrq + r.rqap, 0);
   const perso = impotPersonnel({ emploi: salaire, dividendesNonDetermines: dividendes });
-  const argentEnPoche = arrondi(salaire - cotisationsEmploye + dividendes - perso.impotFederal - perso.impotQuebec);
+  const argentEnPoche = arrondi(
+    salaire - cotisationsEmploye + dividendes - perso.impotFederal - perso.impotQuebec,
+  );
   return {
     salaire: arrondi(salaire),
     dividendes,
@@ -290,7 +345,6 @@ export function scenarioRemuneration(
     argentEnPoche,
     droitsReer: arrondi(Math.min(salaire * 0.18, 33_810)),
     cotiseAuRrq: salaire > 3_500,
-
   };
 
   /** Cotisations annuelles de l'employeur pour un actionnaire (exclu de l'AE). */

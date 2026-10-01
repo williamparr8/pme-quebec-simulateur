@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { posteParId } from '../../../data';
+import { estSocieteActions } from '../../../engine/conformite';
 import { COUT_RECRUTEMENT, semainesPreavis } from '../../../engine/hr';
 import { coutAnnuelEmploye, salaireMensuel, TAUX_VACANCES } from '../../../engine/payroll';
 import { BORNES_DECISIONS, salaireMarche } from '../../../engine/simulation';
@@ -197,8 +198,23 @@ export function PageRH() {
               decimales={0}
               format={(v) => `${v} h`}
               onChange={(v) => changer({ heuresProprietaire: v })}
-              aide="En entreprise individuelle, tu n’as pas de salaire : tu te paies par tes prélèvements (Finance)."
+              aide={
+                estSocieteActions(ent.formeJuridique)
+                  ? 'Si tu te verses un salaire, tes heures (40 h max par semaine) comptent pour les 5 500 heures de la DPE du Québec.'
+                  : 'Tu n’as pas de salaire : tu te paies par tes prélèvements (Finance).'
+              }
             />
+            {estSocieteActions(ent.formeJuridique) && (
+              <Curseur
+                libelle="Ton salaire de dirigeant (brut mensuel)"
+                valeur={d.salaireDirigeant}
+                min={0}
+                max={20_000}
+                format={argentRond}
+                onChange={(v) => changer({ salaireDirigeant: v })}
+                aide="Salaire déductible pour la société, avec retenues à la source et cotisations (sans AE : tu contrôles plus de 40 % des actions). Compare avec les dividendes dans le département Juridique."
+              />
+            )}
           </div>
         </Carte>
         <Carte

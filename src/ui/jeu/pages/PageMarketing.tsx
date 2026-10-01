@@ -1,5 +1,6 @@
 import { indicePrixOffre, prixReference } from '../../../engine/market';
 import { qualiteDe } from '../../../engine/simulation';
+import { FACTEUR_TAXES } from '../../../engine/tax';
 import { argent, argentRond, decimal, pourcentage } from '../../../i18n/format';
 import { useJeu } from '../../../store/jeu';
 import { Astuce, Carte } from '../../composants/Carte';
@@ -68,6 +69,12 @@ export function PageMarketing() {
                   aide={ligne.detail}
                 />
                 <dl className="chiffres grid grid-cols-2 gap-x-2 text-sm">
+                  <dt className="text-doux">
+                    {ent.fiscal.inscritTaxes ? 'Prix payé (TPS + TVQ)' : 'Prix payé (aucune taxe)'}
+                  </dt>
+                  <dd className="text-right">
+                    {argent(prix * (ent.fiscal.inscritTaxes ? FACTEUR_TAXES : 1))}
+                  </dd>
                   <dt className="text-doux">Prix du marché</dt>
                   <dd className="text-right">{argent(ref)}</dd>
                   <dt className="text-doux">Coût unitaire</dt>

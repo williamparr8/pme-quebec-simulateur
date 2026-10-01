@@ -368,6 +368,143 @@
       "terme": "Vrai coût d'un employé",
       "categorie": "Ressources humaines",
       "definition": "Salaire brut + indemnité de vacances + charges sociales de l'employeur. Un employé payé 17,25 $ l'heure coûte environ 20 $ l'heure à l'employeur."
+    },
+    {
+      "id": "tpsTvq",
+      "terme": "TPS et TVQ",
+      "categorie": "Fiscalité",
+      "definition": "Taxes de vente perçues par l'entreprise pour les gouvernements : TPS fédérale de 5 % et TVQ de 9,975 %. L'entreprise les remet périodiquement, moins les taxes qu'elle a payées sur ses achats.",
+      "exemple": "Vente de 100 $ : 5,00 $ de TPS + 9,98 $ de TVQ = 114,98 $."
+    },
+    {
+      "id": "ctiRti",
+      "terme": "CTI et RTI",
+      "categorie": "Fiscalité",
+      "definition": "Crédit de taxe sur les intrants (TPS) et remboursement de la taxe sur les intrants (TVQ) : les taxes payées sur les achats d'affaires, qu'une entreprise inscrite récupère.",
+      "formule": "Remise = Taxes perçues − CTI − RTI"
+    },
+    {
+      "id": "petitFournisseur",
+      "terme": "Petit fournisseur",
+      "categorie": "Fiscalité",
+      "definition": "Entreprise dont les ventes taxables ne dépassent pas 30 000 $ sur quatre trimestres civils consécutifs. L'inscription à la TPS et à la TVQ est alors facultative; au-delà, elle est obligatoire."
+    },
+    {
+      "id": "detaxe",
+      "terme": "Fourniture détaxée ou exonérée",
+      "categorie": "Fiscalité",
+      "definition": "Détaxée : taxable à 0 % (aliments de base, comme le café en grains ou le lait); le vendeur récupère quand même ses CTI. Exonérée : non taxable et sans CTI (services financiers, loyer résidentiel)."
+    },
+    {
+      "id": "req",
+      "terme": "REQ et NEQ",
+      "categorie": "Juridique",
+      "definition": "Le Registraire des entreprises du Québec tient le registre public des entreprises. L'immatriculation donne un numéro d'entreprise du Québec (NEQ). Une déclaration de mise à jour annuelle est exigée chaque année."
+    },
+    {
+      "id": "senc",
+      "terme": "Société en nom collectif (SENC)",
+      "categorie": "Juridique",
+      "definition": "Société de personnes où les associés partagent les bénéfices et sont solidairement responsables de toutes les dettes. Chacun est imposé sur sa part du bénéfice."
+    },
+    {
+      "id": "sec",
+      "terme": "Société en commandite (SEC)",
+      "categorie": "Juridique",
+      "definition": "Société de personnes avec au moins un commandité (gère, responsabilité illimitée) et un commanditaire (investit, responsabilité limitée à son apport, ne gère pas)."
+    },
+    {
+      "id": "societeActions",
+      "terme": "Société par actions (inc.)",
+      "categorie": "Juridique",
+      "definition": "Personne morale distincte de ses actionnaires, constituée au Québec (Loi sur les sociétés par actions) ou au fédéral (LCSA). Les actionnaires ne risquent que leur mise de fonds; la société paie son propre impôt."
+    },
+    {
+      "id": "responsabiliteLimitee",
+      "terme": "Responsabilité limitée",
+      "categorie": "Juridique",
+      "definition": "L'actionnaire ne peut perdre plus que ce qu'il a investi dans la société. Attention : les banques exigent souvent une caution personnelle des propriétaires de petites sociétés."
+    },
+    {
+      "id": "capitalActions",
+      "terme": "Capital-actions",
+      "categorie": "Comptabilité",
+      "definition": "Montant investi par les actionnaires en échange d'actions de la société. Il apparaît dans les capitaux propres."
+    },
+    {
+      "id": "bnr",
+      "terme": "Bénéfices non répartis (BNR)",
+      "categorie": "Comptabilité",
+      "definition": "Bénéfices accumulés par une société depuis sa création, moins les dividendes versés.",
+      "formule": "BNR fin = BNR début + Bénéfice net − Dividendes"
+    },
+    {
+      "id": "dividendes",
+      "terme": "Dividendes",
+      "categorie": "Fiscalité",
+      "definition": "Part des bénéfices après impôt versée aux actionnaires. Ce n'est pas une dépense de la société. Les dividendes d'une PME imposée au taux réduit sont « non déterminés » : majorés de 15 % puis réduits par un crédit d'impôt."
+    },
+    {
+      "id": "dpe",
+      "terme": "Déduction pour petite entreprise (DPE)",
+      "categorie": "Fiscalité",
+      "definition": "Taux d'impôt réduit sur les premiers 500 000 $ de revenu d'une société privée sous contrôle canadien : 9 % au fédéral et 2,2 % au Québec (années commençant après le 29 avril 2026). Au Québec, il faut au moins 5 500 heures rémunérées dans l'année.",
+      "exemple": "100 000 $ de revenu imposable : 11 200 $ d'impôt avec la DPE, 26 500 $ sans."
+    },
+    {
+      "id": "dpa",
+      "terme": "Déduction pour amortissement (DPA)",
+      "categorie": "Fiscalité",
+      "definition": "Amortissement permis par la loi de l'impôt, selon des catégories et des taux fixés (ex. catégorie 8 : 20 % dégressif). Il remplace l'amortissement comptable dans le calcul du revenu imposable."
+    },
+    {
+      "id": "fnacc",
+      "terme": "FNACC",
+      "categorie": "Fiscalité",
+      "definition": "Fraction non amortie du coût en capital : la valeur fiscale restante d'une catégorie de biens, sur laquelle on calcule la DPA de l'année."
+    },
+    {
+      "id": "revenuImposable",
+      "terme": "Revenu imposable",
+      "categorie": "Fiscalité",
+      "definition": "Revenu sur lequel l'impôt est calculé : le bénéfice comptable ajusté selon les règles fiscales (DPA au lieu de l'amortissement, dépenses non déductibles comme les amendes, pertes reportées)."
+    },
+    {
+      "id": "tauxMarginal",
+      "terme": "Taux marginal et taux moyen",
+      "categorie": "Fiscalité",
+      "definition": "Taux marginal : impôt payé sur le prochain dollar gagné. Taux moyen : impôt total divisé par le revenu total. Au Québec, le taux marginal combiné le plus élevé dépasse 53 %."
+    },
+    {
+      "id": "acomptes",
+      "terme": "Acomptes provisionnels",
+      "categorie": "Fiscalité",
+      "definition": "Versements d'impôt faits pendant l'année plutôt qu'en un seul paiement. Une société dont l'impôt dépasse 3 000 $ en verse chaque mois; sinon, elle paie des intérêts."
+    },
+    {
+      "id": "retenuesSource",
+      "terme": "Retenues à la source (DAS)",
+      "categorie": "Fiscalité",
+      "definition": "Impôts, RRQ, RQAP et AE que l'employeur retient sur la paie et remet aux gouvernements avec ses propres cotisations, généralement chaque mois.",
+      "formule": "Salaire net = Salaire brut − Retenues à la source"
+    },
+    {
+      "id": "t4rl1",
+      "terme": "T4 et RL-1",
+      "categorie": "Fiscalité",
+      "definition": "Relevés que l'employeur remet à chaque salarié en février : revenus d'emploi et retenues de l'année (T4 au fédéral, RL-1 au Québec)."
+    },
+    {
+      "id": "declarations",
+      "terme": "T1, TP-1, T2 et CO-17",
+      "categorie": "Fiscalité",
+      "definition": "Déclarations de revenus : T1 (fédéral) et TP-1 (Québec) pour les particuliers, incluant le revenu d'une entreprise individuelle; T2 (fédéral) et CO-17 (Québec) pour les sociétés par actions."
+    },
+    {
+      "id": "planificationFiscale",
+      "terme": "Planification fiscale et évasion fiscale",
+      "categorie": "Fiscalité",
+      "definition": "La planification fiscale utilise légalement les règles (forme juridique, salaire ou dividendes, REER). L'évasion fiscale cache des revenus ou gonfle des dépenses : c'est illégal et sévèrement puni."
     }
   ]
 }

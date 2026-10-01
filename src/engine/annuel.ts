@@ -21,7 +21,9 @@ export function calculerDpa(
   dureeBailAnnees: number,
 ): { equipement: number; ameliorations: number; total: number } {
   const equipement = arrondi(Math.max(0, uccEquipement) * DPA.equipement.taux);
-  const ameliorations = arrondi(Math.min(Math.max(0, uccAmeliorations), coutAmeliorations / Math.max(1, dureeBailAnnees)));
+  const ameliorations = arrondi(
+    Math.min(Math.max(0, uccAmeliorations), coutAmeliorations / Math.max(1, dureeBailAnnees)),
+  );
   return { equipement, ameliorations, total: arrondi(equipement + ameliorations) };
 }
 
@@ -39,7 +41,12 @@ export function finExerciceFiscal(
   const f = ent.fiscal;
   const r = etatResultats(mouvementsAnnee);
   const nonDeductibles = (mouvementsAnnee.amendes ?? 0) / 100;
-  const dpa = calculerDpa(f.uccEquipement, f.uccAmeliorations, f.coutAmeliorations, ent.bail.dureeMois / 12);
+  const dpa = calculerDpa(
+    f.uccEquipement,
+    f.uccAmeliorations,
+    f.coutAmeliorations,
+    ent.bail.dureeMois / 12,
+  );
   f.uccEquipement = arrondi(f.uccEquipement - dpa.equipement);
   f.uccAmeliorations = arrondi(f.uccAmeliorations - dpa.ameliorations);
   const revenuFiscal = arrondi(r.beneficeAvantImpot + r.amortissement + nonDeductibles - dpa.total);
@@ -57,7 +64,15 @@ export function finExerciceFiscal(
     pertesUtilisees: 0,
     pertesReportees: f.pertesReportees,
     heuresRemunerees: Math.round(f.heuresRemunereesAnnee),
-    personnel: { revenuEntreprise: 0, salaire: 0, dividendes: 0, impotFederal: 0, impotQuebec: 0, cotisations: 0, total: 0 },
+    personnel: {
+      revenuEntreprise: 0,
+      salaire: 0,
+      dividendes: 0,
+      impotFederal: 0,
+      impotQuebec: 0,
+      cotisations: 0,
+      total: 0,
+    },
     feuillets,
     taxes,
   };
@@ -76,7 +91,13 @@ export function finExerciceFiscal(
     }
     declaration.pertesReportees = f.pertesReportees;
     const impot = impotSociete(imposable, f.heuresRemunereesAnnee);
-    ecritureSimple(livre, `Impôts sur le revenu de l’exercice ${annee} (T2 et CO-17)`, 'impots', 'impotsAPayer', versCents(impot.total));
+    ecritureSimple(
+      livre,
+      `Impôts sur le revenu de l’exercice ${annee} (T2 et CO-17)`,
+      'impots',
+      'impotsAPayer',
+      versCents(impot.total),
+    );
     const solde = arrondi(impot.total - f.acomptesVersesAnnee);
     declaration.societe = {
       revenuImposable: impot.revenuImposable,

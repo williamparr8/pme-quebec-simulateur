@@ -3,6 +3,7 @@ import { argentRond, moisAnnee } from '../../i18n/format';
 import { ONGLETS, useJeu, type Onglet } from '../../store/jeu';
 import { Bouton } from '../composants/Bouton';
 import { ChoixTheme } from '../composants/ChoixTheme';
+import { FORMES } from '../creation/formes';
 import { useJeuCourant } from './contexte';
 import { Modales } from './Modales';
 import { PageFinance } from './pages/PageFinance';
@@ -42,7 +43,7 @@ function EnTete() {
           <div>
             <p className="text-lg font-extrabold leading-tight">{ent.nom}</p>
             <p className="text-sm text-doux">
-              {secteur.nom} · {ville.nom} · Entreprise individuelle
+              {secteur.nom} · {ville.nom} · {FORMES.find((x) => x.id === ent.formeJuridique)?.nom}
             </p>
           </div>
         </div>

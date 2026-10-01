@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { PLAN_COMPTABLE } from '../../../engine/accounting';
+import { estSocieteActions } from '../../../engine/conformite';
 import { tauxPreferentiel } from '../../../engine/economy';
 import { tableauAmortissement } from '../../../engine/loans';
 import {
@@ -403,6 +404,7 @@ function VueFinancement() {
   const changer = useJeu((s) => s.changerDecisions);
   const [apport, setApport] = useState(0);
   const [remboursement, setRemboursement] = useState(0);
+  const [dividende, setDividende] = useState(0);
   const d = ent.decisions;
   const pret = ent.prets.find((p) => p.solde > 0);
   const marge = ent.margeCredit;
@@ -410,19 +412,60 @@ function VueFinancement() {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-2">
-        <Carte titre="Ta rémunération : prélèvements">
-          <Curseur
-            libelle="Prélèvements mensuels"
-            valeur={d.prelevements}
-            min={0}
-            max={15_000}
-            decimales={0}
-            format={argentRond}
-            terme="prelevements"
-            onChange={(v) => changer({ prelevements: v })}
-            aide="L’argent que tu retires chaque mois pour vivre. Ce n’est pas une charge : il réduit ton capital et ton encaisse."
-          />
-        </Carte>
+        {estSocieteActions(ent.formeJuridique) ? (
+          <Carte titre="Ta rémunération : salaire et dividendes">
+            <p className="mb-2 text-sm">
+              Salaire de dirigeant : <strong>{argentRond(d.salaireDirigeant)}</strong> par mois (à
+              régler dans RH).
+            </p>
+            <p className="mb-2 text-sm text-doux">
+              Dividende à verser au début du prochain mois. Il n’est pas déductible pour la société
+              et sera imposé dans ta déclaration personnelle (dividende non déterminé, majoré de 15
+              %).
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                step={1000}
+                value={dividende}
+                onChange={(e) => setDividende(Number(e.target.value))}
+                aria-label="Montant du dividende"
+                className="chiffres w-32 rounded-md border border-bordure bg-surface-2 px-2 py-1"
+              />
+              <Bouton
+                petit
+                variante="primaire"
+                onClick={() => changer({ dividendePonctuel: dividende })}
+              >
+                Déclarer le dividende
+              </Bouton>
+            </div>
+            {d.dividendePonctuel > 0 && (
+              <p className="mt-2 text-sm font-semibold">
+                Dividende prévu : {argentRond(d.dividendePonctuel)}
+              </p>
+            )}
+          </Carte>
+        ) : (
+          <Carte titre="Ta rémunération : prélèvements">
+            <Curseur
+              libelle="Prélèvements mensuels"
+              valeur={d.prelevements}
+              min={0}
+              max={15_000}
+              decimales={0}
+              format={argentRond}
+              terme="prelevements"
+              onChange={(v) => changer({ prelevements: v })}
+              aide={
+                ent.associe
+                  ? `L’argent que tu retires pour vivre. ${ent.associe.nom} retire en proportion de sa part (${pourcentage(ent.associe.part, 0)}).`
+                  : 'L’argent que tu retires chaque mois pour vivre. Ce n’est pas une charge : il réduit ton capital et ton encaisse.'
+              }
+            />
+          </Carte>
+        )}
         <Carte titre={<Terme id="margeCredit">Marge de crédit</Terme>}>
           <dl className="chiffres grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
             <dt className="text-doux">Limite autorisée</dt>

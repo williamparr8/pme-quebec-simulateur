@@ -316,7 +316,10 @@ export const FLUX = {
     activite: 'investissement',
   },
   depotGarantie: { nom: 'Dépôt de garantie versé', activite: 'investissement' },
-  apportsProprietaire: { nom: 'Apports des propriétaires et émission d’actions', activite: 'financement' },
+  apportsProprietaire: {
+    nom: 'Apports des propriétaires et émission d’actions',
+    activite: 'financement',
+  },
   prelevementsProprietaire: { nom: 'Prélèvements des propriétaires', activite: 'financement' },
   dividendesVerses: { nom: 'Dividendes versés', activite: 'financement' },
   empruntsRecus: { nom: 'Emprunts obtenus', activite: 'financement' },
@@ -466,7 +469,11 @@ export type TypeCapitaux = 'proprietaire' | 'associes' | 'actions';
  * - Société par actions : aux bénéfices non répartis (avec les dividendes).
  * La somme des soldes reste nulle. Retourne le résultat de l'exercice (cents).
  */
-export function cloturerExercice(livre: GrandLivre, type: TypeCapitaux = 'proprietaire', partAssocie = 0): Cents {
+export function cloturerExercice(
+  livre: GrandLivre,
+  type: TypeCapitaux = 'proprietaire',
+  partAssocie = 0,
+): Cents {
   let resultat = 0;
   for (const id of COMPTES) {
     const def = PLAN_COMPTABLE[id];
