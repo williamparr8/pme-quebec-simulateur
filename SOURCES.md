@@ -44,6 +44,29 @@ aussi sa source et sa date de vérification.
 - ARC, _Catégories de biens amortissables_ (DPA) :
   https://www.canada.ca/fr/agence-revenu/services/impot/entreprises/sujets/entreprise-individuelle-societe-personnes/declarer-revenus-depenses-entreprise/reclamer-deduction-amortissement/categories-biens-amortissables.html
 
+## Départements complets (Jalon 3)
+
+- Futurpreneur Canada (prêt de démarrage jusqu’à 75 000 $ avec la BDC, 18 à 39 ans, mentorat) :
+  https://www.futurpreneur.ca/fr/
+- PME MTL, _Fonds PME MTL et Fonds locaux de solidarité Montréal_ (montants, taux selon le risque, mise de fonds de
+  20 %) : https://pmemtl.com/en/services/financing/loans-and-subsidies/fonds-pme-mtl-and-fonds-locaux-de-solidarite-montreal
+- BDC, financement de démarrage (taux, périodes d’intérêts seulement, plan d’affaires) :
+  https://hellodarwin.com/fr/aide-aux-entreprises/programmes/financement-bdc-demarrage
+- Desjardins Créavenir (crédit et subvention pour les 18 à 39 ans) :
+  https://hellodarwin.com/fr/aide-aux-entreprises/programmes/mrc-beaharnois-salaberry-creavenir
+- McCarthy Tétrault, _Le budget 2025 comprend des incitatifs fiscaux appelés « superdéduction à la productivité »_
+  (incitatif à l’investissement accéléré) :
+  https://www.mccarthy.ca/fr/references/blogues/consumer-markets-perspectives/le-budget-2025-comprend-des-incitatifs-fiscaux-appeles-superdeduction-a-la-productivite-et-l-elimination-de-la-taxe-de-luxe-sur-certains-aeronefs-et-navires
+- Taux de change CAD/USD (environ 0,72 $ US pour 1 $ CA en septembre 2026) :
+  https://www.poundsterlinglive.com/history/CAD-USD-2026
+- Guichet-Emplois, salaires des cuisiniers (CNP 63200) dans la région de Montréal :
+  https://www.guichetemplois.gc.ca/rapportmarche/salaire-profession/6224/22446
+- Guichet-Emplois, salaires des gérants de restaurant (CNP 60030) au Québec :
+  https://www.jobbank.gc.ca/marketreport/wages-occupation/2031/QC
+- Gouvernement du Québec, _Formation obligatoire en hygiène et salubrité alimentaires_ (gestionnaire 12 h,
+  manipulateur 6 h, présence d’une personne formée ou 10 % du personnel) :
+  https://www.quebec.ca/sante/alimentation/salubrite-aliments-prevention-risques/etablissements-alimentaires/hygiene-nettoyage/formation-obligatoire-hygiene-salubrite-alimentaires/gestionnaire-etablissement-alimentaire
+
 ## Taux d’intérêt
 
 - Banque du Canada, _La Banque du Canada maintient le taux directeur à 2¼ %_ (2 septembre 2026) :

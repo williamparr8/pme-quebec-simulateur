@@ -10,7 +10,7 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
 
 ---
 
-## Ce que le jeu permet (Jalons 1 et 2)
+## Ce que le jeu permet (Jalons 1 à 3)
 
 - **Créer son entreprise** : nom, emplacement (rue commerciale, centre commercial, quartier résidentiel), équipement,
   aménagement et financement (mise de fonds et prêt bancaire, avec le ratio exigé par la banque).
@@ -42,6 +42,30 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
 - **Impôts 2026** : particuliers (fédéral avec abattement de 16,5 % et Québec), sociétés (DPE, taux du Québec de
   2,2 %, critère des 5 500 heures rémunérées), DPA, report des pertes, acomptes provisionnels, T2/CO-17 et T1/TP-1.
 - **Outil salaire ou dividendes** pour le propriétaire d’une société, et déclaration annuelle au REQ.
+
+### Départements complets (Jalon 3)
+
+- **Marketing** : 10 canaux de publicité (Meta, TikTok, Google, influenceurs, radio, journal, affichage, circulaires,
+  événements, commandites) avec coût par mille, portée, conversion et délai d’effet; 4 personas (étudiants, familles,
+  professionnels, retraités) et notoriété par segment; promotions, programme de fidélité, écoresponsabilité, achat
+  local, livraison par plateforme; nouveaux produits (développement et risque d’échec); études de marché avec
+  échantillon et marge d’erreur; CAC, valeur à vie d’un client, rétention, NPS et image de marque.
+- **Ressources humaines** : 6 postes (barista, cuisinier, aide-cuisinier, gérant, commis comptable, responsable
+  marketing), recrutement par plateformes avec candidats générés (compétence, expérience, attentes, personnalité),
+  salaires individuels et augmentations, formation (dont l’hygiène et la salubrité du MAPAQ), avantages sociaux,
+  évaluations, absentéisme, roulement, jours fériés, vacances de 6 % après 3 ans, syndicalisation et dilemmes RH
+  (conflits d’horaire, harcèlement, congés familiaux, vol interne…) avec une leçon d’affaires.
+- **Opérations** : 9 fournisseurs (locaux ou importés en dollars américains, délais, fiabilité, minimums, 2/10 net 30),
+  stocks simulés au jour le jour (point de commande, stock de sécurité, QEC, péremption, PEPS ou coût moyen), capacité
+  en salle et en cuisine, taux de défauts et plaintes.
+- **Ventes** : ventes en magasin, livrées et aux entreprises; appels d’offres, soumissions et contrats de traiteur;
+  comptes clients, retards et créances irrécouvrables; gestion des avis et politique de satisfaction garantie.
+- **Financement et finance** : financement de départ combiné (banque à taux fixe ou variable, love money, Futurpreneur,
+  BDC, fonds locaux, Desjardins Créavenir, investisseur providentiel) et mini plan d’affaires évalué par les prêteurs;
+  demandes de prêt évaluées (couverture du service de la dette, endettement), comparateur fixe ou variable,
+  placements, investissements (équipement, rénovation, terrasse, véhicule, logiciels) avec registre des
+  immobilisations et DPA par catégorie; budget et prévisions (prévu et réel); nouveaux ratios (liquidité immédiate,
+  rendement des capitaux propres, rotation des stocks, délai de recouvrement, fonds de roulement).
 
 ## Jouer au clavier
 
@@ -87,14 +111,17 @@ Chaque push sur `main` lance le lint, les tests et la construction, puis publie 
 ```
 src/
 ├─ engine/   moteur de simulation en TypeScript pur, sans React, déterministe (graine) et testé
-│            accounting, statements, market, ai-competitors, payroll, loans, inventory, hr,
-│            economy, customers, analyse, rapports, simulation, rng
-├─ data/     données réalistes sourcées (fiscalite.ts, secteurs, villes, salaires, concurrents, glossaire)
+│            accounting, statements, market, marketing, etudes, produits, ai-competitors, payroll,
+│            hr, events, inventory, b2b, loans, financement, immobilisations, tax, annuel,
+│            economy, customers, previsions, analyse, rapports, creation, actions, simulation, rng
+├─ data/     données réalistes sourcées (fiscalite.ts, secteurs, villes, salaires, personas, marketing,
+│            fournisseurs, rh, financement, evenements, concurrents, glossaire)
 ├─ store/    état de l’interface (Zustand) et sauvegardes (localStorage)
 ├─ ui/       composants React par écran et par département
 ├─ scene/    scène 2D du commerce (SVG en blocs; PixiJS prévu au Jalon 6)
 └─ i18n/     textes en français québécois et formatage (1 234,56 $, JJ/MM/AAAA)
-tests/       tests Vitest (bilan équilibré sur 100 parties de 60 mois, paie, prêts, déterminisme…)
+tests/       tests Vitest (bilan équilibré sur 100 parties de 60 mois, paie, prêts, stocks, B2B,
+             déterminisme, textes et glossaire…)
 ```
 
 Stack : Vite, React 18, TypeScript (strict), Zustand, Tailwind CSS, Recharts, Vitest, ESLint et Prettier.
@@ -103,7 +130,7 @@ Stack : Vite, React 18, TypeScript (strict), Zustand, Tailwind CSS, Recharts, Vi
 
 1. ✅ **Fondations** : moteur, café à Montréal, 2 concurrents, états financiers, sauvegarde, clavier, mise en ligne.
 2. ✅ **Fiscalité et juridique** : formes juridiques, REQ, TPS/TVQ, impôts, paie complète, checklist de démarrage.
-3. **Départements complets** : marketing détaillé, RH, opérations et stocks, financement.
+3. ✅ **Départements complets** : marketing détaillé, RH, opérations et stocks, financement.
 4. **Monde vivant** : 7 secteurs, 8 villes, 5 concurrents, 60+ événements, conjoncture économique.
 5. **Multijoueur local et pédagogie** : équipes en alternance, glossaire complet, conseiller, tutoriel, quiz.
 6. **Finition** : scène animée, sons, équilibrage sur 1 000 parties, accessibilité et performance.
