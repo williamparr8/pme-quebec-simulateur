@@ -7,6 +7,7 @@ import { SECTEURS, VILLES, secteurParId, villeParId } from '../../data';
 import { tauxPreferentiel, conjonctureInitiale } from '../../engine/economy';
 import { versementMensuel } from '../../engine/loans';
 import { graineDepuisTexte } from '../../engine/rng';
+import { IDS_DEMARCHES } from '../../engine/conformite';
 import {
   REGLES_FINANCEMENT,
   coutsDemarrage,
@@ -66,6 +67,7 @@ const MESSAGES_ERREUR: Record<ErreurDemarrage, string> = {
   apportInsuffisant: `La banque exige une mise de fonds d’au moins ${argentRond(REGLES_FINANCEMENT.apportMin)}.`,
   pretTropEleve: `La banque prête au plus ${REGLES_FINANCEMENT.multipleApportMax} $ pour chaque dollar que tu investis.`,
   financementInsuffisant: `Tes sources de financement ne couvrent pas les coûts de démarrage plus un fonds de roulement minimal de ${argentRond(REGLES_FINANCEMENT.fondsRoulementMin)}.`,
+  associeRequis: 'Une société de personnes exige un associé qui investit dans l’entreprise.',
 };
 
 export function EcranCreation() {
@@ -83,6 +85,11 @@ export function EcranCreation() {
     amenagementId: 'chaleureux',
     apportPersonnel: 45_000,
     montantPret: 85_000,
+    formeJuridique: 'individuelle',
+    nomAssocie: '',
+    apportAssocie: 0,
+    demarches: [...IDS_DEMARCHES],
+    inscritTaxes: true,
   });
   const [secteurId, setSecteurId] = useState('cafe');
   const [villeId, setVilleId] = useState('montreal');

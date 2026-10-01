@@ -98,11 +98,18 @@ function VueResultats({ r, titre }: { r: EtatResultats; titre: string }) {
       <Ligne libelle="Amortissement" montant={-r.amortissement} terme="amortissement" />
       <Ligne libelle="Bénéfice d’exploitation (BAII)" montant={r.baii} total />
       <Ligne libelle="Intérêts et frais financiers" montant={-r.interets} />
+      {r.impots !== 0 && (
+        <>
+          <Ligne libelle="Bénéfice avant impôts" montant={r.beneficeAvantImpot} total />
+          <Ligne libelle="Impôts sur le revenu (société)" montant={-r.impots} />
+        </>
+      )}
       <Ligne libelle="Bénéfice net" montant={r.beneficeNet} total />
       <tr>
         <td colSpan={2} className="pt-2 text-xs text-doux">
-          Entreprise individuelle : aucun impôt n’apparaît ici. Le bénéfice est imposé dans la
-          déclaration personnelle du propriétaire (T1 et TP-1).
+          Entreprise individuelle et société de personnes : aucun impôt n’apparaît ici, le bénéfice
+          est imposé chez les propriétaires (T1 et TP-1). Société par actions : l’impôt des sociétés
+          (T2 et CO-17) est inscrit à la fin de l’exercice.
         </td>
       </tr>
     </TableEtat>
@@ -165,13 +172,9 @@ function VueBilan({ b, titre }: { b: Bilan; titre: string }) {
             Capitaux propres
           </td>
         </tr>
-        <Ligne
-          libelle="Capital du propriétaire (début de l’exercice et apports)"
-          montant={b.capitaux.capital}
-          retrait
-        />
-        <Ligne libelle="Bénéfice net de l’exercice" montant={b.capitaux.beneficeExercice} retrait />
-        <Ligne libelle="Moins : prélèvements" montant={-b.capitaux.prelevements} retrait />
+        {b.capitaux.lignes.map((l) => (
+          <Ligne key={l.libelle} libelle={l.libelle} montant={l.montant} retrait />
+        ))}
         <Ligne
           libelle="Total des capitaux propres"
           montant={b.capitaux.total}

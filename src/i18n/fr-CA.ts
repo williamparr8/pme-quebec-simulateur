@@ -6,6 +6,7 @@
 import type { CauseVariation } from '../engine/analyse';
 import type { Message } from '../engine/types';
 import { argent, argentRond, decimal, nombre, pourcentage } from './format';
+import { MESSAGES_JALON2 } from './messages-jalon2';
 
 export interface TexteMessage {
   titre: string;
@@ -223,7 +224,7 @@ const MESSAGES: Record<string, (p: Params) => TexteMessage> = {
 };
 
 export function texteMessage(m: Message): TexteMessage {
-  const f = MESSAGES[m.code];
+  const f = MESSAGES[m.code] ?? MESSAGES_JALON2[m.code];
   return f ? f(m.params ?? {}) : { titre: m.code, texte: '' };
 }
 
