@@ -144,3 +144,155 @@ export const FRAIS_TRAITEMENT_CARTES = {
     note: 'Estimation : 1,5 % à 2,5 % pour le crédit, moins pour le débit.',
   } satisfies Source,
 } as const;
+
+// ---------------------------------------------------------------------------
+// Taxes de vente (Jalon 2)
+// ---------------------------------------------------------------------------
+export const TAXES_VENTE = {
+  tps: 0.05,
+  tvq: 0.09975,
+  /** Ventes taxables sur 4 trimestres civils consécutifs au-delà desquelles l'inscription est obligatoire. */
+  seuilPetitFournisseur: 30_000,
+  /** Fréquence de déclaration selon les fournitures taxables annuelles (on peut choisir plus souvent). */
+  seuilsFrequence: { annuelleMax: 1_500_000, trimestrielleMax: 6_000_000 },
+  /** Proportion des charges d'exploitation taxables (donnent droit aux CTI/RTI). */
+  source: {
+    url: 'https://www.revenuquebec.ca/fr/entreprises/taxes/tpstvh-et-tvq/',
+    verifie: '2026-10-01',
+    note: 'TPS 5 %, TVQ 9,975 %, seuil du petit fournisseur de 30 000 $. Les aliments préparés et les boissons servies dans un café sont taxables.',
+  } satisfies Source,
+} as const;
+
+// ---------------------------------------------------------------------------
+// Impôt des particuliers 2026
+// ---------------------------------------------------------------------------
+export interface Palier {
+  /** Borne supérieure du palier ($), Infinity pour le dernier. */
+  jusqua: number;
+  taux: number;
+}
+
+export const IMPOT_PARTICULIERS_2026 = {
+  federal: {
+    paliers: [
+      { jusqua: 58_523, taux: 0.14 },
+      { jusqua: 117_045, taux: 0.205 },
+      { jusqua: 181_440, taux: 0.26 },
+      { jusqua: 258_482, taux: 0.29 },
+      { jusqua: Infinity, taux: 0.33 },
+    ] satisfies Palier[],
+    montantPersonnelBase: 16_452,
+    /** Taux des crédits non remboursables (= taux du 1er palier). */
+    tauxCredits: 0.14,
+    /** Abattement du Québec : réduction de l'impôt fédéral de base des résidents du Québec. */
+    abattementQuebec: 0.165,
+    source: {
+      url: 'https://www.narcity.com/fr/tranches-impot-arc-canada-2026',
+      verifie: '2026-10-01',
+      note: 'Taux du 1er palier réduit à 14 % depuis le 1er janvier 2026. Seuils indexés par l’ARC.',
+    } satisfies Source,
+  },
+  quebec: {
+    paliers: [
+      { jusqua: 54_345, taux: 0.14 },
+      { jusqua: 108_680, taux: 0.19 },
+      { jusqua: 132_245, taux: 0.24 },
+      { jusqua: Infinity, taux: 0.2575 },
+    ] satisfies Palier[],
+    montantPersonnelBase: 18_952, // À VÉRIFIER : 18 571 $ (2025) indexé de 2,05 %
+    tauxCredits: 0.14,
+    source: {
+      url: 'https://www.narcity.com/fr/nouvelles-tranches-revenu-quebec-impots-2026',
+      verifie: '2026-10-01',
+    } satisfies Source,
+  },
+  dividendes: {
+    /** Majoration (« gross-up ») et crédits d'impôt pour dividendes, en % du dividende majoré. */
+    nonDetermines: { majoration: 0.15, creditFederal: 0.090301, creditQuebec: 0.0342 },
+    determines: { majoration: 0.38, creditFederal: 0.150198, creditQuebec: 0.117 },
+    source: {
+      url: 'https://wellington-altus.ca/wp-content/uploads/2026/09/AWPG_Personal_Tax_Cards_QC_08_2026_Final_EN.pdf',
+      verifie: '2026-10-01',
+    } satisfies Source,
+  },
+  /** Cotisations d'un travailleur autonome (il paie les deux parts du RRQ). */
+  travailleurAutonome: {
+    tauxRrq: 0.126,
+    tauxRqap: 0.00764, // À VÉRIFIER : taux 2026 des travailleurs autonomes estimé (0,878 % en 2025 × baisse de 2026)
+  },
+} as const;
+
+/** Taux des retenues de l'employé (2026). */
+export const RETENUES_EMPLOYE_2026 = {
+  rrq: 0.063,
+  rqap: 0.0043,
+  assuranceEmploi: 0.013,
+  source: {
+    url: 'https://www.revenuquebec.ca/fr/entreprises/retenues-a-la-source-et-cotisations-de-lemployeur/employeur-principaux-changements-2026/',
+    verifie: '2026-10-01',
+  } satisfies Source,
+} as const;
+
+// ---------------------------------------------------------------------------
+// Impôt des sociétés (SPCC, années d'imposition commençant en 2027)
+// ---------------------------------------------------------------------------
+export const IMPOT_SOCIETES = {
+  plafondAffaires: 500_000,
+  federal: { tauxGeneral: 0.15, tauxPetiteEntreprise: 0.09 },
+  quebec: {
+    tauxGeneral: 0.115,
+    /** Taux réduit de 3,2 % à 2,2 % pour les années commençant après le 29 avril 2026. */
+    tauxPetiteEntreprise: 0.022,
+    /** Critère des heures rémunérées : DPE complète à 5 500 h, réduite linéairement entre 5 000 et 5 500 h. */
+    heuresMinimum: 5_000,
+    heuresCompletes: 5_500,
+  },
+  /** Seuil d'impôt de l'année précédente au-delà duquel des acomptes provisionnels mensuels sont exigés. */
+  seuilAcomptes: 3_000,
+  source: {
+    url: 'https://www.crowe.com/ca/crowebgk/fr-ca/publications/tax-update-quebec-cuts-small-business-corporate-tax-rate',
+    verifie: '2026-10-01',
+    note: 'Taux du Québec pour PME réduit à 2,2 % (années commençant après le 29 avril 2026); fédéral : 9 % (DPE) et 15 %.',
+  } satisfies Source,
+} as const;
+
+/** Déduction pour amortissement (DPA) : taux des catégories utilisées. */
+export const DPA = {
+  /** Catégorie 8 : mobilier et équipement, 20 % dégressif. */
+  equipement: { categorie: 8, taux: 0.2 },
+  /** Catégorie 13 : améliorations locatives, linéaire sur la durée du bail. */
+  ameliorations: { categorie: 13 },
+  /** Biens acquis avant 2028 : incitatif à l'investissement accéléré, pas de règle de la demi-année. */
+  regleDemiAnneeApres: 2027,
+  source: {
+    url: 'https://www.canada.ca/fr/agence-revenu/services/impot/entreprises/sujets/entreprise-individuelle-societe-personnes/declarer-revenus-depenses-entreprise/reclamer-deduction-amortissement/categories-biens-amortissables.html',
+    verifie: '2026-10-01',
+  } satisfies Source,
+} as const;
+
+// ---------------------------------------------------------------------------
+// Registraire des entreprises du Québec (REQ) et constitution fédérale
+// ---------------------------------------------------------------------------
+export const FRAIS_REQ_2026 = {
+  individuelle: { immatriculation: 41, miseAJourAnnuelle: 41 },
+  societePersonnes: { immatriculation: 63, miseAJourAnnuelle: 63 },
+  societeActionsQc: { constitution: 397, miseAJourAnnuelle: 106 },
+  /** Société fédérale : constitution auprès de Corporations Canada + immatriculation au REQ. */
+  societeActionsFederale: {
+    constitutionCorporationsCanada: 200, // À VÉRIFIER : frais de dépôt en ligne de Corporations Canada
+    immatriculationReq: 397, // À VÉRIFIER : immatriculation d'une société constituée hors Québec
+    miseAJourAnnuelle: 106,
+  },
+  /** Pénalité si la déclaration de mise à jour annuelle est produite en retard. */
+  penaliteRetard: 0.5,
+  source: {
+    url: 'https://www.quebec.ca/entreprises-et-travailleurs-autonomes/tarifs-registraire-entreprises/societe-par-actions',
+    verifie: '2026-10-01',
+    note: 'Tarifs réguliers en vigueur le 1er janvier 2026 (entreprise individuelle, société de personnes, société par actions).',
+  } satisfies Source,
+} as const;
+
+/** Taux d'intérêt sur les montants dus aux gouvernements (estimation). */
+export const INTERETS_FISCAUX = {
+  tauxAnnuel: 0.07, // À VÉRIFIER : taux prescrit de Revenu Québec et de l'ARC sur les soldes dus
+} as const;

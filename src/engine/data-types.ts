@@ -81,6 +81,10 @@ export interface Secteur {
   stockCibleJoursDefaut: number;
   /** Valeur du stock acheté avant l'ouverture ($). */
   stockInitial: number;
+  /** Proportion des achats de marchandises qui sont taxables (le reste est détaxé). */
+  partAchatsTaxables: number;
+  /** Secteur alimentaire : permis du MAPAQ obligatoire. */
+  alimentation: boolean;
   fraisDemarrage: number;
   fraisFixesMensuels: FraisFixesMensuels;
   postes: string[];

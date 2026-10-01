@@ -68,6 +68,7 @@ export function etatResultats(mouvements: Mouvements): EtatResultats {
   let exploitation = 0;
   let interets = 0;
   let amortissement = 0;
+  let impots = 0;
   const chargesExploitation: LignePoste[] = [];
 
   for (const id of COMPTES) {
@@ -83,6 +84,9 @@ export function etatResultats(mouvements: Mouvements): EtatResultats {
           break;
         case 'amortissement':
           amortissement += m(id);
+          break;
+        case 'impots':
+          impots += m(id);
           break;
         default:
           exploitation += m(id);
@@ -109,9 +113,10 @@ export function etatResultats(mouvements: Mouvements): EtatResultats {
     baii: versDollars(baii),
     interets: versDollars(interets),
     beneficeAvantImpot: versDollars(bai),
-    // Entreprise individuelle : le bénéfice est imposé dans la déclaration personnelle du propriétaire.
-    impots: 0,
-    beneficeNet: versDollars(bai),
+    // Entreprise individuelle et société de personnes : aucun impôt ici, le bénéfice est imposé
+    // dans la déclaration personnelle des propriétaires. Société par actions : impôt des sociétés.
+    impots: versDollars(impots),
+    beneficeNet: versDollars(bai - impots),
   };
 }
 
@@ -128,6 +133,8 @@ export interface Bilan {
   totalPassifLong: number;
   totalPassif: number;
   capitaux: {
+    /** Postes des capitaux propres, selon la forme juridique. */
+    lignes: { libelle: string; montant: number }[];
     capital: number;
     beneficeExercice: number;
     prelevements: number;
@@ -158,9 +165,32 @@ export function bilan(soldes: Soldes, portionCouranteDette: Cents = 0): Bilan {
 
   const encaisse = s('encaisse');
   if (encaisse >= 0) ajouter(actifCourt, 'encaisse', encaisse);
-  ajouter(actifCourt, 'comptesClients', s('comptesClients'));
-  ajouter(actifCourt, 'stocks', s('stocks'));
-  const totalActifCourt = Math.max(0, encaisse) + s('comptesClients') + s('stocks');
+  // Comptes à court terme dont le solde peut être débiteur (actif) ou créditeur (passif).
+  const courants: CompteId[] = [
+    'comptesClients',
+    'stocks',
+    'ctiARecouvrer',
+    'rtiARecouvrer',
+    'comptesFournisseurs',
+    'retenuesAPayer',
+    'cotisationsAPayer',
+    'tpsAPayer',
+    'tvqAPayer',
+    'taxesARegulariser',
+    'impotsAPayer',
+  ];
+  const nomsInverses: Partial<Record<CompteId, string>> = {
+    impotsAPayer: 'Impôts sur le revenu à recevoir (acomptes en trop)',
+    tpsAPayer: 'TPS à recevoir',
+    tvqAPayer: 'TVQ à recevoir',
+  };
+  let totalActifCourt = Math.max(0, encaisse);
+  for (const id of courants) {
+    if (s(id) > 0) {
+      ajouter(actifCourt, id, s(id), PLAN_COMPTABLE[id].classe === 'passif' ? nomsInverses[id] : undefined);
+      totalActifCourt += s(id);
+    }
+  }
 
   const actifLong: LignePoste[] = [];
   ajouter(actifLong, 'depotGarantie', s('depotGarantie'));
@@ -191,20 +221,19 @@ export function bilan(soldes: Soldes, portionCouranteDette: Cents = 0): Bilan {
   const passifCourt: LignePoste[] = [];
   if (encaisse < 0) ajouter(passifCourt, 'encaisse', -encaisse, 'Découvert bancaire');
   ajouter(passifCourt, 'margeCredit', -s('margeCredit'));
-  ajouter(passifCourt, 'comptesFournisseurs', -s('comptesFournisseurs'));
-  ajouter(passifCourt, 'cotisationsAPayer', -s('cotisationsAPayer'));
+  let totalPassifCourt = Math.max(0, -encaisse) - s('margeCredit') + portionCourante;
+  for (const id of courants) {
+    if (s(id) < 0) {
+      ajouter(passifCourt, id, -s(id));
+      totalPassifCourt -= s(id);
+    }
+  }
   ajouter(
     passifCourt,
     'empruntBancaire',
     portionCourante,
     'Portion de la dette à long terme échéant à moins d’un an',
   );
-  const totalPassifCourt =
-    Math.max(0, -encaisse) -
-    s('margeCredit') -
-    s('comptesFournisseurs') -
-    s('cotisationsAPayer') +
-    portionCourante;
 
   const passifLong: LignePoste[] = [];
   ajouter(
@@ -222,7 +251,27 @@ export function bilan(soldes: Soldes, portionCouranteDette: Cents = 0): Bilan {
   }
   const capital = -s('capital');
   const prelevements = s('prelevements');
-  const totalCapitaux = capital + resultatExercice - prelevements;
+  const lignesCapitaux: { libelle: string; montant: number }[] = [];
+  const poste = (libelle: string, montant: Cents) => {
+    if (montant !== 0) lignesCapitaux.push({ libelle, montant: versDollars(montant) });
+  };
+  poste('Capital – propriétaire (début de l’exercice et apports)', capital);
+  poste('Capital – associé', -s('capitalAssocie'));
+  poste('Capital-actions', -s('capitalActions'));
+  poste('Bénéfices non répartis au début de l’exercice', -s('benefNonRepartis'));
+  lignesCapitaux.push({ libelle: 'Bénéfice net de l’exercice', montant: versDollars(resultatExercice) });
+  poste('Moins : prélèvements du propriétaire', -prelevements);
+  poste('Moins : prélèvements de l’associé', -s('prelevementsAssocie'));
+  poste('Moins : dividendes déclarés', -s('dividendes'));
+  const totalCapitaux =
+    capital -
+    s('capitalAssocie') -
+    s('capitalActions') -
+    s('benefNonRepartis') +
+    resultatExercice -
+    prelevements -
+    s('prelevementsAssocie') -
+    s('dividendes');
 
   const totalActif = totalActifCourt + totalActifLong;
   const totalPassif = totalPassifCourt + totalPassifLong;
@@ -239,6 +288,7 @@ export function bilan(soldes: Soldes, portionCouranteDette: Cents = 0): Bilan {
     totalPassifLong: versDollars(totalPassifLong),
     totalPassif: versDollars(totalPassif),
     capitaux: {
+      lignes: lignesCapitaux,
       capital: versDollars(capital),
       beneficeExercice: versDollars(resultatExercice),
       prelevements: versDollars(prelevements),

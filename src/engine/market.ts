@@ -30,6 +30,22 @@ export interface Offre {
   tauxRupture?: number;
   /** Bonus (ou malus) d'utilité lié à l'emplacement (achalandage). */
   bonusEmplacement?: number;
+  /**
+   * Prix payé par le client / prix affiché : 1,14975 si le commerce perçoit la TPS et la TVQ,
+   * 1 pour un petit fournisseur non inscrit. Par défaut : taxes perçues.
+   */
+  facteurPrixClient?: number;
+}
+
+/** Facteur des taxes de vente au Québec (TPS 5 % + TVQ 9,975 %). */
+const FACTEUR_TAXES_MARCHE = 1.14975;
+
+/** Indice du prix payé par le client (taxes comprises) par rapport au marché. */
+export function indicePrixClient(offre: Pick<Offre, 'prix' | 'facteurPrixClient'>, secteur: Secteur, indicePrix = 1): number {
+  return (
+    indicePrixOffre(offre.prix, secteur, indicePrix) *
+    ((offre.facteurPrixClient ?? FACTEUR_TAXES_MARCHE) / FACTEUR_TAXES_MARCHE)
+  );
 }
 
 export interface VenteLigne {
@@ -104,7 +120,7 @@ export function tauxAchatLigne(
 
 export function utiliteOffre(offre: Offre, secteur: Secteur, indicePrix = 1): number {
   const s = secteur.sensibilites;
-  const ip = indicePrixOffre(offre.prix, secteur, indicePrix);
+  const ip = indicePrixClient(offre, secteur, indicePrix);
   const heures = Math.max(1, offre.heuresOuverture) / secteur.heuresOuvertureReference;
   return (
     -s.prix * (ip - 1) +

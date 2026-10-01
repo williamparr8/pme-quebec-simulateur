@@ -152,6 +152,9 @@
       ],
       "stockCibleJoursDefaut": 7,
       "stockInitial": 2400,
+      "partAchatsTaxables": 0.25,
+      "partAchatsTaxablesNote": "Les aliments de base (grains de café, lait, farine) sont détaxés; les emballages, gobelets et produits d'entretien sont taxables.",
+      "alimentation": true,
       "fraisDemarrage": 2500,
       "fraisDemarrageNote": "Permis, immatriculation, enseigne, inauguration, frais juridiques de base.",
       "fraisFixesMensuels": {

@@ -21,7 +21,8 @@ export type GroupeCompte =
   | 'cmv'
   | 'exploitation'
   | 'financieres'
-  | 'amortissement';
+  | 'amortissement'
+  | 'impots';
 
 interface DefinitionCompte {
   numero: string;
@@ -36,6 +37,18 @@ export const PLAN_COMPTABLE = {
   encaisse: { numero: '1000', nom: 'Encaisse', classe: 'actif', groupe: 'actifCourt' },
   comptesClients: { numero: '1100', nom: 'Comptes clients', classe: 'actif', groupe: 'actifCourt' },
   stocks: { numero: '1200', nom: 'Stocks de marchandises', classe: 'actif', groupe: 'actifCourt' },
+  ctiARecouvrer: {
+    numero: '1310',
+    nom: 'TPS à recouvrer (CTI)',
+    classe: 'actif',
+    groupe: 'actifCourt',
+  },
+  rtiARecouvrer: {
+    numero: '1320',
+    nom: 'TVQ à recouvrer (RTI)',
+    classe: 'actif',
+    groupe: 'actifCourt',
+  },
   depotGarantie: {
     numero: '1400',
     nom: 'Dépôt de garantie (bail)',
@@ -76,6 +89,26 @@ export const PLAN_COMPTABLE = {
     classe: 'passif',
     groupe: 'passifCourt',
   },
+  retenuesAPayer: {
+    numero: '2210',
+    nom: 'Retenues à la source à remettre',
+    classe: 'passif',
+    groupe: 'passifCourt',
+  },
+  tpsAPayer: { numero: '2300', nom: 'TPS perçue', classe: 'passif', groupe: 'passifCourt' },
+  tvqAPayer: { numero: '2310', nom: 'TVQ perçue', classe: 'passif', groupe: 'passifCourt' },
+  taxesARegulariser: {
+    numero: '2320',
+    nom: 'Taxes, amendes et intérêts à payer (avis de cotisation)',
+    classe: 'passif',
+    groupe: 'passifCourt',
+  },
+  impotsAPayer: {
+    numero: '2400',
+    nom: 'Impôts sur le revenu à payer',
+    classe: 'passif',
+    groupe: 'passifCourt',
+  },
   empruntBancaire: {
     numero: '2500',
     nom: 'Emprunt bancaire',
@@ -88,9 +121,39 @@ export const PLAN_COMPTABLE = {
     classe: 'capitaux',
     groupe: 'capitaux',
   },
+  capitalAssocie: {
+    numero: '3010',
+    nom: 'Capital – associé',
+    classe: 'capitaux',
+    groupe: 'capitaux',
+  },
+  capitalActions: {
+    numero: '3050',
+    nom: 'Capital-actions',
+    classe: 'capitaux',
+    groupe: 'capitaux',
+  },
   prelevements: {
     numero: '3100',
     nom: 'Prélèvements du propriétaire',
+    classe: 'capitaux',
+    groupe: 'capitaux',
+  },
+  prelevementsAssocie: {
+    numero: '3110',
+    nom: 'Prélèvements de l’associé',
+    classe: 'capitaux',
+    groupe: 'capitaux',
+  },
+  benefNonRepartis: {
+    numero: '3200',
+    nom: 'Bénéfices non répartis',
+    classe: 'capitaux',
+    groupe: 'capitaux',
+  },
+  dividendes: {
+    numero: '3300',
+    nom: 'Dividendes déclarés',
     classe: 'capitaux',
     groupe: 'capitaux',
   },
@@ -123,6 +186,12 @@ export const PLAN_COMPTABLE = {
   recrutement: {
     numero: '5120',
     nom: 'Frais de recrutement',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  salaireDirigeant: {
+    numero: '5130',
+    nom: 'Salaire du dirigeant',
     classe: 'charge',
     groupe: 'exploitation',
   },
@@ -176,6 +245,24 @@ export const PLAN_COMPTABLE = {
     classe: 'charge',
     groupe: 'exploitation',
   },
+  droitsPermis: {
+    numero: '5460',
+    nom: 'Droits, permis et immatriculation',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  amendes: {
+    numero: '5470',
+    nom: 'Amendes et pénalités (non déductibles)',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  sinistres: {
+    numero: '5480',
+    nom: 'Pertes non assurées',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
   interets: {
     numero: '5500',
     nom: 'Intérêts et frais financiers',
@@ -187,6 +274,12 @@ export const PLAN_COMPTABLE = {
     nom: 'Amortissement des immobilisations',
     classe: 'charge',
     groupe: 'amortissement',
+  },
+  impots: {
+    numero: '5800',
+    nom: 'Impôts sur le revenu',
+    classe: 'charge',
+    groupe: 'impots',
   },
 } as const satisfies Record<string, DefinitionCompte>;
 
@@ -206,9 +299,12 @@ export const FLUX = {
   paiementsFournisseurs: { nom: 'Paiements aux fournisseurs', activite: 'exploitation' },
   salairesVerses: { nom: 'Salaires versés', activite: 'exploitation' },
   remisesGouvernementales: {
-    nom: 'Remises aux gouvernements (cotisations)',
+    nom: 'Remises de retenues et cotisations (DAS)',
     activite: 'exploitation',
   },
+  remisesTaxes: { nom: 'Remises nettes de TPS et de TVQ', activite: 'exploitation' },
+  impotsPayes: { nom: 'Impôts sur le revenu payés', activite: 'exploitation' },
+  droitsEtAmendes: { nom: 'Droits, permis, amendes et sinistres', activite: 'exploitation' },
   loyerEtFrais: { nom: 'Loyer et frais d’exploitation', activite: 'exploitation' },
   publicite: { nom: 'Publicité et recrutement', activite: 'exploitation' },
   fraisBancaires: { nom: 'Frais bancaires et de cartes', activite: 'exploitation' },
@@ -220,8 +316,9 @@ export const FLUX = {
     activite: 'investissement',
   },
   depotGarantie: { nom: 'Dépôt de garantie versé', activite: 'investissement' },
-  apportsProprietaire: { nom: 'Apports du propriétaire', activite: 'financement' },
-  prelevementsProprietaire: { nom: 'Prélèvements du propriétaire', activite: 'financement' },
+  apportsProprietaire: { nom: 'Apports des propriétaires et émission d’actions', activite: 'financement' },
+  prelevementsProprietaire: { nom: 'Prélèvements des propriétaires', activite: 'financement' },
+  dividendesVerses: { nom: 'Dividendes versés', activite: 'financement' },
   empruntsRecus: { nom: 'Emprunts obtenus', activite: 'financement' },
   remboursementsEmprunts: { nom: 'Remboursement du capital des emprunts', activite: 'financement' },
   margeCredit: { nom: 'Variation de la marge de crédit', activite: 'financement' },
@@ -359,11 +456,17 @@ export function ouvrirNouveauMois(livre: GrandLivre): void {
   livre.ecrituresMois = [];
 }
 
+/** Comment les capitaux propres sont structurés selon la forme juridique. */
+export type TypeCapitaux = 'proprietaire' | 'associes' | 'actions';
+
 /**
- * Clôture de l'exercice d'une entreprise individuelle : les produits, les charges
- * et les prélèvements sont virés au compte Capital. La somme des soldes reste nulle.
+ * Clôture de l'exercice : les produits et les charges sont virés aux capitaux propres.
+ * - Entreprise individuelle : au capital du propriétaire (avec les prélèvements).
+ * - Société de personnes : réparti entre les associés selon `partAssocie`.
+ * - Société par actions : aux bénéfices non répartis (avec les dividendes).
+ * La somme des soldes reste nulle. Retourne le résultat de l'exercice (cents).
  */
-export function cloturerExercice(livre: GrandLivre): Cents {
+export function cloturerExercice(livre: GrandLivre, type: TypeCapitaux = 'proprietaire', partAssocie = 0): Cents {
   let resultat = 0;
   for (const id of COMPTES) {
     const def = PLAN_COMPTABLE[id];
@@ -372,9 +475,29 @@ export function cloturerExercice(livre: GrandLivre): Cents {
       livre.soldes[id] = 0;
     }
   }
-  // Bénéfice (résultat > 0) : il augmente le capital, qui a un solde créditeur (négatif).
-  livre.soldes.capital -= resultat;
-  livre.soldes.capital += livre.soldes.prelevements;
-  livre.soldes.prelevements = 0;
+  const s = livre.soldes;
+  // Un bénéfice (résultat > 0) augmente un compte de capitaux, qui a un solde créditeur (négatif).
+  if (type === 'actions') {
+    s.benefNonRepartis -= resultat;
+    s.benefNonRepartis += s.dividendes;
+    s.dividendes = 0;
+  } else {
+    const partDeLAssocie = type === 'associes' ? Math.round(resultat * partAssocie) : 0;
+    s.capitalAssocie -= partDeLAssocie;
+    s.capital -= resultat - partDeLAssocie;
+    s.capitalAssocie += s.prelevementsAssocie;
+    s.prelevementsAssocie = 0;
+  }
+  s.capital += s.prelevements;
+  s.prelevements = 0;
   return resultat;
+}
+
+/** Virement du capital du propriétaire au capital-actions lors de l'incorporation (roulement). */
+export function convertirEnCapitalActions(livre: GrandLivre): Cents {
+  const montant = -(livre.soldes.capital + livre.soldes.capitalAssocie);
+  livre.soldes.capitalActions += livre.soldes.capital + livre.soldes.capitalAssocie;
+  livre.soldes.capital = 0;
+  livre.soldes.capitalAssocie = 0;
+  return montant;
 }

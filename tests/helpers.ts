@@ -1,17 +1,24 @@
 import { secteurParId } from '../src/data';
 import { Rng } from '../src/engine/rng';
+import { IDS_DEMARCHES } from '../src/engine/conformite';
 import {
+  changerFrequenceTaxes,
   congedier,
   creerPartie,
   embaucher,
+  inscrireTaxes,
   modifierDecisions,
   modifierHeuresEmploye,
+  planifierIncorporation,
+  produireMiseAJourAnnuelle,
+  regulariserDemarche,
   simulerMois,
 } from '../src/engine/simulation';
 import type {
   ConfigPartie,
   DureePartie,
   EtatPartie,
+  FormeJuridique,
   ParametresDemarrage,
 } from '../src/engine/types';
 
@@ -39,6 +46,11 @@ export const DEMARRAGE_TEST: ParametresDemarrage = {
   amenagementId: 'chaleureux',
   apportPersonnel: 45_000,
   montantPret: 85_000,
+  formeJuridique: 'individuelle',
+  nomAssocie: '',
+  apportAssocie: 0,
+  demarches: ['req', 'retenues', 'cnesst', 'permisMunicipal', 'mapaq', 'assurances', 'compteBancaire', 'francisation'],
+  inscritTaxes: true,
 };
 
 export function nouvellePartie(
@@ -75,12 +87,37 @@ export function tourAleatoire(etat: EtatPartie, rng: Rng): EtatPartie {
   if (e.entreprises[0].employes.length > 0 && rng.chance(0.2)) {
     e = modifierHeuresEmploye(e, ent.id, rng.pick(e.entreprises[0].employes).id, rng.int(5, 50));
   }
+  // Jalon 2 : rémunération d'une société, taxes, démarches et obligations
+  e = modifierDecisions(e, ent.id, {
+    salaireDirigeant: rng.chance(0.7) ? rng.int(0, 6000) : 0,
+    dividendePonctuel: rng.chance(0.08) ? rng.int(500, 15000) : 0,
+  });
+  if (rng.chance(0.05)) e = inscrireTaxes(e, ent.id);
+  if (rng.chance(0.05)) e = changerFrequenceTaxes(e, ent.id, rng.pick(['mensuelle', 'trimestrielle', 'annuelle'] as const));
+  if (rng.chance(0.05)) e = regulariserDemarche(e, ent.id, rng.pick(IDS_DEMARCHES));
+  if (rng.chance(0.1)) e = produireMiseAJourAnnuelle(e, ent.id);
+  if (rng.chance(0.03)) e = planifierIncorporation(e, ent.id, rng.pick(['inc-qc', 'inc-federal'] as const));
   return simulerMois(e);
+}
+
+const FORMES: FormeJuridique[] = ['individuelle', 'senc', 'sec', 'inc-qc', 'inc-federal'];
+
+/** Paramètres de démarrage variés selon la graine (forme juridique, démarches, inscription aux taxes). */
+export function demarrageVarie(graine: number): ParametresDemarrage {
+  const forme = FORMES[graine % FORMES.length];
+  return {
+    ...DEMARRAGE_TEST,
+    formeJuridique: forme,
+    nomAssocie: 'Sam Roy',
+    apportAssocie: forme === 'senc' || forme === 'sec' ? 20_000 : 0,
+    demarches: IDS_DEMARCHES.filter((_, i) => (graine >> i) % 2 === 0 || graine % 4 === 0),
+    inscritTaxes: graine % 3 !== 0,
+  };
 }
 
 export function jouerAleatoirement(graine: number, mois: DureePartie): EtatPartie {
   const rng = new Rng(graine * 7919 + 13);
-  let etat = nouvellePartie(graine, mois);
+  let etat = creerPartie(configTest(graine, mois), demarrageVarie(graine));
   while (!etat.terminee) etat = tourAleatoire(etat, rng);
   return etat;
 }

@@ -32,6 +32,110 @@ export interface ParametresDemarrage {
   apportPersonnel: number;
   /** Prêt bancaire de démarrage demandé ($). */
   montantPret: number;
+  formeJuridique: FormeJuridique;
+  /** Société de personnes : nom et apport de l'associé ($). */
+  nomAssocie: string;
+  apportAssocie: number;
+  /** Démarches de démarrage faites avant l'ouverture. */
+  demarches: IdDemarche[];
+  /** Inscription aux fichiers de la TPS et de la TVQ dès l'ouverture. */
+  inscritTaxes: boolean;
+}
+
+/**
+ * Formes juridiques simulées :
+ * - individuelle : entreprise individuelle
+ * - senc : société en nom collectif (associés solidairement responsables)
+ * - sec : société en commandite (commandité responsable, commanditaire limité à son apport)
+ * - inc-qc / inc-federal : société par actions (Loi sur les sociétés par actions du Québec / LCSA)
+ */
+export type FormeJuridique = 'individuelle' | 'senc' | 'sec' | 'inc-qc' | 'inc-federal';
+
+export const FORMES_SOCIETE_PERSONNES: readonly FormeJuridique[] = ['senc', 'sec'];
+export const FORMES_SOCIETE_ACTIONS: readonly FormeJuridique[] = ['inc-qc', 'inc-federal'];
+
+export type IdDemarche =
+  | 'req'
+  | 'retenues'
+  | 'cnesst'
+  | 'permisMunicipal'
+  | 'mapaq'
+  | 'assurances'
+  | 'compteBancaire'
+  | 'francisation';
+
+export type FrequenceTaxes = 'mensuelle' | 'trimestrielle' | 'annuelle';
+
+/** Cumul annuel de la paie d'un salarié (pour les relevés T4 et RL-1). */
+export interface CumulPaie {
+  nom: string;
+  brut: number;
+  impotFederal: number;
+  impotQuebec: number;
+  rrq: number;
+  rqap: number;
+  assuranceEmploi: number;
+}
+
+/** Résumé des déclarations de fin d'exercice. */
+export interface DeclarationAnnuelle {
+  annee: number;
+  forme: FormeJuridique;
+  /** Bénéfice comptable avant impôts sur le revenu. */
+  beneficeComptable: number;
+  amortissementComptable: number;
+  /** Déduction pour amortissement (fiscale). */
+  dpa: number;
+  /** Dépenses non déductibles (amendes et pénalités). */
+  nonDeductibles: number;
+  /** Revenu net d'entreprise selon les règles fiscales. */
+  revenuFiscal: number;
+  pertesUtilisees: number;
+  pertesReportees: number;
+  heuresRemunerees: number;
+  /** Société par actions (T2 et CO-17). */
+  societe?: { revenuImposable: number; facteurDpeQuebec: number; impotFederal: number; impotQuebec: number; total: number; acomptesVerses: number; solde: number };
+  /** Propriétaire (T1 et TP-1) : revenu d'entreprise ou salaire et dividendes. */
+  personnel: {
+    revenuEntreprise: number;
+    salaire: number;
+    dividendes: number;
+    impotFederal: number;
+    impotQuebec: number;
+    cotisations: number;
+    total: number;
+  };
+  /** Relevés T4 et RL-1 produits pour les salariés. */
+  feuillets: CumulPaie[];
+  taxes: { tpsPercue: number; tvqPercue: number; cti: number; rti: number };
+}
+
+export interface EtatFiscal {
+  inscritTaxes: boolean;
+  frequenceTaxes: FrequenceTaxes;
+  /** Ventes taxables des 12 derniers mois (pour le seuil du petit fournisseur). */
+  ventesTaxablesMois: number[];
+  /** L'inscription aux taxes est devenue obligatoire (seuil de 30 000 $ dépassé). */
+  doitSInscrire: boolean;
+  /** Ventes faites sans percevoir les taxes alors que l'inscription était obligatoire. */
+  ventesNonTaxees: number;
+  /** Fraction non amortie du coût en capital (FNACC), en dollars. */
+  uccEquipement: number;
+  uccAmeliorations: number;
+  coutAmeliorations: number;
+  pertesReportees: number;
+  /** Acompte provisionnel mensuel d'impôt (société). */
+  acompteMensuel: number;
+  acomptesVersesAnnee: number;
+  /** Solde d'impôt de l'exercice précédent à payer (positif) ou à recevoir (négatif), réglé en mars. */
+  soldeImpotAPayer: number;
+  heuresRemunereesAnnee: number;
+  paieAnnee: Record<string, CumulPaie>;
+  taxesAnnee: { tpsPercue: number; tvqPercue: number; cti: number; rti: number };
+  declarations: DeclarationAnnuelle[];
+  /** Années pour lesquelles la déclaration de mise à jour annuelle du REQ a été produite. */
+  majAnnuelles: number[];
+  incorporationPrevue: 'inc-qc' | 'inc-federal' | null;
 }
 
 /** Décisions modifiables à chaque tour. Elles restent en vigueur d'un mois à l'autre. */
@@ -57,6 +161,10 @@ export interface Decisions {
   apportPonctuel: number;
   /** Remboursement anticipé de l'emprunt ce mois-ci ($, remis à 0 après le mois). */
   remboursementAnticipe: number;
+  /** Société par actions : salaire brut mensuel du dirigeant ($). */
+  salaireDirigeant: number;
+  /** Société par actions : dividende versé ce mois-ci ($, remis à 0 après le mois). */
+  dividendePonctuel: number;
 }
 
 export interface Employe {
@@ -164,7 +272,12 @@ export interface Entreprise {
   nom: string;
   proprietaire: string;
   couleur: string;
-  formeJuridique: 'individuelle';
+  formeJuridique: FormeJuridique;
+  /** Société de personnes : l'associé et sa part des bénéfices (0 à 1). */
+  associe: { nom: string; part: number } | null;
+  /** Démarches de démarrage faites (vrai) ou oubliées (faux). */
+  demarches: Record<IdDemarche, boolean>;
+  fiscal: EtatFiscal;
   emplacementId: string;
   equipementId: string;
   amenagementId: string;
@@ -185,6 +298,8 @@ export interface Entreprise {
   moisEnDefaut: number;
   enFaillite: boolean;
   prochainIdEmploye: number;
+  /** Jours de fermeture forcée ce mois-ci (inspection, ordonnance). */
+  joursFermeture: number;
 }
 
 export interface EtatPartie {

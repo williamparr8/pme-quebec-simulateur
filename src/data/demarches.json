@@ -1,0 +1,99 @@
+{
+  "_meta": {
+    "description": "Démarches de démarrage d'une PME au Québec. Une démarche obligatoire oubliée peut être découverte chaque mois (probabilité), ce qui entraîne une amende, parfois une fermeture temporaire, puis la régularisation forcée.",
+    "avertissement": "Les coûts des permis et les montants des amendes sont des estimations pédagogiques (À VÉRIFIER) : ils varient selon la municipalité et la gravité de l'infraction."
+  },
+  "demarches": [
+    {
+      "id": "req",
+      "nom": "Immatriculation au Registraire des entreprises (REQ)",
+      "description": "Obligatoire si l'entreprise porte un autre nom que celui du propriétaire, et pour toute société. Tu obtiens ton NEQ (numéro d'entreprise du Québec).",
+      "cout": 0,
+      "coutSelonForme": true,
+      "obligation": "toujours",
+      "probabiliteDetection": 0.12,
+      "amende": 500,
+      "joursFermeture": 0,
+      "organisme": "Registraire des entreprises du Québec"
+    },
+    {
+      "id": "retenues",
+      "nom": "Numéros de retenues à la source (Revenu Québec et ARC)",
+      "description": "Obligatoire dès qu'on verse un salaire : il faut retenir l'impôt et les cotisations des employés et les remettre chaque mois.",
+      "cout": 0,
+      "obligation": "employes",
+      "probabiliteDetection": 0.15,
+      "amende": 1000,
+      "joursFermeture": 0,
+      "organisme": "Revenu Québec et Agence du revenu du Canada"
+    },
+    {
+      "id": "cnesst",
+      "nom": "Inscription à la CNESST",
+      "description": "Obligatoire dans les 14 jours suivant l'embauche du premier employé. Elle assure les travailleurs en cas d'accident du travail.",
+      "cout": 0,
+      "obligation": "employes",
+      "probabiliteDetection": 0.1,
+      "amende": 1500,
+      "joursFermeture": 0,
+      "organisme": "CNESST"
+    },
+    {
+      "id": "permisMunicipal",
+      "nom": "Certificat d'occupation et zonage (municipalité)",
+      "description": "La ville vérifie que l'usage du local est permis par le zonage et que le local respecte les normes.",
+      "cout": 450,
+      "obligation": "toujours",
+      "probabiliteDetection": 0.1,
+      "amende": 1000,
+      "joursFermeture": 3,
+      "organisme": "Ville de Montréal"
+    },
+    {
+      "id": "mapaq",
+      "nom": "Permis de restauration du MAPAQ",
+      "description": "Obligatoire pour préparer et servir des aliments. L'inspecteur vérifie l'hygiène et la salubrité.",
+      "cout": 380,
+      "obligation": "alimentation",
+      "probabiliteDetection": 0.15,
+      "amende": 1500,
+      "joursFermeture": 7,
+      "organisme": "MAPAQ"
+    },
+    {
+      "id": "assurances",
+      "nom": "Assurances (responsabilité civile, biens, interruption d'affaires)",
+      "description": "Facultatif, mais essentiel : sans assurance, un accident de client ou un dégât d'eau est payé de ta poche. Le coût mensuel est inclus dans tes frais fixes.",
+      "cout": 0,
+      "obligation": "facultative",
+      "probabiliteDetection": 0.02,
+      "amende": 0,
+      "sinistre": [6000, 25000],
+      "joursFermeture": 0,
+      "organisme": "Assureur"
+    },
+    {
+      "id": "compteBancaire",
+      "nom": "Compte bancaire d'entreprise distinct",
+      "description": "Facultatif pour une entreprise individuelle, mais fortement recommandé : mélanger les dépenses personnelles et d'affaires complique la comptabilité et attire les vérifications fiscales.",
+      "cout": 0,
+      "obligation": "facultative",
+      "probabiliteDetection": 0,
+      "amende": 0,
+      "fraisComptablesSupplementaires": 120,
+      "joursFermeture": 0,
+      "organisme": "Institution financière"
+    },
+    {
+      "id": "francisation",
+      "nom": "Respect de la Charte de la langue française",
+      "description": "Affichage, menu, emballages et site Web en français (le français doit être nettement prédominant sur l'affichage). Coût : traduction et enseigne conforme.",
+      "cout": 300,
+      "obligation": "toujours",
+      "probabiliteDetection": 0.05,
+      "amende": 3000,
+      "joursFermeture": 0,
+      "organisme": "Office québécois de la langue française (OQLF)"
+    }
+  ]
+}
