@@ -6,25 +6,70 @@
 import { DPA, IMPOT_SOCIETES } from '../data/fiscalite';
 import { ecritureSimple, type GrandLivre, type Mouvements } from './accounting';
 import { estSocieteActions } from './conformite';
+import type { ClasseDpa } from './data-types';
 import { etatResultats } from './statements';
 import { impotPersonnel, impotSociete } from './tax';
-import type { DeclarationAnnuelle, Entreprise } from './types';
+import type { DeclarationAnnuelle, Entreprise, EtatFiscal } from './types';
 import { versCents } from './util';
 
 const arrondi = (x: number): number => Math.round(x * 100) / 100;
 
-/** DPA de l'année. Biens acquis avant 2028 : incitatif à l'investissement accéléré (pas de demi-année). */
-export function calculerDpa(
-  uccEquipement: number,
-  uccAmeliorations: number,
+export const CLASSES_DPA: readonly ClasseDpa[] = ['8', '10', '12', '13', '50'];
+
+/** Ajoute une acquisition à la FNACC de sa catégorie. */
+export function ajouterAcquisition(f: EtatFiscal, classe: ClasseDpa, cout: number): void {
+  f.fnacc[classe] = arrondi((f.fnacc[classe] ?? 0) + cout);
+  f.ajoutsAnnee[classe] = arrondi((f.ajoutsAnnee[classe] ?? 0) + cout);
+  if (classe === '13') f.coutAmeliorations = arrondi(f.coutAmeliorations + cout);
+}
+
+/**
+ * DPA d'une catégorie pour l'année. Catégories dégressives : taux × (FNACC sans les ajouts
+ * + facteur × ajouts de l'année). Catégorie 13 : coût / durée du bail (avec le même facteur
+ * la première année). Le facteur vient de l'incitatif à l'investissement accéléré.
+ */
+export function dpaClasse(
+  classe: ClasseDpa,
+  fnacc: number,
+  ajouts: number,
+  annee: number,
   coutAmeliorations: number,
   dureeBailAnnees: number,
-): { equipement: number; ameliorations: number; total: number } {
-  const equipement = arrondi(Math.max(0, uccEquipement) * DPA.equipement.taux);
-  const ameliorations = arrondi(
-    Math.min(Math.max(0, uccAmeliorations), coutAmeliorations / Math.max(1, dureeBailAnnees)),
-  );
-  return { equipement, ameliorations, total: arrondi(equipement + ameliorations) };
+): number {
+  const facteur = DPA.facteurPremiereAnnee(annee);
+  const base = Math.max(0, fnacc - ajouts);
+  if (classe === '13') {
+    const annuel = (coutAmeliorations - ajouts) / Math.max(1, dureeBailAnnees);
+    const premiere = (ajouts / Math.max(1, dureeBailAnnees)) * facteur;
+    return arrondi(Math.min(Math.max(0, fnacc), Math.max(0, annuel) + premiere));
+  }
+  const taux = DPA.taux[classe];
+  return arrondi(Math.min(Math.max(0, fnacc), taux * (base + facteur * ajouts)));
+}
+
+/** DPA de toutes les catégories (sans modifier la FNACC). */
+export function calculerDpa(
+  f: Pick<EtatFiscal, 'fnacc' | 'ajoutsAnnee' | 'coutAmeliorations'>,
+  annee: number,
+  dureeBailAnnees: number,
+): { parClasse: Partial<Record<ClasseDpa, number>>; total: number } {
+  const parClasse: Partial<Record<ClasseDpa, number>> = {};
+  let total = 0;
+  for (const c of CLASSES_DPA) {
+    const fnacc = f.fnacc[c] ?? 0;
+    if (fnacc <= 0) continue;
+    const d = dpaClasse(
+      c,
+      fnacc,
+      f.ajoutsAnnee[c] ?? 0,
+      annee,
+      f.coutAmeliorations,
+      dureeBailAnnees,
+    );
+    parClasse[c] = d;
+    total += d;
+  }
+  return { parClasse, total: arrondi(total) };
 }
 
 /**
@@ -41,14 +86,10 @@ export function finExerciceFiscal(
   const f = ent.fiscal;
   const r = etatResultats(mouvementsAnnee);
   const nonDeductibles = (mouvementsAnnee.amendes ?? 0) / 100;
-  const dpa = calculerDpa(
-    f.uccEquipement,
-    f.uccAmeliorations,
-    f.coutAmeliorations,
-    ent.bail.dureeMois / 12,
-  );
-  f.uccEquipement = arrondi(f.uccEquipement - dpa.equipement);
-  f.uccAmeliorations = arrondi(f.uccAmeliorations - dpa.ameliorations);
+  const dpa = calculerDpa(f, annee, ent.bail.dureeMois / 12);
+  for (const [c, d] of Object.entries(dpa.parClasse) as [ClasseDpa, number][])
+    f.fnacc[c] = arrondi((f.fnacc[c] ?? 0) - d);
+  f.ajoutsAnnee = {};
   const revenuFiscal = arrondi(r.beneficeAvantImpot + r.amortissement + nonDeductibles - dpa.total);
 
   const feuillets = Object.values(f.paieAnnee);
@@ -59,6 +100,7 @@ export function finExerciceFiscal(
     beneficeComptable: r.beneficeAvantImpot,
     amortissementComptable: r.amortissement,
     dpa: dpa.total,
+    dpaParClasse: dpa.parClasse,
     nonDeductibles,
     revenuFiscal,
     pertesUtilisees: 0,
@@ -110,8 +152,11 @@ export function finExerciceFiscal(
     };
     f.soldeImpotAPayer = solde;
     f.acompteMensuel = impot.total > IMPOT_SOCIETES.seuilAcomptes ? arrondi(impot.total / 12) : 0;
+    // Le fondateur ne reçoit que sa part des dividendes (les autres actionnaires, la leur).
+    const partFondateur =
+      ent.finance.actionnaires.find((a) => a.type === 'fondateur')?.part ?? 1;
     const salaire = f.paieAnnee.dirigeant?.brut ?? 0;
-    const dividendes = livre.soldes.dividendes / 100;
+    const dividendes = arrondi((livre.soldes.dividendes / 100) * partFondateur);
     const perso = impotPersonnel({ emploi: salaire, dividendesNonDetermines: dividendes });
     declaration.personnel = {
       revenuEntreprise: 0,

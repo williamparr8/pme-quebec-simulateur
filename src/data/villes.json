@@ -21,6 +21,7 @@
       "population": 1762949,
       "indiceSalaires": 1.0,
       "penurieMainOeuvre": 0.5,
+      "fondsLocal": "PME MTL",
       "marchePotentielMensuel": {
         "cafe": 21000
       },

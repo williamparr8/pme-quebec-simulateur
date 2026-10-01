@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "description": "Personas (segments de clientèle). Les sensibilités multiplient celles du secteur : 1 = client moyen, 1,5 = 50 % plus sensible.",
+    "avertissement": "Estimations de conception inspirées des profils de consommateurs québécois; à adapter selon les études locales. Voir DECISIONS.md."
+  },
+  "personas": [
+    {
+      "id": "etudiants",
+      "nom": "Étudiants",
+      "description": "Cégépiens et universitaires : budget serré, viennent étudier entre amis, très présents sur TikTok et Instagram, sensibles à l'environnement.",
+      "sensibilites": { "prix": 1.45, "qualite": 0.8, "service": 0.8, "ambiance": 1.35, "heures": 1.2, "eco": 1.5, "local": 0.8 },
+      "numerique": 1.4
+    },
+    {
+      "id": "familles",
+      "nom": "Jeunes familles",
+      "description": "Parents avec de jeunes enfants : sorties de fin de semaine, achètent des viennoiseries, lisent les circulaires et Facebook, aiment l'achat local.",
+      "sensibilites": { "prix": 1.15, "qualite": 1.0, "service": 0.9, "ambiance": 1.0, "heures": 0.8, "eco": 1.1, "local": 1.2 },
+      "numerique": 1.0
+    },
+    {
+      "id": "professionnels",
+      "nom": "Professionnels",
+      "description": "Travailleurs des bureaux voisins : pressés le matin et le midi, peu sensibles au prix, exigent un service rapide et une bonne qualité.",
+      "sensibilites": { "prix": 0.6, "qualite": 1.2, "service": 1.45, "ambiance": 0.8, "heures": 1.2, "eco": 0.8, "local": 0.8 },
+      "numerique": 1.3
+    },
+    {
+      "id": "retraites",
+      "nom": "Retraités",
+      "description": "Clients fidèles du quartier : viennent en matinée, apprécient le service et l'achat local, lisent le journal de quartier.",
+      "sensibilites": { "prix": 1.05, "qualite": 1.15, "service": 1.2, "ambiance": 1.0, "heures": 0.6, "eco": 0.7, "local": 1.5 },
+      "numerique": 0.4
+    }
+  ]
+}

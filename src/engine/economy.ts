@@ -2,7 +2,7 @@
  * Conjoncture économique : taux directeur de la Banque du Canada, inflation,
  * indice des prix des fournisseurs et confiance des consommateurs.
  */
-import { TAUX_INTERET } from '../data/fiscalite';
+import { TAUX_CHANGE, TAUX_INTERET } from '../data/fiscalite';
 import type { Rng } from './rng';
 import { borner, lisser } from './util';
 
@@ -21,6 +21,8 @@ export interface Conjoncture {
   phase: PhaseEconomique;
   /** Variation du taux directeur annoncée ce mois-ci (0 si aucune). */
   derniereVariation: number;
+  /** Dollars canadiens pour 1 $ US. */
+  tauxChange: number;
 }
 
 export function conjonctureInitiale(): Conjoncture {
@@ -32,6 +34,7 @@ export function conjonctureInitiale(): Conjoncture {
     confiance: 1,
     phase: 'stable',
     derniereVariation: 0,
+    tauxChange: TAUX_CHANGE.usdCadInitial,
   };
 }
 
@@ -75,6 +78,14 @@ export function evoluerConjoncture(c: Conjoncture, mois: number, rng: Rng): Conj
   const phase: PhaseEconomique =
     confiance > 1.03 ? 'expansion' : confiance < 0.96 ? 'ralentissement' : 'stable';
 
+  // Taux de change : marche aléatoire qui revient lentement vers le taux de référence.
+  const tauxChange = borner(
+    lisser(c.tauxChange ?? TAUX_CHANGE.usdCadInitial, TAUX_CHANGE.reference, 0.05) +
+      rng.normal(0, 0.012),
+    TAUX_CHANGE.bornes.min,
+    TAUX_CHANGE.bornes.max,
+  );
+
   return {
     tauxDirecteur: Math.round(tauxDirecteur * 10000) / 10000,
     inflationAnnuelle: inflation,
@@ -83,5 +94,6 @@ export function evoluerConjoncture(c: Conjoncture, mois: number, rng: Rng): Conj
     confiance,
     phase,
     derniereVariation,
+    tauxChange: Math.round(tauxChange * 10000) / 10000,
   };
 }

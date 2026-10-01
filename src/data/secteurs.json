@@ -11,9 +11,14 @@
         "url": "https://www.restaurantscanada.org/",
         "verifie": "2026-09-30",
         "note": "Repères généraux de l'industrie (coût des aliments, main-d'œuvre)."
+      },
+      {
+        "url": "https://www.canada.ca/fr/agence-revenu/services/impot/entreprises/sujets/entreprise-individuelle-societe-personnes/declarer-revenus-depenses-entreprise/reclamer-deduction-amortissement/categories-biens-amortissables.html",
+        "verifie": "2026-10-01",
+        "note": "Catégories de DPA des investissements : 8 (équipement, 20 %), 10 (véhicules, 30 %), 12 (logiciels, 100 %), 13 (améliorations locatives), 50 (matériel informatique, 55 %)."
       }
     ],
-    "avertissement": "Les paramètres de demande (sensibilités, taux d'achat, saisonnalité) sont des estimations de conception calibrées pour donner des résultats plausibles. Voir DECISIONS.md."
+    "avertissement": "Les paramètres de demande (sensibilités, taux d'achat, saisonnalité, personas) et les effets des investissements sont des estimations de conception calibrées pour donner des résultats plausibles. Voir DECISIONS.md."
   },
   "secteurs": [
     {
@@ -34,7 +39,11 @@
           "coutUnitaire": 1.3,
           "tauxAchat": 0.92,
           "elasticite": 0.6,
-          "perissable": false
+          "perissable": false,
+          "conservationJours": 30,
+          "cuisine": false,
+          "unite": "boisson",
+          "categorieAppro": "boissons"
         },
         {
           "id": "viennoiseries",
@@ -44,7 +53,11 @@
           "coutUnitaire": 1.45,
           "tauxAchat": 0.38,
           "elasticite": 1.0,
-          "perissable": true
+          "perissable": true,
+          "conservationJours": 2,
+          "cuisine": false,
+          "unite": "viennoiserie",
+          "categorieAppro": "boulangerie"
         },
         {
           "id": "repas",
@@ -54,35 +67,39 @@
           "coutUnitaire": 4.4,
           "tauxAchat": 0.22,
           "elasticite": 1.2,
-          "perissable": true
+          "perissable": true,
+          "conservationJours": 4,
+          "cuisine": true,
+          "unite": "repas",
+          "categorieAppro": "cuisine"
         }
       ],
       "qualites": [
         {
           "id": "economique",
           "nom": "Économique",
-          "description": "Café d'entrée de gamme, produits surgelés industriels.",
+          "description": "Café d'entrée de gamme, recettes simples, portions standard.",
           "multiplicateurCout": 0.8,
           "score": 0.35
         },
         {
           "id": "standard",
           "nom": "Standard",
-          "description": "Café de torréfacteur régional, viennoiseries d'une boulangerie locale.",
+          "description": "Café de torréfacteur, recettes maison simples.",
           "multiplicateurCout": 1.0,
           "score": 0.55
         },
         {
           "id": "superieure",
           "nom": "Supérieure",
-          "description": "Café de spécialité, produits frais faits sur place.",
+          "description": "Café de spécialité, produits frais préparés sur place.",
           "multiplicateurCout": 1.2,
           "score": 0.72
         },
         {
           "id": "artisanale",
           "nom": "Artisanale et biologique",
-          "description": "Café équitable et biologique, ingrédients locaux haut de gamme.",
+          "description": "Café équitable et biologique, ingrédients haut de gamme.",
           "multiplicateurCout": 1.45,
           "score": 0.88
         }
@@ -90,6 +107,7 @@
       "saisonnalite": [1.0, 0.97, 1.0, 0.98, 0.99, 0.95, 0.86, 0.9, 1.04, 1.06, 1.06, 1.08],
       "saisonnaliteNote": "Index de janvier à décembre. Creux en juillet (vacances de la construction, étudiants absents), sommet à l'automne et à Noël.",
       "transactionsParHeureEmploye": 6.5,
+      "unitesCuisineParHeure": 12,
       "heuresOuvertureReference": 84,
       "sensibilites": {
         "prix": 2.5,
@@ -97,9 +115,37 @@
         "service": 1.0,
         "note": 0.5,
         "ambiance": 0.6,
-        "heures": 0.6
+        "heures": 0.6,
+        "eco": 0.4,
+        "local": 0.35
       },
       "utiliteAlternative": 0.45,
+      "visitesParClientMois": 4,
+      "partLivraison": 0.08,
+      "partLivraisonNote": "Estimation : environ 8 % des repas et boissons commandés par une plateforme de livraison dans un quartier urbain.",
+      "panierLivraison": { "boissons": 0.6, "viennoiseries": 0.7, "repas": 1.9, "brunch": 1.5, "bolsSante": 1.8, "boissonsFroides": 0.8 },
+      "segments": [
+        {
+          "personaId": "etudiants",
+          "part": 0.24,
+          "panier": { "boissons": 1.0, "viennoiseries": 0.9, "repas": 0.6 }
+        },
+        {
+          "personaId": "familles",
+          "part": 0.2,
+          "panier": { "boissons": 0.85, "viennoiseries": 1.45, "repas": 1.0 }
+        },
+        {
+          "personaId": "professionnels",
+          "part": 0.36,
+          "panier": { "boissons": 1.1, "viennoiseries": 0.8, "repas": 1.4 }
+        },
+        {
+          "personaId": "retraites",
+          "part": 0.2,
+          "panier": { "boissons": 0.95, "viennoiseries": 1.15, "repas": 0.85 }
+        }
+      ],
       "superficiePi2": 1200,
       "equipements": [
         {
@@ -150,13 +196,12 @@
           "ambiance": 0.85
         }
       ],
-      "stockCibleJoursDefaut": 7,
       "stockInitial": 2400,
       "partAchatsTaxables": 0.25,
       "partAchatsTaxablesNote": "Les aliments de base (grains de café, lait, farine) sont détaxés; les emballages, gobelets et produits d'entretien sont taxables.",
       "alimentation": true,
       "fraisDemarrage": 2500,
-      "fraisDemarrageNote": "Permis, immatriculation, enseigne, inauguration, frais juridiques de base.",
+      "fraisDemarrageNote": "Enseigne, inauguration, frais juridiques de base.",
       "fraisFixesMensuels": {
         "electricite": 950,
         "assurances": 240,
@@ -166,7 +211,205 @@
         "telecom": 110
       },
       "fraisFixesNote": "Estimations pour un local de 1 200 pi² à Montréal. Électricité et gaz : Hydro-Québec tarif G; assurances responsabilité et biens.",
-      "postes": ["barista"]
+      "postes": ["barista", "cuisinier", "aideCuisine", "gerant", "commisComptable", "marketeur"],
+      "fournisseursDefaut": {
+        "boissons": "torrefacteurLocal",
+        "boulangerie": "boulangerieIndustrielle",
+        "cuisine": "distributeurAlimentaire"
+      },
+      "nouveauxProduits": [
+        {
+          "id": "boissonsFroides",
+          "nom": "Boissons froides signature",
+          "detail": "Thés glacés maison, smoothies et cafés infusés à froid",
+          "description": "Une gamme qui plaît aux étudiants. Peu de risque, mais il faut développer les recettes et former l'équipe.",
+          "prixReference": 6.25,
+          "coutUnitaire": 1.75,
+          "tauxAchat": 0.12,
+          "elasticite": 0.9,
+          "perissable": false,
+          "conservationJours": 20,
+          "cuisine": false,
+          "unite": "boisson",
+          "categorieAppro": "boissons",
+          "coutDeveloppement": 2500,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.7,
+          "segments": { "etudiants": 1.7, "familles": 0.9, "professionnels": 1.0, "retraites": 0.4 }
+        },
+        {
+          "id": "brunch",
+          "nom": "Brunch de fin de semaine",
+          "detail": "Œufs, crêpes et cafés le samedi et le dimanche",
+          "description": "Attire les familles et les retraités la fin de semaine. Exige du temps en cuisine.",
+          "prixReference": 18.0,
+          "coutUnitaire": 6.2,
+          "tauxAchat": 0.05,
+          "elasticite": 1.1,
+          "perissable": true,
+          "conservationJours": 4,
+          "cuisine": true,
+          "unite": "brunch",
+          "categorieAppro": "cuisine",
+          "coutDeveloppement": 4500,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.65,
+          "segments": { "etudiants": 0.9, "familles": 1.8, "professionnels": 0.7, "retraites": 1.2 }
+        },
+        {
+          "id": "bolsSante",
+          "nom": "Bols santé et options véganes",
+          "detail": "Bols de grains, légumes et protéines végétales",
+          "description": "Tendance chez les étudiants et les professionnels, mais le succès n'est pas garanti.",
+          "prixReference": 14.5,
+          "coutUnitaire": 4.9,
+          "tauxAchat": 0.06,
+          "elasticite": 1.2,
+          "perissable": true,
+          "conservationJours": 3,
+          "cuisine": true,
+          "unite": "bol",
+          "categorieAppro": "cuisine",
+          "coutDeveloppement": 3500,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.55,
+          "segments": { "etudiants": 1.4, "familles": 0.8, "professionnels": 1.4, "retraites": 0.5 }
+        },
+        {
+          "id": "grainsVrac",
+          "nom": "Café en grains à emporter",
+          "detail": "Sacs de 340 g de café torréfié",
+          "description": "Augmente le panier moyen. Il faut concevoir des emballages et un étiquetage conformes (français obligatoire, valeur nutritive au besoin).",
+          "prixReference": 17.0,
+          "coutUnitaire": 8.0,
+          "tauxAchat": 0.03,
+          "elasticite": 0.8,
+          "perissable": false,
+          "conservationJours": 90,
+          "cuisine": false,
+          "unite": "sac",
+          "categorieAppro": "boissons",
+          "coutDeveloppement": 3000,
+          "delaiMois": 2,
+          "probabiliteSucces": 0.6,
+          "segments": { "etudiants": 0.5, "familles": 0.9, "professionnels": 1.4, "retraites": 1.3 }
+        },
+        {
+          "id": "traiteur",
+          "nom": "Traiteur pour entreprises",
+          "detail": "Boîtes à lunch et plateaux livrés aux bureaux",
+          "description": "Ouvre les ventes aux entreprises (B2B) : tu réponds à des appels d'offres et tu factures à 30, 45 ou 60 jours. Attention aux comptes clients et aux mauvaises créances.",
+          "prixReference": 15.0,
+          "coutUnitaire": 5.2,
+          "tauxAchat": 0,
+          "elasticite": 1.0,
+          "perissable": true,
+          "conservationJours": 3,
+          "cuisine": true,
+          "unite": "boîte à lunch",
+          "categorieAppro": "cuisine",
+          "coutDeveloppement": 5000,
+          "delaiMois": 1,
+          "probabiliteSucces": 1,
+          "segments": {},
+          "b2b": true
+        }
+      ],
+      "investissements": [
+        {
+          "id": "machine2",
+          "nom": "Deuxième machine espresso",
+          "description": "Une deuxième machine à 2 groupes : moins d'attente aux heures de pointe.",
+          "cout": 18000,
+          "type": "equipement",
+          "dureeVieMois": 84,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": { "capaciteService": 0.1, "qualiteLignes": { "boissons": 0.02 } }
+        },
+        {
+          "id": "four",
+          "nom": "Four combiné et laminoir",
+          "description": "Pour cuire des viennoiseries maison : meilleure qualité et ingrédients moins chers que les produits finis.",
+          "cout": 16000,
+          "type": "equipement",
+          "dureeVieMois": 96,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": { "qualiteLignes": { "viennoiseries": 0.07 }, "coutLignes": { "viennoiseries": 0.85 } }
+        },
+        {
+          "id": "renovation",
+          "nom": "Rénovation de la salle",
+          "description": "Nouveau mobilier, éclairage et insonorisation : une ambiance plus agréable.",
+          "cout": 30000,
+          "type": "ameliorations",
+          "dureeVieMois": 60,
+          "classeDpa": "13",
+          "unique": true,
+          "effets": { "ambiance": 0.15 }
+        },
+        {
+          "id": "terrasse",
+          "nom": "Terrasse estivale",
+          "description": "Une terrasse de 20 places de mai à septembre. Permis municipal et entretien : environ 130 $ par mois en saison.",
+          "cout": 9000,
+          "type": "ameliorations",
+          "dureeVieMois": 60,
+          "classeDpa": "13",
+          "unique": true,
+          "effets": { "demandeEte": 0.12 },
+          "fraisMensuels": 130,
+          "moisActifs": [5, 6, 7, 8, 9]
+        },
+        {
+          "id": "vehicule",
+          "nom": "Fourgonnette de livraison",
+          "description": "Livre tes commandes de traiteur toi-même au lieu de payer un coursier. Assurance, essence et entretien : environ 450 $ par mois.",
+          "cout": 42000,
+          "type": "vehicule",
+          "dureeVieMois": 72,
+          "classeDpa": "10",
+          "unique": true,
+          "effets": { "livraisonPropre": true },
+          "fraisMensuels": 450
+        },
+        {
+          "id": "logicielCaisse",
+          "nom": "Logiciel de caisse et de gestion des stocks",
+          "description": "Prévisions de commandes plus justes : moins de produits périmés. Abonnement d'environ 60 $ par mois.",
+          "cout": 3500,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": { "pertesStocks": 0.7 },
+          "fraisMensuels": 60
+        },
+        {
+          "id": "siteWeb",
+          "nom": "Site Web et commande en ligne",
+          "description": "Commandes pour emporter sur ton site : apprécié des professionnels et des étudiants. Exige une politique de confidentialité (Loi 25).",
+          "cout": 4500,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": { "commandeEnLigne": 0.15 },
+          "fraisMensuels": 40
+        },
+        {
+          "id": "tablettes",
+          "nom": "Tablettes de commande et ordinateur",
+          "description": "Prise de commandes plus rapide au comptoir et en salle.",
+          "cout": 2800,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "50",
+          "unique": true,
+          "effets": { "capaciteService": 0.04 }
+        }
+      ]
     }
   ]
 }

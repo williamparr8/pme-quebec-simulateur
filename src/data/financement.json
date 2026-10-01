@@ -1,0 +1,192 @@
+{
+  "_meta": {
+    "description": "Sources de financement de démarrage. Les taux sont exprimés en écart au-dessus du taux préférentiel (sauf indication contraire).",
+    "sources": [
+      {
+        "url": "https://www.futurpreneur.ca/fr/",
+        "verifie": "2026-10-01",
+        "note": "Futurpreneur Canada : prêt de démarrage jusqu'à 75 000 $ (avec la BDC) et mentorat de 2 ans pour les 18 à 39 ans."
+      },
+      {
+        "url": "https://pmemtl.com/en/services/financing/loans-and-subsidies/fonds-pme-mtl-and-fonds-locaux-de-solidarite-montreal",
+        "verifie": "2026-10-01",
+        "note": "Fonds PME MTL (jusqu'à 300 000 $) et FLS Montréal (jusqu'à 100 000 $); taux selon le risque; mise de fonds d'au moins 20 % du projet; entreprise immatriculée au REQ."
+      },
+      {
+        "url": "https://hellodarwin.com/fr/aide-aux-entreprises/programmes/financement-bdc-demarrage",
+        "verifie": "2026-10-01",
+        "note": "BDC : financement de démarrage, taux généralement de 1 % à 3 % au-dessus des banques, souvent variable, périodes d'intérêts seulement possibles, plan d'affaires exigé."
+      },
+      {
+        "url": "https://hellodarwin.com/fr/aide-aux-entreprises/programmes/mrc-beaharnois-salaberry-creavenir",
+        "verifie": "2026-10-01",
+        "note": "Desjardins Créavenir : crédit jusqu'à environ 15 000 $ et subvention jusqu'à 5 000 $ pour les 18 à 39 ans (varie selon la région)."
+      }
+    ],
+    "avertissement": "Les montants maximaux, les taux et les reports exacts varient selon le dossier et la région : valeurs simplifiées pour le jeu (À VÉRIFIER, voir DECISIONS.md)."
+  },
+  "sources": [
+    {
+      "id": "banque",
+      "nom": "Prêt à terme bancaire",
+      "organisme": "Banque à charte ou caisse",
+      "description": "Le prêt classique : la banque prête jusqu'à 3 $ pour chaque dollar de mise de fonds et exige presque toujours ta caution personnelle, même pour une société par actions.",
+      "type": "pret",
+      "montantMin": 0,
+      "montantMax": 150000,
+      "ecartTaux": 0.025,
+      "tauxVariable": false,
+      "dureeMois": 60,
+      "differeMois": 0,
+      "scorePlanMin": null,
+      "apportMinPct": 0,
+      "conditions": "Au plus 3 fois la mise de fonds (la love money compte à moitié). Taux fixe : préférentiel + 2,5 %. Taux variable : préférentiel + 2 %."
+    },
+    {
+      "id": "loveMoney",
+      "nom": "Prêt de la famille (love money)",
+      "organisme": "Famille et amis",
+      "description": "Sans intérêt et sans paperasse, remboursable sur 4 ans après un an de répit. Pratique, mais une entreprise qui échoue peut briser des liens.",
+      "type": "pret",
+      "montantMin": 1000,
+      "montantMax": 30000,
+      "ecartTaux": null,
+      "tauxFixe": 0,
+      "tauxVariable": false,
+      "dureeMois": 48,
+      "differeMois": 12,
+      "scorePlanMin": null,
+      "apportMinPct": 0,
+      "conditions": "Sans intérêt. Remboursement après 12 mois. La banque considère la moitié de ce montant comme une mise de fonds."
+    },
+    {
+      "id": "futurpreneur",
+      "nom": "Futurpreneur Canada (avec la BDC)",
+      "organisme": "Futurpreneur Canada et BDC",
+      "description": "Prêt de démarrage pour les 18 à 39 ans, avec un mentor bénévole pendant 2 ans. Remboursement du capital reporté de 12 mois.",
+      "type": "pret",
+      "montantMin": 5000,
+      "montantMax": 75000,
+      "ecartTaux": 0.03,
+      "tauxVariable": true,
+      "dureeMois": 60,
+      "differeMois": 12,
+      "ageMin": 18,
+      "ageMax": 39,
+      "scorePlanMin": 60,
+      "apportMinPct": 0.1,
+      "conditions": "18 à 39 ans, plan d'affaires et prévisions sur 2 ans. Taux variable (préférentiel + 3 %, À VÉRIFIER), 12 mois d'intérêts seulement."
+    },
+    {
+      "id": "bdc",
+      "nom": "BDC – prêt de démarrage",
+      "organisme": "Banque de développement du Canada",
+      "description": "Banque fédérale qui prête aux entrepreneurs : plus souple que les banques (report du capital), mais plus cher.",
+      "type": "pret",
+      "montantMin": 10000,
+      "montantMax": 100000,
+      "ecartTaux": 0.04,
+      "tauxVariable": true,
+      "dureeMois": 84,
+      "differeMois": 6,
+      "scorePlanMin": 60,
+      "apportMinPct": 0.2,
+      "conditions": "Plan d'affaires solide, mise de fonds d'au moins 20 % du projet. Taux variable (préférentiel + 4 %), 6 mois d'intérêts seulement."
+    },
+    {
+      "id": "fondsLocal",
+      "nom": "Fonds locaux (FLI et FLS)",
+      "organisme": "Fonds local de la ville",
+      "description": "Prêts des fonds locaux d'investissement et de solidarité, gérés par le service de développement économique de la ville (ex. PME MTL à Montréal).",
+      "type": "pret",
+      "montantMin": 5000,
+      "montantMax": 100000,
+      "ecartTaux": null,
+      "tauxFixe": 0.07,
+      "tauxVariable": false,
+      "dureeMois": 60,
+      "differeMois": 6,
+      "scorePlanMin": 60,
+      "apportMinPct": 0.2,
+      "partProjetMax": 0.3,
+      "formes": ["senc", "sec", "inc-qc", "inc-federal", "individuelle"],
+      "conditions": "Entreprise immatriculée au REQ, mise de fonds d'au moins 20 %, au plus 30 % du projet. Taux fixe d'environ 7 % (taux de base plus une prime de risque)."
+    },
+    {
+      "id": "creavenir",
+      "nom": "Desjardins – Créavenir",
+      "organisme": "Desjardins",
+      "description": "Pour les 18 à 39 ans : un financement sans garantie et une subvention de 5 000 $ qui n'a pas à être remboursée.",
+      "type": "pretEtSubvention",
+      "montantMin": 3000,
+      "montantMax": 15000,
+      "ecartTaux": 0.015,
+      "tauxVariable": true,
+      "dureeMois": 48,
+      "differeMois": 6,
+      "ageMin": 18,
+      "ageMax": 39,
+      "scorePlanMin": 50,
+      "apportMinPct": 0,
+      "subvention": 5000,
+      "conditions": "18 à 39 ans, membre Desjardins, projet viable. Subvention de 5 000 $ comptabilisée comme un produit (subvention)."
+    },
+    {
+      "id": "ange",
+      "nom": "Investisseur providentiel (ange)",
+      "organisme": "Investisseur privé",
+      "description": "Un entrepreneur d'expérience investit en échange d'actions : aucun remboursement ni intérêt, mais tu partages la propriété et les profits futurs (dilution).",
+      "type": "capital",
+      "montantMin": 20000,
+      "montantMax": 150000,
+      "ecartTaux": null,
+      "tauxVariable": false,
+      "dureeMois": 0,
+      "differeMois": 0,
+      "scorePlanMin": 65,
+      "apportMinPct": 0.15,
+      "formes": ["inc-qc", "inc-federal"],
+      "conditions": "Seulement pour une société par actions (il reçoit des actions). Il prend au plus 49 % des actions selon la valeur qu'il accorde à ton projet."
+    },
+    {
+      "id": "investissementQuebec",
+      "nom": "Investissement Québec",
+      "organisme": "Investissement Québec",
+      "description": "La société d'État finance surtout des projets manufacturiers, technologiques ou d'exportation, généralement plus gros qu'un commerce de détail.",
+      "type": "nonAdmissible",
+      "montantMin": 0,
+      "montantMax": 0,
+      "ecartTaux": null,
+      "tauxVariable": false,
+      "dureeMois": 0,
+      "differeMois": 0,
+      "scorePlanMin": null,
+      "apportMinPct": 0,
+      "secteurs": ["manufacture", "enLigne"],
+      "conditions": "Non admissible pour ce projet : un café de quartier ne correspond pas aux priorités d'Investissement Québec (fabrication, innovation, exportation)."
+    }
+  ],
+  "placements": [
+    {
+      "id": "ceie",
+      "nom": "Compte d'épargne à intérêt élevé",
+      "description": "Retrait possible en tout temps. Taux : taux directeur moins 0,5 %.",
+      "ecart": -0.005,
+      "dureeMois": 0
+    },
+    {
+      "id": "cpg6",
+      "nom": "Certificat de placement garanti (6 mois)",
+      "description": "Argent bloqué 6 mois. Taux : taux directeur plus 0,25 %.",
+      "ecart": 0.0025,
+      "dureeMois": 6
+    },
+    {
+      "id": "cpg12",
+      "nom": "Certificat de placement garanti (1 an)",
+      "description": "Argent bloqué 12 mois. Taux : taux directeur plus 0,5 %.",
+      "ecart": 0.005,
+      "dureeMois": 12
+    }
+  ]
+}

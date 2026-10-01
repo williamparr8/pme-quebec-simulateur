@@ -8,19 +8,16 @@ import {
   modifierDecisions,
   planifierIncorporation,
   produireMiseAJourAnnuelle,
-  simulerMois,
 } from '../src/engine/simulation';
 import type { EtatPartie, ParametresDemarrage } from '../src/engine/types';
-import { DEMARRAGE_TEST, configTest } from './helpers';
+import { DEMARRAGE_TEST, configTest, jouerMois } from './helpers';
 
 function partie(changements: Partial<ParametresDemarrage>, graine = 21, duree: 12 | 24 | 36 = 24): EtatPartie {
   return creerPartie(configTest(graine, duree), { ...DEMARRAGE_TEST, ...changements });
 }
 
 function jouer(etat: EtatPartie, mois: number): EtatPartie {
-  let e = etat;
-  for (let i = 0; i < mois && !e.terminee; i++) e = simulerMois(e);
-  return e;
+  return jouerMois(etat, mois);
 }
 
 const codes = (e: EtatPartie) => e.entreprises[0].archives.flatMap((a) => a.messages.map((m) => m.code));
@@ -148,10 +145,22 @@ describe('conformité et démarches', () => {
 
 describe('DPA et décisions', () => {
   it('DPA : 20 % de la FNACC pour l’équipement, linéaire pour les améliorations locatives', () => {
-    const dpa = calculerDpa(45_000, 38_000, 38_000, 5);
-    expect(dpa.equipement).toBe(9_000);
-    expect(dpa.ameliorations).toBe(7_600);
-    expect(calculerDpa(0, 1_000, 38_000, 5).ameliorations).toBe(1_000);
+    const dpa = calculerDpa({ fnacc: { '8': 45_000, '13': 38_000 }, ajoutsAnnee: {}, coutAmeliorations: 38_000 }, 2028, 5);
+    expect(dpa.parClasse['8']).toBe(9_000);
+    expect(dpa.parClasse['13']).toBe(7_600);
+    expect(dpa.total).toBe(16_600);
+    const fin = calculerDpa({ fnacc: { '13': 1_000 }, ajoutsAnnee: {}, coutAmeliorations: 38_000 }, 2028, 5);
+    expect(fin.parClasse['13']).toBe(1_000);
+  });
+
+  it('DPA : incitatif à l’investissement accéléré l’année d’acquisition (1,5 fois, puis demi-année)', () => {
+    const f = { fnacc: { '8': 10_000, '10': 40_000, '12': 3_000 }, ajoutsAnnee: { '8': 10_000, '10': 40_000, '12': 3_000 }, coutAmeliorations: 0 };
+    const avant2030 = calculerDpa(f, 2027, 5);
+    expect(avant2030.parClasse['8']).toBe(3_000); // 20 % × 1,5
+    expect(avant2030.parClasse['10']).toBe(18_000); // 30 % × 1,5
+    expect(avant2030.parClasse['12']).toBe(3_000); // plafonné à la FNACC
+    expect(calculerDpa(f, 2031, 5).parClasse['8']).toBe(2_000); // sans règle de la demi-année
+    expect(calculerDpa(f, 2034, 5).parClasse['8']).toBe(1_000); // règle de la demi-année
   });
 
   it('une société ne fait pas de prélèvements; une entreprise individuelle n’a pas de salaire de dirigeant', () => {

@@ -1,0 +1,427 @@
+{
+  "_meta": {
+    "description": "Dilemmes (événements avec choix). Jalon 3 : ressources humaines. {nom} est remplacé par le nom de l'employé concerné.",
+    "sources": [
+      {
+        "url": "https://www.cnesst.gouv.qc.ca/fr/conditions-travail",
+        "verifie": "2026-10-01",
+        "note": "Normes du travail : obligations familiales (10 jours, dont 2 rémunérés), harcèlement psychologique, recours après 2 ans de service, jours fériés."
+      }
+    ],
+    "avertissement": "Les montants des règlements et des pénalités sont des estimations de conception."
+  },
+  "dilemmes": [
+    {
+      "id": "conflitHoraire",
+      "categorie": "rh",
+      "titre": "Conflit d'horaire",
+      "description": "{nom} et un collègue veulent tous les deux congé samedi prochain pour un événement familial. Il faut quelqu'un au comptoir.",
+      "condition": "employes2",
+      "cible": "aleatoire",
+      "choixParDefaut": "anciennete",
+      "choix": [
+        {
+          "id": "anciennete",
+          "libelle": "Trancher selon l'ancienneté",
+          "explication": "Une règle claire et connue de tous évite l'arbitraire, même si quelqu'un est déçu.",
+          "effets": [
+            { "type": "moral", "cible": "concerne", "valeur": -4 },
+            { "type": "moral", "cible": "autres", "valeur": 1 }
+          ]
+        },
+        {
+          "id": "equipe",
+          "libelle": "Laisser les employés s'entendre entre eux",
+          "explication": "Responsabiliser l'équipe fonctionne souvent… mais sans règle, un conflit peut dégénérer.",
+          "effets": [
+            {
+              "type": "hasard",
+              "probabilite": 0.65,
+              "siOui": [{ "type": "moral", "cible": "tous", "valeur": 2 }],
+              "siNon": [{ "type": "moral", "cible": "tous", "valeur": -5 }]
+            }
+          ]
+        },
+        {
+          "id": "proprietaire",
+          "libelle": "Travailler toi-même ce samedi",
+          "explication": "Tu règles le problème, mais ton temps a aussi une valeur. Un propriétaire épuisé prend de mauvaises décisions.",
+          "effets": [
+            { "type": "heuresProprietaire", "valeur": 2 },
+            { "type": "moral", "cible": "tous", "valeur": 2 }
+          ]
+        }
+      ],
+      "lecon": "Les horaires sont la première source de conflits en restauration. Des règles écrites et équitables (rotation des fins de semaine, ancienneté, délai pour les demandes) réduisent les tensions."
+    },
+    {
+      "id": "demandeAugmentation",
+      "categorie": "rh",
+      "titre": "Demande d'augmentation",
+      "description": "{nom}, l'un de tes meilleurs employés, demande une augmentation de 8 %. Un autre café lui a fait une offre.",
+      "condition": "employeCompetent",
+      "cible": "plusCompetent",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "accepter",
+          "libelle": "Accorder les 8 %",
+          "explication": "Garder un employé performant coûte souvent moins cher que de le remplacer.",
+          "effets": [
+            { "type": "salaire", "cible": "concerne", "pourcentage": 0.08 },
+            { "type": "moral", "cible": "concerne", "valeur": 10 }
+          ]
+        },
+        {
+          "id": "compromis",
+          "libelle": "Offrir 4 % et une formation payée",
+          "explication": "Une augmentation plus modeste avec de la formation montre que tu investis dans sa progression.",
+          "effets": [
+            { "type": "salaire", "cible": "concerne", "pourcentage": 0.04 },
+            { "type": "competence", "cible": "concerne", "valeur": 0.05 },
+            { "type": "depense", "categorie": "formation", "montant": 400, "libelle": "Formation offerte à un employé" },
+            { "type": "moral", "cible": "concerne", "valeur": 4 }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Refuser",
+          "explication": "C'est ton droit, mais un employé qui a une autre offre risque de partir.",
+          "effets": [
+            { "type": "moral", "cible": "concerne", "valeur": -12 },
+            { "type": "depart", "cible": "concerne", "probabilite": 0.45 }
+          ]
+        }
+      ],
+      "lecon": "Remplacer un employé coûte cher : recrutement, formation, erreurs du début et clients moins bien servis. On estime souvent ce coût à plusieurs mois de salaire."
+    },
+    {
+      "id": "retards",
+      "categorie": "rh",
+      "titre": "Retards répétés",
+      "description": "{nom} est arrivé en retard 4 fois ce mois-ci. Les collègues doivent compenser et commencent à se plaindre.",
+      "condition": "employes2",
+      "cible": "aleatoire",
+      "choixParDefaut": "ignorer",
+      "choix": [
+        {
+          "id": "avertissement",
+          "libelle": "Donner un avertissement écrit",
+          "explication": "La discipline progressive (avis verbal, avis écrit, suspension) est équitable et documentée.",
+          "effets": [
+            { "type": "moral", "cible": "concerne", "valeur": -3 },
+            { "type": "moral", "cible": "autres", "valeur": 2 }
+          ]
+        },
+        {
+          "id": "ignorer",
+          "libelle": "Ne rien dire",
+          "explication": "Tolérer ce comportement nuit au moral de ceux qui font leur part.",
+          "effets": [{ "type": "moral", "cible": "autres", "valeur": -4 }]
+        },
+        {
+          "id": "congedier",
+          "libelle": "Le congédier sur-le-champ",
+          "explication": "Sans avertissement préalable, un congédiement peut être contesté : après 2 ans de service, un employé peut porter plainte pour congédiement sans cause juste et suffisante.",
+          "effets": [
+            { "type": "congedier", "cible": "concerne" },
+            {
+              "type": "risque",
+              "probabilite": 0.3,
+              "delaiMois": 2,
+              "code": "plainteCongediement",
+              "effets": [
+                { "type": "depense", "categorie": "amendes", "montant": 4000, "libelle": "Règlement d'une plainte pour congédiement sans cause juste" }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Avant un congédiement pour motif disciplinaire, il faut des avertissements documentés : c'est la discipline progressive."
+    },
+    {
+      "id": "heuresNonPayees",
+      "categorie": "rh",
+      "titre": "Inventaire « bénévole »",
+      "description": "On te propose que l'équipe reste une heure de plus après la fermeture, sans être payée, pour faire l'inventaire « par esprit d'équipe ».",
+      "condition": "employes2",
+      "cible": "plusAncien",
+      "choixParDefaut": "payer",
+      "choix": [
+        {
+          "id": "payer",
+          "libelle": "Payer les heures d'inventaire",
+          "explication": "Toute heure travaillée doit être payée (à 150 % si la semaine dépasse 40 heures).",
+          "effets": [
+            { "type": "prime", "montant": 45, "parEmploye": true },
+            { "type": "moral", "cible": "tous", "valeur": 2 }
+          ]
+        },
+        {
+          "id": "accepter",
+          "libelle": "Accepter l'offre de travail non payé",
+          "explication": "Un employé ne peut pas renoncer à ses droits : la Loi sur les normes du travail est d'ordre public.",
+          "effets": [
+            { "type": "moral", "cible": "tous", "valeur": -5 },
+            {
+              "type": "risque",
+              "probabilite": 0.4,
+              "delaiMois": 2,
+              "code": "plainteCNT",
+              "effets": [
+                { "type": "prime", "montant": 60, "parEmploye": true },
+                { "type": "depense", "categorie": "amendes", "montant": 1500, "libelle": "Pénalité à la suite d'une plainte à la CNESST (normes du travail)" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reporter",
+          "libelle": "Faire l'inventaire pendant les heures d'ouverture",
+          "explication": "Personne n'est lésé, mais le service est un peu ralenti ce mois-ci.",
+          "effets": [{ "type": "capacite", "facteur": 0.98 }]
+        }
+      ],
+      "lecon": "Le salaire minimum, les heures supplémentaires et le paiement des heures travaillées sont des normes d'ordre public : même un employé consentant ne peut pas y renoncer."
+    },
+    {
+      "id": "harcelement",
+      "categorie": "rh",
+      "titre": "Un client dépasse les bornes",
+      "description": "{nom} se plaint des remarques déplacées et répétées d'un client régulier.",
+      "condition": "employes2",
+      "cible": "aleatoire",
+      "choixParDefaut": "ignorer",
+      "choix": [
+        {
+          "id": "interdire",
+          "libelle": "Interdire l'accès au client",
+          "explication": "Tu protèges ton employé : c'est ton obligation légale, même si tu perds un client.",
+          "effets": [
+            { "type": "moral", "cible": "concerne", "valeur": 8 },
+            { "type": "moral", "cible": "autres", "valeur": 3 },
+            { "type": "notoriete", "valeur": -0.003 }
+          ]
+        },
+        {
+          "id": "discuter",
+          "libelle": "Rencontrer le client et documenter la situation",
+          "explication": "Appliquer ta politique de prévention, avec un suivi écrit, est une bonne pratique.",
+          "effets": [{ "type": "moral", "cible": "concerne", "valeur": 4 }]
+        },
+        {
+          "id": "ignorer",
+          "libelle": "Lui dire que « le client a toujours raison »",
+          "explication": "L'employeur doit prévenir et faire cesser le harcèlement, même s'il vient d'un client.",
+          "effets": [
+            { "type": "moral", "cible": "concerne", "valeur": -12 },
+            { "type": "moral", "cible": "autres", "valeur": -4 },
+            {
+              "type": "risque",
+              "probabilite": 0.35,
+              "delaiMois": 2,
+              "code": "plainteHarcelement",
+              "effets": [
+                { "type": "depense", "categorie": "amendes", "montant": 5000, "libelle": "Règlement d'une plainte pour harcèlement psychologique" }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Depuis 2019, tout employeur québécois doit avoir une politique de prévention du harcèlement psychologique et sexuel et de traitement des plaintes."
+    },
+    {
+      "id": "congeFamilial",
+      "categorie": "rh",
+      "titre": "Congé pour obligations familiales",
+      "description": "{nom} demande 5 jours de congé pour s'occuper de son père hospitalisé.",
+      "condition": "employes2",
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "accepter",
+          "libelle": "Accorder le congé et réorganiser l'horaire",
+          "explication": "La loi permet jusqu'à 10 jours par année pour des obligations familiales, dont 2 rémunérés.",
+          "effets": [
+            { "type": "capacite", "facteur": 0.97 },
+            { "type": "moral", "cible": "concerne", "valeur": 6 },
+            { "type": "moral", "cible": "autres", "valeur": 2 }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Refuser : c'est trop occupé",
+          "explication": "Refuser un congé prévu par la loi est illégal et peut mener à une plainte.",
+          "effets": [
+            { "type": "moral", "cible": "concerne", "valeur": -15 },
+            { "type": "moral", "cible": "autres", "valeur": -4 },
+            {
+              "type": "risque",
+              "probabilite": 0.5,
+              "delaiMois": 1,
+              "code": "plainteCNT",
+              "effets": [
+                { "type": "depense", "categorie": "amendes", "montant": 2000, "libelle": "Pénalité à la suite d'une plainte à la CNESST (normes du travail)" }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "La Loi sur les normes du travail prévoit 10 jours par année pour obligations familiales ou maladie (dont 2 rémunérés) et des congés plus longs si un proche est gravement malade."
+    },
+    {
+      "id": "volInterne",
+      "categorie": "rh",
+      "titre": "Il manque de l'argent dans la caisse",
+      "description": "Depuis un mois, il manque environ 100 $ par semaine dans la caisse. Tes soupçons se portent sur {nom}, sans preuve.",
+      "condition": "employes3",
+      "cible": "aleatoire",
+      "choixParDefaut": "ignorer",
+      "choix": [
+        {
+          "id": "controles",
+          "libelle": "Installer une caméra et des contrôles de caisse",
+          "explication": "Les contrôles internes (fermeture de caisse à deux, rapprochement quotidien) protègent l'entreprise sans accuser personne.",
+          "effets": [
+            { "type": "depense", "categorie": "entretien", "montant": 900, "libelle": "Caméra et procédure de contrôle de la caisse" },
+            { "type": "moral", "cible": "tous", "valeur": -1 }
+          ]
+        },
+        {
+          "id": "accuser",
+          "libelle": "Confronter {nom}",
+          "explication": "Accuser sans preuve peut briser la confiance de toute l'équipe.",
+          "effets": [
+            {
+              "type": "hasard",
+              "probabilite": 0.5,
+              "siOui": [{ "type": "congedier", "cible": "concerne" }],
+              "siNon": [
+                { "type": "moral", "cible": "tous", "valeur": -10 },
+                { "type": "depart", "cible": "concerne", "probabilite": 0.6 }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ignorer",
+          "libelle": "Attendre de voir",
+          "explication": "Les pertes continuent tant que rien ne change.",
+          "effets": [{ "type": "pertesRecurrentes", "montant": 400, "mois": 3, "libelle": "Argent manquant dans la caisse (vol)" }]
+        }
+      ],
+      "lecon": "La séparation des tâches, le rapprochement quotidien de la caisse et l'inventaire régulier sont des contrôles internes de base. Ils dissuadent la fraude sans accuser personne."
+    },
+    {
+      "id": "tempsDesFetes",
+      "categorie": "rh",
+      "titre": "Le temps des Fêtes",
+      "description": "Toute l'équipe voudrait congé les soirs du 24 et du 31 décembre.",
+      "condition": "decembre",
+      "cible": "aleatoire",
+      "choixParDefaut": "imposer",
+      "choix": [
+        {
+          "id": "fermer",
+          "libelle": "Fermer plus tôt ces deux soirs",
+          "explication": "Tu perds quelques ventes, mais l'équipe s'en souviendra.",
+          "effets": [
+            { "type": "capacite", "facteur": 0.96 },
+            { "type": "moral", "cible": "tous", "valeur": 4 }
+          ]
+        },
+        {
+          "id": "prime",
+          "libelle": "Verser une prime de 60 $ à ceux qui travaillent",
+          "explication": "Une prime pour les quarts difficiles est appréciée.",
+          "effets": [
+            { "type": "prime", "montant": 60, "parEmploye": true },
+            { "type": "moral", "cible": "tous", "valeur": 5 }
+          ]
+        },
+        {
+          "id": "imposer",
+          "libelle": "Garder l'horaire habituel",
+          "explication": "Tu as le droit de fixer l'horaire, mais le moral en souffre.",
+          "effets": [{ "type": "moral", "cible": "tous", "valeur": -6 }]
+        }
+      ],
+      "lecon": "Noël et le jour de l'An sont des jours fériés : l'employé qui travaille ces jours-là reçoit son salaire plus une indemnité (ou un congé compensatoire)."
+    },
+    {
+      "id": "equipeEpuisee",
+      "categorie": "rh",
+      "titre": "Équipe épuisée",
+      "description": "Ton équipe n'arrive plus à suivre : files d'attente, pauses sautées, tensions au comptoir.",
+      "condition": "surcharge",
+      "cible": "moralBas",
+      "choixParDefaut": "rien",
+      "choix": [
+        {
+          "id": "prime",
+          "libelle": "Verser une prime de reconnaissance de 150 $",
+          "explication": "Reconnaître l'effort aide, mais ne règle pas le manque de personnel.",
+          "effets": [
+            { "type": "prime", "montant": 150, "parEmploye": true },
+            { "type": "moral", "cible": "tous", "valeur": 6 }
+          ]
+        },
+        {
+          "id": "heures",
+          "libelle": "Travailler plus d'heures toi-même",
+          "explication": "Tu mets la main à la pâte pendant les heures de pointe.",
+          "effets": [
+            { "type": "heuresProprietaire", "valeur": 10 },
+            { "type": "moral", "cible": "tous", "valeur": 3 }
+          ]
+        },
+        {
+          "id": "rien",
+          "libelle": "Leur demander de tenir le coup",
+          "explication": "La surcharge prolongée mène à l'épuisement et aux démissions.",
+          "effets": [{ "type": "moral", "cible": "tous", "valeur": -6 }]
+        }
+      ],
+      "lecon": "Quand la demande dépasse la capacité, il faut embaucher ou réorganiser le travail : la surcharge chronique coûte plus cher en roulement de personnel."
+    },
+    {
+      "id": "formationSoir",
+      "categorie": "rh",
+      "titre": "Un employé veut se former",
+      "description": "{nom} veut suivre un certificat en gestion le soir et te demande de payer les frais de 800 $.",
+      "condition": "employeCompetent",
+      "cible": "plusCompetent",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "payer",
+          "libelle": "Payer toute la formation",
+          "explication": "Investir dans un employé motivé prépare la relève (un futur gérant?).",
+          "effets": [
+            { "type": "depense", "categorie": "formation", "montant": 800, "libelle": "Certificat en gestion d'un employé" },
+            { "type": "competence", "cible": "concerne", "valeur": 0.08 },
+            { "type": "moral", "cible": "concerne", "valeur": 10 }
+          ]
+        },
+        {
+          "id": "moitie",
+          "libelle": "Payer la moitié",
+          "explication": "Un partage des coûts engage les deux parties.",
+          "effets": [
+            { "type": "depense", "categorie": "formation", "montant": 400, "libelle": "Certificat en gestion d'un employé (50 %)" },
+            { "type": "competence", "cible": "concerne", "valeur": 0.04 },
+            { "type": "moral", "cible": "concerne", "valeur": 5 }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Refuser",
+          "explication": "Économie à court terme, déception à long terme.",
+          "effets": [{ "type": "moral", "cible": "concerne", "valeur": -5 }]
+        }
+      ],
+      "lecon": "Les frais de formation sont des dépenses déductibles. Une entreprise qui développe ses employés les garde plus longtemps et prépare sa relève."
+    }
+  ]
+}

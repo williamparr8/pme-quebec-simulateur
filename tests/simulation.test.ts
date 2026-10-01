@@ -15,6 +15,7 @@ import {
   dateDuMois,
   embaucher,
   modifierDecisions,
+  modifierSalaireEmploye,
   pretMaximum,
   prixMarche,
   salaireMarche,
@@ -93,14 +94,18 @@ describe('simulation complète', () => {
     etat = congedier(etat, id, ancien.id);
     expect(etat.entreprises[0].enAttente.indemnites).toBeGreaterThan(0);
     etat = modifierDecisions(etat, id, {
-      budgetPublicite: 1e9,
-      salaireHoraire: 1,
+      publicite: { meta: 1e9, tiktok: -50 },
+      promotion: 0.9,
       heuresOuverture: Number.NaN,
     });
     const d = etat.entreprises[0].decisions;
-    expect(d.budgetPublicite).toBe(20_000);
-    expect(d.salaireHoraire).toBe(etat.salaireMinimum);
+    expect(d.publicite.meta).toBe(15_000);
+    expect(d.publicite.tiktok).toBeUndefined();
+    expect(d.promotion).toBe(0.3);
     expect(d.heuresOuverture).toBe(60);
+    const employe = etat.entreprises[0].employes[0];
+    etat = modifierSalaireEmploye(etat, id, employe.id, 1);
+    expect(etat.entreprises[0].employes[0].salaireHoraire).toBe(etat.salaireMinimum);
     etat = simulerMois(etat);
     expect(
       etat.entreprises[0].archives.at(-1)?.messages.some((m) => m.code === 'indemnitesPreavis'),
@@ -114,7 +119,11 @@ describe('simulation complète', () => {
     const id = etat.entreprises[0].id;
     const prix: Record<string, number> = {};
     for (const l of secteurParId('cafe').lignes) prix[l.id] = l.prixReference * 4;
-    etat = modifierDecisions(etat, id, { prix, budgetPublicite: 20_000, prelevements: 15_000 });
+    etat = modifierDecisions(etat, id, {
+      prix,
+      publicite: { radio: 15_000, affichage: 15_000 },
+      prelevements: 15_000,
+    });
     while (!etat.terminee) etat = simulerMois(etat);
     expect(etat.raisonFin).toBe('faillite');
     const ent = etat.entreprises[0];
@@ -134,7 +143,7 @@ describe('simulation complète', () => {
     const etats = etatsFinanciers(ent, { type: 'exercice', annee: 2028 });
     expect(etats.nbMois).toBe(12);
     const r = ratios(etats, cafe.margeBruteCible, cafe.margeNetteCible);
-    expect(r).toHaveLength(6);
+    expect(r).toHaveLength(11);
     const mois = etatsFinanciers(ent, { type: 'mois', index: 5 });
     expect(mois.nbMois).toBe(1);
     const seuil = seuilRentabilite(ent.archives[5].mouvements);

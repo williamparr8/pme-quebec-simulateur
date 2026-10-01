@@ -85,5 +85,21 @@
     "Nadeau",
     "Martel",
     "Thibault"
+  ],
+  "clientsAffaires": [
+    { "nom": "Cabinet comptable Gagnon et associés", "type": "bureau" },
+    { "nom": "Clinique dentaire du Plateau", "type": "clinique" },
+    { "nom": "Agence Pixel Boréal", "type": "bureau" },
+    { "nom": "École secondaire des Érables", "type": "ecole" },
+    { "nom": "Groupe immobilier Laurentien", "type": "bureau" },
+    { "nom": "Studio d'architecture Lumen", "type": "bureau" },
+    { "nom": "Centre de services du quartier", "type": "organisme" },
+    { "nom": "Laboratoires BioNord", "type": "bureau" },
+    { "nom": "Notaires Roy et Tremblay", "type": "bureau" },
+    { "nom": "Garderie Les Petits Pas", "type": "garderie" },
+    { "nom": "Firme de génie Héliotrope", "type": "bureau" },
+    { "nom": "Coworking La Ruche Créative", "type": "bureau" },
+    { "nom": "Résidence pour aînés Les Jardins", "type": "residence" },
+    { "nom": "Jeune pousse NeuroLogiq", "type": "bureau" }
   ]
 }

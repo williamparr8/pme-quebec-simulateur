@@ -1,9 +1,12 @@
 /**
- * Boucle de simulation : création de la partie et simulation d'un mois.
+ * Boucle de simulation : simulation d'un mois.
  *
  * `simulerMois` est une fonction pure : elle reçoit un état et retourne un
  * nouvel état, sans rien modifier de l'original. Tout le hasard passe par le
  * générateur à graine (`rngState`), ce qui rend le moteur déterministe.
+ *
+ * La création de la partie est dans creation.ts et les actions du joueur dans
+ * actions.ts; ce module les réexporte pour l'interface.
  */
 import {
   FRAIS_TRAITEMENT_CARTES,
@@ -11,23 +14,31 @@ import {
   SALAIRE_MINIMUM,
   TAXES_VENTE,
 } from '../data/fiscalite';
-import { PERSONNALITES, personnaliteParId, posteParId, secteurParId, villeParId } from '../data';
+import {
+  DILEMMES,
+  INITIATIVES_ECO,
+  PARAMETRES_MARKETING,
+  dilemmeParId,
+  fournisseurParId,
+  personaParId,
+  personnaliteParId,
+  plateformeParId,
+  posteParId,
+  secteurParId,
+  traitParId,
+  villeParId,
+} from '../data';
 import {
   cloturerExercice,
   convertirEnCapitalActions,
-  creerGrandLivre,
   ecritureSimple,
   ouvrirNouveauMois,
   passerEcriture,
   type CompteId,
-  type FluxId,
-  type GrandLivre,
-  type LigneEcriture,
-  type TypeCapitaux,
 } from './accounting';
+import { contexteEffets, majAnnuelleExigee } from './actions';
 import {
   ajusterPrixConcurrent,
-  creerConcurrent,
   deciderConcurrent,
   majConcurrentApresMarche,
   offreConcurrent,
@@ -35,45 +46,69 @@ import {
 } from './ai-competitors';
 import { analyserMois } from './analyse';
 import { finExerciceFiscal } from './annuel';
+import { FRAIS_COURSIER, PONCTUALITE, RISQUE_DEFAUT, genererAppels, moisEcheance, resoudreSoumissions } from './b2b';
 import {
   IDS_DEMARCHES,
   coutDemarche,
   demarche,
   estObligatoire,
   estSocieteActions,
-  estSocietePersonnes,
   fraisComptablesForme,
   fraisImmatriculation,
   fraisMiseAJourAnnuelle,
-  immatriculationObligatoire,
 } from './conformite';
-import { noteCible, nouvelleNote, satisfactionClients } from './customers';
-import type {
-  Amenagement,
-  Emplacement,
-  Equipement,
-  FraisFixesMensuels,
-  NiveauQualite,
-  Secteur,
-  Ville,
-} from './data-types';
 import {
-  conjonctureInitiale,
-  evoluerConjoncture,
-  tauxPreferentiel,
-  type Conjoncture,
-} from './economy';
+  DIFFICULTES,
+  REGLES_FINANCEMENT,
+  amenagementDe,
+  coutUnitaireLigne,
+  dateDuMois,
+  emplacementDe,
+  equipementDe,
+  politiqueParDefaut,
+  qualiteDe,
+  typeCapitaux,
+  validerDecisions,
+} from './creation';
+import { noteCible, noteDuMois, nouvelleNote, satisfactionClients } from './customers';
+import type { FraisFixesMensuels, Secteur, Ville } from './data-types';
+import { evoluerConjoncture, tauxPreferentiel, type Conjoncture } from './economy';
+import { acheterMarchandises, payer, solderComptes } from './ecritures';
+import { appliquerEffets, montantEffets, tirerDilemme } from './events';
 import {
-  COUT_RECRUTEMENT,
+  JOURS_FERIES_PAR_MOIS,
+  effetsAvantages,
   evoluerMoral,
+  facteurIntegration,
   facteurMoral,
-  genererEmploye,
+  genererCandidat,
+  indemniteJourFerie,
   moralCible,
+  nombreCandidats,
+  penurieDuMois,
   probabiliteDepart,
-  semainesPreavis,
+  progressionCompetence,
+  salaireMarchePoste,
+  tauxAbsenteisme,
+  tauxVacances,
 } from './hr';
-import { reapprovisionner, tauxRupture } from './inventory';
-import { creerPret, effectuerVersement, portionCourante, rembourserPartiellement } from './loans';
+import {
+  COMPTES_IMMOBILISATIONS,
+  amortirImmobilisations,
+  effetsInvestissements,
+  fraisInvestissements,
+  usureEquipement,
+  type EffetsCumules,
+} from './immobilisations';
+import {
+  politiqueRecommandee,
+  simulerStockLigne,
+  stockVide,
+  unitesEnStock,
+  valeurStock,
+  type ResultatStockLigne,
+} from './inventory';
+import { ajusterTauxVariable, effectuerVersement, portionCourante, rembourserPartiellement } from './loans';
 import {
   evoluerNotoriete,
   indicePrixClient,
@@ -82,77 +117,52 @@ import {
   simulerMarche,
   type Offre,
   type ResultatOffre,
+  type SegmentMarche,
 } from './market';
-import { TAUX_VACANCES, cotisationsEmployeur, salaireMensuel } from './payroll';
+import {
+  combinerGains,
+  effetsPubliciteDuMois,
+  evoluerAdhesion,
+  evoluerImage,
+  imageCible,
+  malusFatiguePromo,
+  netPromoterScore,
+  notorieteMoyenne,
+  planifierEffetsPublicite,
+  promotionsRecentes,
+  retentionClients,
+  scoreEco,
+  scoreLocal,
+  segmentsMarche,
+  totalPublicite,
+  valeurVieClient,
+} from './marketing';
+import { cotisationsEmployeur, salaireMensuel } from './payroll';
+import { bonusGamme, lignesOffre, lignesStock, produitActif, resoudreLancements } from './produits';
 import { Rng } from './rng';
 import { cumulerMouvements, etatResultats } from './statements';
 import { FACTEUR_TAXES, depasseSeuilPetitFournisseur, retenuesEmploye, taxesSur } from './tax';
 import type {
   ConfigPartie,
   CumulPaie,
-  Decisions,
-  Difficulte,
-  Employe,
   Entreprise,
-  EtatFiscal,
   EtatPartie,
-  FormeJuridique,
   FrequenceTaxes,
-  IdDemarche,
   Indicateurs,
   Message,
   MoisArchive,
-  ParametresDemarrage,
+  StockLigneMois,
 } from './types';
 import { SEMAINES_PAR_MOIS, borner, lisser, versCents, versDollars } from './util';
 
+export * from './creation';
+export * from './actions';
+
 // ---------------------------------------------------------------------------
-// Règles du jeu
+// Règles
 // ---------------------------------------------------------------------------
 
-export const DIFFICULTES: Record<
-  Difficulte,
-  { marche: number; notorieteDepart: number; agressivite: number; limiteMarge: number }
-> = {
-  facile: { marche: 1.1, notorieteDepart: 0.12, agressivite: 0.6, limiteMarge: 25_000 },
-  realiste: { marche: 1.0, notorieteDepart: 0.08, agressivite: 1.0, limiteMarge: 20_000 },
-  expert: { marche: 0.9, notorieteDepart: 0.05, agressivite: 1.4, limiteMarge: 15_000 },
-};
-
-export const REGLES_FINANCEMENT = {
-  /** Prêt de démarrage : taux préférentiel + 2,5 %, fixe, sur 5 ans. */
-  ecartTauxPret: 0.025,
-  dureePretMois: 60,
-  /** La banque prête au plus 3 $ pour chaque dollar investi par les propriétaires. */
-  multipleApportMax: 3,
-  pretMax: 150_000,
-  apportMin: 5_000,
-  /** Marge de crédit : taux préférentiel + 3 %. */
-  ecartTauxMarge: 0.03,
-  /** Dépôt de garantie exigé par le propriétaire de l'immeuble (en mois de loyer). */
-  moisDepotGarantie: 2,
-  /** Encaisse minimale gardée avant de rembourser la marge de crédit. */
-  coussinEncaisse: 5_000,
-  /** Fonds de roulement minimal exigé à l'ouverture. */
-  fondsRoulementMin: 3_000,
-} as const;
-
-export const BORNES_DECISIONS = {
-  budgetPublicite: { min: 0, max: 20_000 },
-  heuresOuverture: { min: 20, max: 112 },
-  heuresProprietaire: { min: 0, max: 80 },
-  salaireHoraire: { max: 40 },
-  stockJoursCible: { min: 1, max: 21 },
-  prelevements: { min: 0, max: 15_000 },
-  salaireDirigeant: { min: 0, max: 20_000 },
-  heuresEmploye: { min: 8, max: 45 },
-  prixRatio: { min: 0.4, max: 3 },
-} as const;
-
-/** Bail commercial de 5 ans, indexé de 2,5 % par année. */
-const DUREE_BAIL_MOIS = 60;
-const INDEXATION_BAIL = 0.025;
-/** Proportion des ventes payées par carte (débit ou crédit). */
+/** Proportion des ventes en magasin payées par carte (débit ou crédit). */
 const PART_VENTES_CARTES = 0.85;
 /** Proportion des clients servis qui laissent un avis en ligne. */
 const TAUX_AVIS = 0.008;
@@ -162,21 +172,18 @@ const DETECTION_TAXES = 0.15;
 const PENALITE_TAXES = 0.15;
 /** Mois limite (fin juin) pour la déclaration de mise à jour annuelle du REQ. */
 const MOIS_LIMITE_MAJ_REQ = 6;
+/** Inspection du MAPAQ sans personne formée en hygiène : probabilité mensuelle et amende. */
+const RISQUE_HYGIENE = 0.025;
+const AMENDE_HYGIENE = 1500;
+/** Escompte de paiement rapide (2/10 net 30). */
+const TAUX_ESCOMPTE = 0.02;
 
 const COMPTES_FRAIS_FIXES: Record<
   keyof FraisFixesMensuels,
   { compte: CompteId; libelle: string; taxable: boolean }
 > = {
-  electricite: {
-    compte: 'electricite',
-    libelle: 'Électricité et chauffage (Hydro-Québec)',
-    taxable: true,
-  },
-  assurances: {
-    compte: 'assurances',
-    libelle: 'Assurances (taxe sur les primes non récupérable)',
-    taxable: false,
-  },
+  electricite: { compte: 'electricite', libelle: 'Électricité et chauffage (Hydro-Québec)', taxable: true },
+  assurances: { compte: 'assurances', libelle: 'Assurances (taxe sur les primes non récupérable)', taxable: false },
   comptable: { compte: 'honoraires', libelle: 'Honoraires du comptable', taxable: true },
   entretien: { compte: 'entretien', libelle: 'Entretien et réparations', taxable: true },
   logiciels: { compte: 'logiciels', libelle: 'Logiciel de caisse et abonnements', taxable: true },
@@ -184,688 +191,7 @@ const COMPTES_FRAIS_FIXES: Record<
 };
 
 // ---------------------------------------------------------------------------
-// Outils
-// ---------------------------------------------------------------------------
-
-export function dateDuMois(config: ConfigPartie, index: number): { annee: number; mois: number } {
-  return { annee: config.anneeDepart + Math.floor(index / 12), mois: (index % 12) + 1 };
-}
-
-function parId<T extends { id: string }>(liste: readonly T[], id: string): T {
-  const x = liste.find((e) => e.id === id);
-  if (!x) throw new Error(`Élément introuvable : ${id}`);
-  return x;
-}
-
-export function emplacementDe(ville: Ville, id: string): Emplacement {
-  return parId(ville.emplacements, id);
-}
-export function equipementDe(secteur: Secteur, id: string): Equipement {
-  return parId(secteur.equipements, id);
-}
-export function amenagementDe(secteur: Secteur, id: string): Amenagement {
-  return parId(secteur.amenagements, id);
-}
-export function qualiteDe(secteur: Secteur, id: string): NiveauQualite {
-  return parId(secteur.qualites, id);
-}
-
-export function loyerMensuelInitial(secteur: Secteur, emplacement: Emplacement): number {
-  return Math.round(
-    (secteur.superficiePi2 * (emplacement.loyerNetPi2 + emplacement.fraisCommunsPi2)) / 12,
-  );
-}
-
-export function typeCapitaux(forme: FormeJuridique): TypeCapitaux {
-  if (estSocieteActions(forme)) return 'actions';
-  if (estSocietePersonnes(forme)) return 'associes';
-  return 'proprietaire';
-}
-
-export interface CoutsDemarrage {
-  equipement: number;
-  amenagement: number;
-  depotGarantie: number;
-  stockInitial: number;
-  fraisDemarrage: number;
-  /** Immatriculation ou constitution et autres démarches choisies (permis, francisation…). */
-  fraisJuridiques: number;
-  /** TPS et TVQ payées sur les achats de démarrage (récupérables si l'entreprise est inscrite). */
-  taxes: number;
-  total: number;
-}
-
-type ParamsCouts = Pick<ParametresDemarrage, 'emplacementId' | 'equipementId' | 'amenagementId'> &
-  Partial<Pick<ParametresDemarrage, 'formeJuridique' | 'demarches'>>;
-
-export function coutsDemarrage(
-  params: ParamsCouts,
-  secteur: Secteur,
-  ville: Ville,
-): CoutsDemarrage {
-  const forme = params.formeJuridique ?? 'individuelle';
-  const demarches = new Set(params.demarches ?? []);
-  if (immatriculationObligatoire(forme)) demarches.add('req');
-  const equipement = equipementDe(secteur, params.equipementId).cout;
-  const amenagement = amenagementDe(secteur, params.amenagementId).cout;
-  const depotGarantie =
-    loyerMensuelInitial(secteur, emplacementDe(ville, params.emplacementId)) *
-    REGLES_FINANCEMENT.moisDepotGarantie;
-  const stockInitial = secteur.stockInitial;
-  const fraisDemarrage = secteur.fraisDemarrage;
-  const fraisJuridiques = [...demarches].reduce((a, id) => a + coutDemarche(id, forme), 0);
-  const taxable =
-    equipement + amenagement + fraisDemarrage + stockInitial * secteur.partAchatsTaxables;
-  const taxes = taxesSur(taxable).total;
-  return {
-    equipement,
-    amenagement,
-    depotGarantie,
-    stockInitial,
-    fraisDemarrage,
-    fraisJuridiques,
-    taxes,
-    total:
-      Math.round(
-        (equipement +
-          amenagement +
-          depotGarantie +
-          stockInitial +
-          fraisDemarrage +
-          fraisJuridiques +
-          taxes) *
-          100,
-      ) / 100,
-  };
-}
-
-export function pretMaximum(apport: number): number {
-  return Math.max(
-    0,
-    Math.min(REGLES_FINANCEMENT.pretMax, Math.floor(apport * REGLES_FINANCEMENT.multipleApportMax)),
-  );
-}
-
-export type ErreurDemarrage =
-  'nomVide' | 'apportInsuffisant' | 'pretTropEleve' | 'financementInsuffisant' | 'associeRequis';
-
-/** Mise de fonds totale des propriétaires (incluant l'associé d'une société de personnes). */
-export function apportTotal(
-  params: Pick<ParametresDemarrage, 'apportPersonnel' | 'apportAssocie' | 'formeJuridique'>,
-): number {
-  return (
-    params.apportPersonnel +
-    (estSocietePersonnes(params.formeJuridique) ? Math.max(0, params.apportAssocie) : 0)
-  );
-}
-
-export function validerDemarrage(
-  params: ParametresDemarrage,
-  secteur: Secteur,
-  ville: Ville,
-): ErreurDemarrage[] {
-  const erreurs: ErreurDemarrage[] = [];
-  if (params.nomEntreprise.trim().length === 0) erreurs.push('nomVide');
-  if (params.apportPersonnel < REGLES_FINANCEMENT.apportMin) erreurs.push('apportInsuffisant');
-  if (estSocietePersonnes(params.formeJuridique) && params.apportAssocie <= 0)
-    erreurs.push('associeRequis');
-  const apports = apportTotal(params);
-  if (params.montantPret > pretMaximum(apports)) erreurs.push('pretTropEleve');
-  const couts = coutsDemarrage(params, secteur, ville);
-  if (apports + params.montantPret < couts.total + REGLES_FINANCEMENT.fondsRoulementMin) {
-    erreurs.push('financementInsuffisant');
-  }
-  return erreurs;
-}
-
-export function decisionsParDefaut(
-  secteur: Secteur,
-  salaireMinimum: number,
-  forme: FormeJuridique = 'individuelle',
-): Decisions {
-  const prix: Record<string, number> = {};
-  for (const ligne of secteur.lignes) prix[ligne.id] = ligne.prixReference;
-  const poste = posteParId(secteur.postes[0]);
-  const societe = estSocieteActions(forme);
-  return {
-    prix,
-    qualiteId: 'standard',
-    budgetPublicite: 2_500,
-    heuresOuverture: secteur.heuresOuvertureReference,
-    heuresProprietaire: 50,
-    salaireHoraire: Math.max(salaireMinimum, poste.salaireMedian),
-    stockJoursCible: secteur.stockCibleJoursDefaut,
-    prelevements: societe ? 0 : 2_000,
-    remboursementAutoMarge: true,
-    apportPonctuel: 0,
-    remboursementAnticipe: 0,
-    salaireDirigeant: societe ? 2_500 : 0,
-    dividendePonctuel: 0,
-  };
-}
-
-/** Borne les décisions dans des limites réalistes (protège le moteur des valeurs absurdes). */
-export function validerDecisions(
-  d: Decisions,
-  secteur: Secteur,
-  salaireMinimum: number,
-  forme: FormeJuridique = 'individuelle',
-): Decisions {
-  const b = BORNES_DECISIONS;
-  const prix: Record<string, number> = {};
-  for (const ligne of secteur.lignes) {
-    const p = d.prix[ligne.id];
-    const valeur = Number.isFinite(p) ? p : ligne.prixReference;
-    prix[ligne.id] =
-      Math.round(
-        borner(
-          valeur,
-          ligne.prixReference * b.prixRatio.min,
-          ligne.prixReference * b.prixRatio.max * 1.5,
-        ) * 100,
-      ) / 100;
-  }
-  const fini = (x: number | undefined, defaut: number) =>
-    x !== undefined && Number.isFinite(x) ? x : defaut;
-  const societe = estSocieteActions(forme);
-  return {
-    prix,
-    qualiteId: secteur.qualites.some((q) => q.id === d.qualiteId) ? d.qualiteId : 'standard',
-    budgetPublicite: Math.round(
-      borner(fini(d.budgetPublicite, 0), b.budgetPublicite.min, b.budgetPublicite.max),
-    ),
-    heuresOuverture: Math.round(
-      borner(fini(d.heuresOuverture, 60), b.heuresOuverture.min, b.heuresOuverture.max),
-    ),
-    heuresProprietaire: Math.round(
-      borner(fini(d.heuresProprietaire, 40), b.heuresProprietaire.min, b.heuresProprietaire.max),
-    ),
-    salaireHoraire:
-      Math.round(
-        borner(fini(d.salaireHoraire, salaireMinimum), salaireMinimum, b.salaireHoraire.max) * 100,
-      ) / 100,
-    stockJoursCible: Math.round(
-      borner(fini(d.stockJoursCible, 7), b.stockJoursCible.min, b.stockJoursCible.max),
-    ),
-    // Une société par actions ne fait pas de prélèvements : elle verse un salaire ou des dividendes.
-    prelevements: societe
-      ? 0
-      : Math.round(borner(fini(d.prelevements, 0), b.prelevements.min, b.prelevements.max)),
-    remboursementAutoMarge: d.remboursementAutoMarge,
-    apportPonctuel: Math.round(borner(fini(d.apportPonctuel, 0), 0, 200_000)),
-    remboursementAnticipe: Math.round(borner(fini(d.remboursementAnticipe, 0), 0, 1_000_000)),
-    salaireDirigeant: societe
-      ? Math.round(
-          borner(fini(d.salaireDirigeant, 0), b.salaireDirigeant.min, b.salaireDirigeant.max),
-        )
-      : 0,
-    dividendePonctuel: societe ? Math.round(borner(fini(d.dividendePonctuel, 0), 0, 500_000)) : 0,
-  };
-}
-
-function etatFiscalInitial(inscritTaxes: boolean): EtatFiscal {
-  return {
-    inscritTaxes,
-    frequenceTaxes: 'trimestrielle',
-    ventesTaxablesMois: [],
-    doitSInscrire: false,
-    ventesNonTaxees: 0,
-    uccEquipement: 0,
-    uccAmeliorations: 0,
-    coutAmeliorations: 0,
-    pertesReportees: 0,
-    acompteMensuel: 0,
-    acomptesVersesAnnee: 0,
-    soldeImpotAPayer: 0,
-    heuresRemunereesAnnee: 0,
-    paieAnnee: {},
-    taxesAnnee: { tpsPercue: 0, tvqPercue: 0, cti: 0, rti: 0 },
-    declarations: [],
-    majAnnuelles: [],
-    incorporationPrevue: null,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Écritures avec taxes
-// ---------------------------------------------------------------------------
-
-/**
- * Paiement d'une dépense ou d'un actif. Si elle est taxable : une entreprise inscrite
- * récupère la TPS (CTI) et la TVQ (RTI); une entreprise non inscrite les absorbe dans le coût.
- */
-function payer(
-  L: GrandLivre,
-  ent: Entreprise,
-  libelle: string,
-  compte: CompteId,
-  montantHT: number,
-  taxable: boolean,
-  flux: FluxId,
-  contrepartie: CompteId = 'encaisse',
-): void {
-  const ht = versCents(montantHT);
-  if (ht <= 0) return;
-  if (!taxable) {
-    ecritureSimple(L, libelle, compte, contrepartie, ht, flux);
-    return;
-  }
-  const t = taxesSur(montantHT);
-  const tps = versCents(t.tps);
-  const tvq = versCents(t.tvq);
-  if (ent.fiscal.inscritTaxes) {
-    passerEcriture(L, {
-      libelle: `${libelle} (TPS et TVQ récupérables)`,
-      flux,
-      lignes: [
-        { compte, debit: ht },
-        { compte: 'ctiARecouvrer', debit: tps },
-        { compte: 'rtiARecouvrer', debit: tvq },
-        { compte: contrepartie, credit: ht + tps + tvq },
-      ],
-    });
-    ent.fiscal.taxesAnnee.cti += t.tps;
-    ent.fiscal.taxesAnnee.rti += t.tvq;
-  } else {
-    ecritureSimple(
-      L,
-      `${libelle} (taxes incluses, non récupérables)`,
-      compte,
-      contrepartie,
-      ht + tps + tvq,
-      flux,
-    );
-  }
-}
-
-/** Ramène des comptes à zéro en contrepartie de l'encaisse (remises gouvernementales). */
-function solderComptes(L: GrandLivre, libelle: string, comptes: CompteId[], flux: FluxId): number {
-  const lignes: LigneEcriture[] = [];
-  let net = 0;
-  for (const id of comptes) {
-    const b = L.soldes[id];
-    if (b > 0) lignes.push({ compte: id, credit: b });
-    else if (b < 0) lignes.push({ compte: id, debit: -b });
-    net -= b;
-  }
-  if (lignes.length === 0) return 0;
-  if (net > 0) lignes.push({ compte: 'encaisse', credit: net });
-  else if (net < 0) lignes.push({ compte: 'encaisse', debit: -net });
-  passerEcriture(L, { libelle, flux, lignes });
-  return net;
-}
-
-// ---------------------------------------------------------------------------
-// Création de la partie
-// ---------------------------------------------------------------------------
-
-export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): EtatPartie {
-  const secteur = secteurParId(config.secteurId);
-  const ville = villeParId(config.villeId);
-  const erreurs = validerDemarrage(params, secteur, ville);
-  if (erreurs.length > 0) throw new Error(`Démarrage invalide : ${erreurs.join(', ')}`);
-
-  const rng = new Rng(config.graine);
-  const diff = DIFFICULTES[config.difficulte];
-  const conjoncture = conjonctureInitiale();
-  const salaireMinimum = SALAIRE_MINIMUM.general;
-  const forme = params.formeJuridique;
-  const emplacement = emplacementDe(ville, params.emplacementId);
-  const equipement = equipementDe(secteur, params.equipementId);
-  const amenagement = amenagementDe(secteur, params.amenagementId);
-  const couts = coutsDemarrage(params, secteur, ville);
-  const societe = estSocieteActions(forme);
-  const avecAssocie = estSocietePersonnes(forme);
-
-  const demarches = {} as Record<IdDemarche, boolean>;
-  for (const id of IDS_DEMARCHES) demarches[id] = params.demarches.includes(id);
-  if (immatriculationObligatoire(forme)) demarches.req = true;
-
-  const poste = posteParId(secteur.postes[0]);
-  const employes = [1, 2, 3].map((i) => genererEmploye(i, poste, poste.heuresSemaineDefaut, rng));
-  const qualite = qualiteDe(secteur, 'standard');
-  const livre = creerGrandLivre();
-
-  const entreprise: Entreprise = {
-    id: 'joueur-1',
-    nom: params.nomEntreprise.trim(),
-    proprietaire: params.nomProprietaire.trim() || 'Propriétaire',
-    couleur: params.couleur,
-    formeJuridique: forme,
-    associe: avecAssocie
-      ? {
-          nom: params.nomAssocie.trim() || 'Associé',
-          part: params.apportAssocie / (params.apportPersonnel + params.apportAssocie),
-        }
-      : null,
-    demarches,
-    fiscal: etatFiscalInitial(params.inscritTaxes),
-    emplacementId: emplacement.id,
-    equipementId: equipement.id,
-    amenagementId: amenagement.id,
-    decisions: decisionsParDefaut(secteur, salaireMinimum, forme),
-    employes,
-    clientele: {
-      notoriete: diff.notorieteDepart,
-      qualitePercue: qualite.score + equipement.bonusQualite,
-      service: 0.6,
-      satisfaction: 0.7,
-      note: 4,
-      nbAvis: 0,
-    },
-    livre,
-    prets: [],
-    margeCredit: {
-      limite: versCents(diff.limiteMarge),
-      ecartTaux: REGLES_FINANCEMENT.ecartTauxMarge,
-    },
-    bail: {
-      loyerMensuel: versCents(loyerMensuelInitial(secteur, emplacement)),
-      dureeMois: DUREE_BAIL_MOIS,
-      indexation: INDEXATION_BAIL,
-    },
-    dureeAmortAmeliorations: DUREE_BAIL_MOIS,
-    dureeAmortEquipement: equipement.dureeVieMois,
-    enAttente: { recrutement: 0, indemnites: 0, embauches: 0 },
-    archives: [],
-    moisEnDefaut: 0,
-    enFaillite: false,
-    prochainIdEmploye: employes.length + 1,
-    joursFermeture: 0,
-  };
-
-  // Financement : mise de fonds (capital, parts d'associés ou actions) et prêt.
-  ecritureSimple(
-    livre,
-    societe ? 'Émission d’actions ordinaires au fondateur' : 'Mise de fonds du propriétaire',
-    'encaisse',
-    societe ? 'capitalActions' : 'capital',
-    versCents(params.apportPersonnel),
-    'apportsProprietaire',
-  );
-  if (avecAssocie) {
-    ecritureSimple(
-      livre,
-      'Mise de fonds de l’associé',
-      'encaisse',
-      'capitalAssocie',
-      versCents(params.apportAssocie),
-      'apportsProprietaire',
-    );
-  }
-  if (params.montantPret > 0) {
-    const taux = tauxPreferentiel(conjoncture) + REGLES_FINANCEMENT.ecartTauxPret;
-    const pret = creerPret(
-      'pret-demarrage',
-      'Prêt de démarrage',
-      versCents(params.montantPret),
-      taux,
-      REGLES_FINANCEMENT.dureePretMois,
-    );
-    entreprise.prets.push(pret);
-    ecritureSimple(
-      livre,
-      'Prêt bancaire de démarrage',
-      'encaisse',
-      'empruntBancaire',
-      pret.capitalInitial,
-      'empruntsRecus',
-    );
-  }
-
-  // Investissements de démarrage (taxes récupérables seulement si l'entreprise est inscrite).
-  payer(
-    livre,
-    entreprise,
-    `Achat : ${equipement.nom}`,
-    'equipement',
-    couts.equipement,
-    true,
-    'acquisitionImmobilisations',
-  );
-  payer(
-    livre,
-    entreprise,
-    `Travaux : ${amenagement.nom}`,
-    'ameliorationsLocatives',
-    couts.amenagement,
-    true,
-    'acquisitionImmobilisations',
-  );
-  ecritureSimple(
-    livre,
-    'Dépôt de garantie du bail',
-    'depotGarantie',
-    'encaisse',
-    versCents(couts.depotGarantie),
-    'depotGarantie',
-  );
-  const stockTaxable = couts.stockInitial * secteur.partAchatsTaxables;
-  ecritureSimple(
-    livre,
-    'Stock initial de marchandises (aliments détaxés)',
-    'stocks',
-    'encaisse',
-    versCents(couts.stockInitial - stockTaxable),
-    'achatStockInitial',
-  );
-  payer(
-    livre,
-    entreprise,
-    'Stock initial (emballages et fournitures)',
-    'stocks',
-    stockTaxable,
-    true,
-    'achatStockInitial',
-  );
-  payer(
-    livre,
-    entreprise,
-    'Frais de démarrage (enseigne, inauguration, frais juridiques)',
-    'fraisDemarrage',
-    couts.fraisDemarrage,
-    true,
-    'fraisDemarrage',
-  );
-  for (const id of IDS_DEMARCHES) {
-    if (!demarches[id]) continue;
-    const cout = coutDemarche(id, forme);
-    if (cout > 0)
-      ecritureSimple(
-        livre,
-        demarche(id).nom,
-        'droitsPermis',
-        'encaisse',
-        versCents(cout),
-        'droitsEtAmendes',
-      );
-  }
-
-  // Valeurs fiscales de départ des biens amortissables (FNACC).
-  entreprise.fiscal.uccEquipement = versDollars(livre.soldes.equipement);
-  entreprise.fiscal.uccAmeliorations = versDollars(livre.soldes.ameliorationsLocatives);
-  entreprise.fiscal.coutAmeliorations = entreprise.fiscal.uccAmeliorations;
-
-  // Jalon 1 : deux concurrents (le Géant et le Local branché).
-  const concurrents = PERSONNALITES.slice(0, 2).map((p) =>
-    creerConcurrent(p, secteur, diff.agressivite),
-  );
-
-  return {
-    version: 1,
-    config,
-    moisCourant: 0,
-    rngState: rng.state,
-    conjoncture,
-    salaireMinimum,
-    entreprises: [entreprise],
-    concurrents,
-    terminee: false,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Actions du joueur entre deux mois
-// ---------------------------------------------------------------------------
-
-function trouverEntreprise(etat: EtatPartie, id: string): Entreprise {
-  return parId(etat.entreprises, id);
-}
-
-/** Applique une action sur une copie de l'état (fonction pure). */
-function action(
-  etat: EtatPartie,
-  entrepriseId: string,
-  f: (ent: Entreprise, e: EtatPartie) => void,
-): EtatPartie {
-  const e = structuredClone(etat);
-  f(trouverEntreprise(e, entrepriseId), e);
-  return e;
-}
-
-export function modifierDecisions(
-  etat: EtatPartie,
-  entrepriseId: string,
-  changements: Partial<Decisions>,
-): EtatPartie {
-  return action(etat, entrepriseId, (ent, e) => {
-    const secteur = secteurParId(e.config.secteurId);
-    ent.decisions = validerDecisions(
-      { ...ent.decisions, ...changements },
-      secteur,
-      e.salaireMinimum,
-      ent.formeJuridique,
-    );
-  });
-}
-
-export function embaucher(
-  etat: EtatPartie,
-  entrepriseId: string,
-  heuresSemaine?: number,
-): EtatPartie {
-  return action(etat, entrepriseId, (ent, e) => {
-    const secteur = secteurParId(e.config.secteurId);
-    const poste = posteParId(secteur.postes[0]);
-    const rng = new Rng(e.rngState);
-    const heures = Math.round(
-      borner(
-        heuresSemaine ?? poste.heuresSemaineDefaut,
-        BORNES_DECISIONS.heuresEmploye.min,
-        BORNES_DECISIONS.heuresEmploye.max,
-      ),
-    );
-    ent.employes.push(genererEmploye(ent.prochainIdEmploye, poste, heures, rng));
-    ent.prochainIdEmploye += 1;
-    ent.enAttente.recrutement += COUT_RECRUTEMENT;
-    ent.enAttente.embauches += 1;
-    e.rngState = rng.state;
-  });
-}
-
-/** Fin d'emploi : l'employé part tout de suite et reçoit une indemnité tenant lieu de préavis. */
-export function congedier(etat: EtatPartie, entrepriseId: string, employeId: string): EtatPartie {
-  return action(etat, entrepriseId, (ent) => {
-    const employe = parId(ent.employes, employeId);
-    const semaines = semainesPreavis(employe.moisAnciennete);
-    ent.enAttente.indemnites +=
-      Math.round(semaines * employe.heuresSemaine * ent.decisions.salaireHoraire * 100) / 100;
-    ent.employes = ent.employes.filter((x) => x.id !== employeId);
-  });
-}
-
-export function modifierHeuresEmploye(
-  etat: EtatPartie,
-  entrepriseId: string,
-  employeId: string,
-  heures: number,
-): EtatPartie {
-  return action(etat, entrepriseId, (ent) => {
-    const employe = parId(ent.employes, employeId);
-    employe.heuresSemaine = Math.round(
-      borner(heures, BORNES_DECISIONS.heuresEmploye.min, BORNES_DECISIONS.heuresEmploye.max),
-    );
-  });
-}
-
-/** Inscription volontaire aux fichiers de la TPS et de la TVQ. */
-export function inscrireTaxes(etat: EtatPartie, entrepriseId: string): EtatPartie {
-  return action(etat, entrepriseId, (ent) => {
-    ent.fiscal.inscritTaxes = true;
-    ent.fiscal.doitSInscrire = false;
-  });
-}
-
-export function changerFrequenceTaxes(
-  etat: EtatPartie,
-  entrepriseId: string,
-  frequence: FrequenceTaxes,
-): EtatPartie {
-  return action(etat, entrepriseId, (ent) => {
-    ent.fiscal.frequenceTaxes = frequence;
-  });
-}
-
-/** Faire une démarche oubliée (payer son coût maintenant) avant qu'elle soit découverte. */
-export function regulariserDemarche(
-  etat: EtatPartie,
-  entrepriseId: string,
-  id: IdDemarche,
-): EtatPartie {
-  return action(etat, entrepriseId, (ent) => {
-    if (ent.demarches[id]) return;
-    ent.demarches[id] = true;
-    const cout = coutDemarche(id, ent.formeJuridique);
-    if (cout > 0)
-      ecritureSimple(
-        ent.livre,
-        `Régularisation : ${demarche(id).nom}`,
-        'droitsPermis',
-        'encaisse',
-        versCents(cout),
-        'droitsEtAmendes',
-      );
-  });
-}
-
-/** Produire la déclaration de mise à jour annuelle au REQ pour l'année en cours. */
-export function produireMiseAJourAnnuelle(etat: EtatPartie, entrepriseId: string): EtatPartie {
-  return action(etat, entrepriseId, (ent, e) => {
-    const { annee } = dateDuMois(e.config, Math.min(e.moisCourant, e.config.dureeMois - 1));
-    if (ent.fiscal.majAnnuelles.includes(annee)) return;
-    ent.fiscal.majAnnuelles.push(annee);
-    ecritureSimple(
-      ent.livre,
-      `Déclaration de mise à jour annuelle ${annee} (REQ)`,
-      'droitsPermis',
-      'encaisse',
-      versCents(fraisMiseAJourAnnuelle(ent.formeJuridique)),
-      'droitsEtAmendes',
-    );
-  });
-}
-
-/** S'incorporer : la société par actions prend effet le 1er janvier suivant (début d'un exercice). */
-export function planifierIncorporation(
-  etat: EtatPartie,
-  entrepriseId: string,
-  type: 'inc-qc' | 'inc-federal' | null,
-): EtatPartie {
-  return action(etat, entrepriseId, (ent) => {
-    if (ent.formeJuridique !== 'individuelle') return;
-    ent.fiscal.incorporationPrevue = type;
-  });
-}
-
-/** La déclaration de mise à jour annuelle est-elle exigée cette année? */
-export function majAnnuelleExigee(anneeDepart: number, ent: Entreprise, annee: number): boolean {
-  return (
-    annee > anneeDepart && (ent.demarches.req || immatriculationObligatoire(ent.formeJuridique))
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Simulation d'un mois
+// Contexte du mois
 // ---------------------------------------------------------------------------
 
 interface ContexteMois {
@@ -880,19 +206,59 @@ interface ContexteMois {
   rng: Rng;
   messagesCommuns: Message[];
   config: ConfigPartie;
+  segments: SegmentMarche[];
 }
 
 interface Preparation {
   offre: Offre;
   capacite: number;
+  capaciteCuisine: number;
+  sansCuisinier: boolean;
   heuresPersonnel: number;
   heuresEffectives: number;
+  heuresProprietaire: number;
+  qualiteLignes: Record<string, number>;
+  qualiteGlobale: number;
+  coutLignes: Record<string, number>;
+  effets: EffetsCumules;
+  competenceMoyenne: number;
+  moralPondere: number;
+  bonusService: number;
+  ambiance: number;
+  eco: number;
+  local: number;
+  bonusConversion: number;
+  promotionsRecentes: number;
   messages: Message[];
 }
 
+function nouvelId(ent: Entreprise, prefixe: string): string {
+  ent.prochainId += 1;
+  return `${prefixe}-${ent.prochainId}`;
+}
+
+/** Heures hebdomadaires d'un poste précis dans l'équipe. */
+function heuresPoste(ent: Entreprise, role: string): number {
+  return ent.employes
+    .filter((e) => posteParId(e.posteId).role === role)
+    .reduce((a, e) => a + e.heuresSemaine, 0);
+}
+
+/** Conformité en hygiène et salubrité : gestionnaire formé ou au moins 10 % du personnel formé. */
+export function conformeHygiene(ent: Entreprise): boolean {
+  if (ent.rh.gestionnaireHygiene) return true;
+  const formes = ent.employes.filter((e) => e.formations.includes('manipulateur')).length;
+  return formes >= Math.max(1, Math.ceil(ent.employes.length * 0.1));
+}
+
+// ---------------------------------------------------------------------------
+// Début du mois
+// ---------------------------------------------------------------------------
+
 /**
- * Début du mois : changements de forme juridique, contrôles des organismes (démarches
- * oubliées, taxes non perçues), sinistres non assurés et obligations annuelles.
+ * Début du mois : changements de forme juridique, dilemmes non tranchés, risques qui
+ * se concrétisent, contrôles des organismes, lancements de produits, résultat des
+ * soumissions et obligations annuelles.
  */
 function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
   const L = ent.livre;
@@ -904,80 +270,70 @@ function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
   // Incorporation planifiée : elle prend effet le 1er janvier.
   if (ctx.mois === 1 && f.incorporationPrevue && ent.formeJuridique === 'individuelle') {
     const nouvelle = f.incorporationPrevue;
-    ecritureSimple(
-      L,
-      'Constitution de la société par actions',
-      'droitsPermis',
-      'encaisse',
-      versCents(fraisImmatriculation(nouvelle)),
-      'droitsEtAmendes',
-    );
+    ecritureSimple(L, 'Constitution de la société par actions', 'droitsPermis', 'encaisse', versCents(fraisImmatriculation(nouvelle)), 'droitsEtAmendes');
     convertirEnCapitalActions(L);
     ent.formeJuridique = nouvelle;
     ent.demarches.req = true;
     f.incorporationPrevue = null;
-    ent.decisions = {
-      ...ent.decisions,
-      prelevements: 0,
-      salaireDirigeant: ent.decisions.prelevements,
-    };
+    ent.finance.actionnaires = [{ nom: ent.proprietaire, part: 1, type: 'fondateur' }];
+    ent.decisions = { ...ent.decisions, prelevements: 0, salaireDirigeant: ent.decisions.prelevements };
     m.push({ code: 'incorporationEffectuee', niveau: 'succes', params: { forme: nouvelle } });
+  }
+
+  // Dilemmes non tranchés : le choix par défaut s'applique (ne rien décider est un choix).
+  for (const d of ent.dilemmes) {
+    const def = dilemmeParId(d.defId);
+    const choix = def.choix.find((c) => c.id === def.choixParDefaut) ?? def.choix[0];
+    const c = contexteEffets(ent, d.employeId, ctx.index, rng);
+    appliquerEffets(choix.effets, c);
+    m.push(...c.messages);
+    m.push({ code: 'dilemmeNonTranche', niveau: 'alerte', params: { titre: def.titre, choix: choix.libelle } });
+  }
+  ent.dilemmes = [];
+
+  // Risques différés (plaintes) : se concrétisent ou non.
+  const echus = ent.risques.filter((r) => r.echeance <= ctx.index);
+  ent.risques = ent.risques.filter((r) => r.echeance > ctx.index);
+  for (const r of echus) {
+    if (!rng.chance(r.probabilite)) continue;
+    const montant = montantEffets(r.effets, ent.employes.length);
+    const c = contexteEffets(ent, null, ctx.index, rng);
+    appliquerEffets(r.effets, c);
+    m.push(...c.messages);
+    m.push({ code: r.code, niveau: 'danger', params: { montant } });
   }
 
   // Contrôles : une démarche obligatoire oubliée peut être découverte.
   for (const id of IDS_DEMARCHES) {
     if (ent.demarches[id]) continue;
     const d = demarche(id);
-    if (
-      id === 'req' &&
-      ent.formeJuridique === 'individuelle' &&
-      ent.nom.toLowerCase().includes(ent.proprietaire.toLowerCase())
-    )
+    if (id === 'req' && ent.formeJuridique === 'individuelle' && ent.nom.toLowerCase().includes(ent.proprietaire.toLowerCase()))
       continue;
     if (d.sinistre) {
       // Pas d'assurance : un accident ou un dégât d'eau est payé par l'entreprise.
       if (rng.chance(d.probabiliteDetection)) {
         const cout = Math.round(rng.range(d.sinistre[0], d.sinistre[1]));
-        ecritureSimple(
-          L,
-          'Sinistre non assuré (dégât d’eau ou réclamation d’un client)',
-          'sinistres',
-          'encaisse',
-          versCents(cout),
-          'droitsEtAmendes',
-        );
+        ecritureSimple(L, 'Sinistre non assuré (dégât d’eau ou réclamation d’un client)', 'sinistres', 'encaisse', versCents(cout), 'droitsEtAmendes');
         m.push({ code: 'sinistreNonAssure', niveau: 'danger', params: { montant: cout } });
       }
       continue;
     }
-    if (!estObligatoire(id, secteur, ent.employes.length) || !rng.chance(d.probabiliteDetection))
-      continue;
+    if (!estObligatoire(id, secteur, ent.employes.length) || !rng.chance(d.probabiliteDetection)) continue;
     const cout = coutDemarche(id, ent.formeJuridique);
-    if (d.amende > 0)
-      ecritureSimple(
-        L,
-        `Amende : ${d.nom}`,
-        'amendes',
-        'encaisse',
-        versCents(d.amende),
-        'droitsEtAmendes',
-      );
-    if (cout > 0)
-      ecritureSimple(
-        L,
-        `Régularisation forcée : ${d.nom}`,
-        'droitsPermis',
-        'encaisse',
-        versCents(cout),
-        'droitsEtAmendes',
-      );
+    if (d.amende > 0) ecritureSimple(L, `Amende : ${d.nom}`, 'amendes', 'encaisse', versCents(d.amende), 'droitsEtAmendes');
+    if (cout > 0) ecritureSimple(L, `Régularisation forcée : ${d.nom}`, 'droitsPermis', 'encaisse', versCents(cout), 'droitsEtAmendes');
     ent.demarches[id] = true;
+    if (id === 'mapaq') ent.rh.gestionnaireHygiene = true;
     ent.joursFermeture = Math.max(ent.joursFermeture, d.joursFermeture);
-    m.push({
-      code: 'demarcheDecouverte',
-      niveau: 'danger',
-      params: { nom: d.nom, organisme: d.organisme, amende: d.amende, jours: d.joursFermeture },
-    });
+    m.push({ code: 'demarcheDecouverte', niveau: 'danger', params: { nom: d.nom, organisme: d.organisme, amende: d.amende, jours: d.joursFermeture } });
+  }
+
+  // Hygiène et salubrité : une inspection peut constater l'absence de personne formée.
+  if (secteur.alimentation && !conformeHygiene(ent) && rng.chance(RISQUE_HYGIENE)) {
+    ecritureSimple(L, 'Constat d’infraction du MAPAQ (hygiène et salubrité)', 'amendes', 'encaisse', versCents(AMENDE_HYGIENE), 'droitsEtAmendes');
+    payer(L, ent, 'Formation obligatoire de gestionnaire en hygiène', 'formation', 220, true, 'formationAvantages');
+    ent.rh.gestionnaireHygiene = true;
+    m.push({ code: 'infractionHygiene', niveau: 'danger', params: { amende: AMENDE_HYGIENE } });
   }
 
   // Taxes : un petit fournisseur qui a dépassé le seuil sans s'inscrire peut être découvert.
@@ -986,93 +342,212 @@ function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
     const penalite = taxes * PENALITE_TAXES;
     const interets = taxes * INTERETS_FISCAUX.tauxAnnuel * 0.25;
     const total = Math.round((taxes + penalite + interets) * 100) / 100;
-    ecritureSimple(
-      L,
-      'Avis de cotisation : TPS/TVQ non perçues, pénalité et intérêts',
-      'amendes',
-      'encaisse',
-      versCents(total),
-      'droitsEtAmendes',
-    );
-    m.push({
-      code: 'cotisationTaxes',
-      niveau: 'danger',
-      params: { ventes: f.ventesNonTaxees, montant: total },
-    });
+    ecritureSimple(L, 'Avis de cotisation : TPS/TVQ non perçues, pénalité et intérêts', 'amendes', 'encaisse', versCents(total), 'droitsEtAmendes');
+    m.push({ code: 'cotisationTaxes', niveau: 'danger', params: { ventes: f.ventesNonTaxees, montant: total } });
     f.inscritTaxes = true;
     f.doitSInscrire = false;
     f.ventesNonTaxees = 0;
   }
 
   // REQ : déclaration de mise à jour annuelle à produire avant la fin de juin.
-  if (
-    majAnnuelleExigee(ctx.config.anneeDepart, ent, ctx.annee) &&
-    !f.majAnnuelles.includes(ctx.annee)
-  ) {
-    if (ctx.mois === MOIS_LIMITE_MAJ_REQ + 1) {
-      const frais = fraisMiseAJourAnnuelle(ent.formeJuridique);
-      ecritureSimple(
-        L,
-        `Déclaration de mise à jour annuelle ${ctx.annee} produite en retard`,
-        'droitsPermis',
-        'encaisse',
-        versCents(frais),
-        'droitsEtAmendes',
-      );
-      ecritureSimple(
-        L,
-        'Pénalité de retard du REQ (50 % des droits)',
-        'amendes',
-        'encaisse',
-        versCents(frais * 0.5),
-        'droitsEtAmendes',
-      );
+  if (majAnnuelleExigee(ctx.config.anneeDepart, ent, ctx.annee) && !f.majAnnuelles.includes(ctx.annee)) {
+    const commis = heuresPoste(ent, 'administration') >= 5;
+    if (commis && ctx.mois >= 3) {
+      // Le commis comptable produit la déclaration à temps.
       f.majAnnuelles.push(ctx.annee);
-      m.push({
-        code: 'majAnnuelleEnRetard',
-        niveau: 'alerte',
-        params: { annee: ctx.annee, penalite: frais * 0.5 },
-      });
+      ecritureSimple(L, `Déclaration de mise à jour annuelle ${ctx.annee} (REQ)`, 'droitsPermis', 'encaisse', versCents(fraisMiseAJourAnnuelle(ent.formeJuridique)), 'droitsEtAmendes');
+      m.push({ code: 'majAnnuelleAuto', niveau: 'info', params: { annee: ctx.annee } });
+    } else if (ctx.mois === MOIS_LIMITE_MAJ_REQ + 1) {
+      const frais = fraisMiseAJourAnnuelle(ent.formeJuridique);
+      ecritureSimple(L, `Déclaration de mise à jour annuelle ${ctx.annee} produite en retard`, 'droitsPermis', 'encaisse', versCents(frais), 'droitsEtAmendes');
+      ecritureSimple(L, 'Pénalité de retard du REQ (50 % des droits)', 'amendes', 'encaisse', versCents(frais * 0.5), 'droitsEtAmendes');
+      f.majAnnuelles.push(ctx.annee);
+      m.push({ code: 'majAnnuelleEnRetard', niveau: 'alerte', params: { annee: ctx.annee, penalite: frais * 0.5 } });
     } else if (ctx.mois >= 3 && ctx.mois <= MOIS_LIMITE_MAJ_REQ) {
       m.push({ code: 'rappelMajAnnuelle', niveau: 'info', params: { annee: ctx.annee } });
     }
   }
+
+  // Pertes récurrentes (vol dans la caisse).
+  for (const p of ent.effetsMois.pertesRecurrentes) {
+    ecritureSimple(L, p.libelle, 'sinistres', 'encaisse', versCents(p.montant), 'droitsEtAmendes');
+    p.moisRestants -= 1;
+  }
+
+  // Nouveaux produits : fin du développement.
+  m.push(...resoudreLancements(ent, secteur, ctx.index, qualiteDe(secteur, ent.decisions.qualiteId).score, rng));
+
+  // Ventes aux entreprises : résultat des soumissions.
+  const gagnes = resoudreSoumissions(ent, () => nouvelId(ent, 'contrat'), rng);
+  ent.b2b.contrats.push(...gagnes);
+  for (const r of ent.b2b.resultats)
+    m.push({ code: r.gagne ? 'soumissionGagnee' : 'soumissionPerdue', niveau: r.gagne ? 'succes' : 'info', params: { client: r.client, prix: r.prix } });
+
+  // Salaire minimum et absentéisme du mois.
+  let ajuste = false;
+  for (const e of ent.employes) {
+    if (e.salaireHoraire < ctx.salaireMinimum) {
+      e.salaireHoraire = ctx.salaireMinimum;
+      ajuste = true;
+    }
+    e.absenteisme = Math.round(tauxAbsenteisme(e.moral, traitParId(e.trait)) * 1000) / 1000;
+  }
+  if (ajuste) m.push({ code: 'salaireAjusteMinimum', niveau: 'info', params: { salaire: ctx.salaireMinimum } });
   return m;
 }
 
+// ---------------------------------------------------------------------------
+// Offre de l'entreprise
+// ---------------------------------------------------------------------------
+
 function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]): Preparation {
   const d = ent.decisions;
+  const { secteur, conj } = ctx;
   const emplacement = emplacementDe(ctx.ville, ent.emplacementId);
-  const amenagement = amenagementDe(ctx.secteur, ent.amenagementId);
+  const amenagement = amenagementDe(secteur, ent.amenagementId);
+  const equipement = equipementDe(secteur, ent.equipementId);
+  const qualite = qualiteDe(secteur, d.qualiteId);
+  const effets = effetsInvestissements(ent, secteur);
   const ouvert = 1 - borner(ent.joursFermeture / 30, 0, 1);
-  const heuresEmployes = ent.employes.reduce((a, x) => a + x.heuresSemaine, 0);
-  const heuresPersonnel = heuresEmployes + d.heuresProprietaire;
-  // Il faut au moins une personne sur place pour ouvrir.
-  const heuresEffectives = Math.min(d.heuresOuverture, heuresPersonnel);
-  const heuresProductives =
-    ent.employes.reduce((a, x) => a + x.heuresSemaine * x.competence * facteurMoral(x.moral), 0) +
-    d.heuresProprietaire;
-  const capacite = Math.floor(
-    heuresProductives * SEMAINES_PAR_MOIS * ctx.secteur.transactionsParHeureEmploye * ouvert,
+  const facteurMois = ent.effetsMois.capacite;
+  const gerant = heuresPoste(ent, 'gestion') > 0;
+  const capaciteAvantages =
+    ent.employes.length > 0
+      ? ent.employes.reduce((a, e) => a + effetsAvantages(d.avantages, e.heuresSemaine).capacite, 0) /
+        ent.employes.length
+      : 0;
+
+  // Le temps passé à répondre aux avis est pris sur les heures du propriétaire.
+  const heuresProprietaire = Math.max(
+    0,
+    d.heuresProprietaire + ent.effetsMois.heuresProprietaire - (d.reponseAvis === 'ignorer' ? 0 : 1),
   );
+  let service = 0;
+  let cuisine = 0;
+  let heuresService = heuresProprietaire;
+  let heuresCuisine = 0;
+  for (const e of ent.employes) {
+    const poste = posteParId(e.posteId);
+    const h = e.heuresSemaine * (1 - e.absenteisme);
+    const prod = h * e.competence * facteurMoral(e.moral) * facteurIntegration(e.moisAnciennete);
+    service += prod * poste.productiviteService;
+    cuisine += prod * poste.productiviteCuisine;
+    if (poste.productiviteService >= 0.25) heuresService += e.heuresSemaine;
+    if (poste.productiviteCuisine > 0) heuresCuisine += h;
+  }
+  service += heuresProprietaire;
+  const multiplicateur =
+    ouvert * facteurMois * (1 + effets.capaciteService + capaciteAvantages + (gerant ? 0.04 : 0));
+  const capacite = Math.floor(service * SEMAINES_PAR_MOIS * secteur.transactionsParHeureEmploye * multiplicateur);
+  const sansCuisinier = heuresCuisine <= 0;
+  const capaciteCuisine = Math.floor(
+    (sansCuisinier ? service * 0.12 : cuisine) * SEMAINES_PAR_MOIS * secteur.unitesCuisineParHeure * ouvert * facteurMois,
+  );
+  const heuresPersonnel = ent.employes.reduce((a, x) => a + x.heuresSemaine, 0) + heuresProprietaire;
+  const heuresEffectives = Math.min(d.heuresOuverture, heuresService);
+
+  // Qualité et coût de chaque ligne (qualité choisie, fournisseur, formation, investissements).
+  const formesBarista = ent.employes.filter((e) => e.formations.includes('barista')).length;
+  const formesCuisine = ent.employes.filter((e) => e.formations.includes('cuisine')).length;
+  const qualiteLignes: Record<string, number> = {};
+  const coutLignes: Record<string, number> = {};
+  for (const ligne of lignesStock(ent, secteur)) {
+    const politique = d.approvisionnement[ligne.id];
+    const fournisseurId = politique?.fournisseurId ?? secteur.fournisseursDefaut[ligne.categorieAppro];
+    const f = fournisseurParId(fournisseurId);
+    let q = qualite.score + equipement.bonusQualite + f.bonusQualite + (effets.qualiteLignes[ligne.id] ?? 0);
+    if (ligne.categorieAppro === 'boissons') q += Math.min(0.04, 0.02 * formesBarista);
+    if (ligne.cuisine) q += sansCuisinier ? -0.06 : Math.min(0.04, 0.02 * formesCuisine);
+    qualiteLignes[ligne.id] = borner(q, 0.05, 1);
+    coutLignes[ligne.id] = coutUnitaireLigne(ligne, fournisseurId, qualite, conj, effets.coutLignes[ligne.id] ?? 1);
+  }
+  let poids = 0;
+  let somme = 0;
+  for (const ligne of secteur.lignes) {
+    const w = ligne.tauxAchat * ligne.prixReference;
+    poids += w;
+    somme += w * (qualiteLignes[ligne.id] ?? qualite.score);
+  }
+  const qualiteGlobale = poids > 0 ? somme / poids : qualite.score;
+
+  // Moral et compétence de l'équipe (pondérés par les heures).
+  const heuresTotales = heuresPersonnel;
+  const moralPondere =
+    heuresTotales > 0
+      ? (ent.employes.reduce((a, x) => a + x.moral * x.heuresSemaine, 0) + 80 * heuresProprietaire) / heuresTotales
+      : 50;
+  const competenceMoyenne =
+    heuresTotales > 0
+      ? (ent.employes.reduce((a, x) => a + x.competence * x.heuresSemaine, 0) + 1.1 * heuresProprietaire) / heuresTotales
+      : 0.8;
+  const bonusService = Math.min(
+    0.06,
+    ent.employes.reduce((a, e) => a + traitParId(e.trait).service, 0) + (d.satisfactionGarantie ? 0.01 : 0),
+  );
+
+  // Positionnement et marketing.
+  const ambiance = Math.min(0.95, amenagement.ambiance + effets.ambiance);
+  const eco = scoreEco(d);
+  const local = scoreLocal(d, secteur);
+  const recentes = promotionsRecentes(ent.marketing, ctx.index);
+  const prix: Record<string, number> = {};
+  for (const [k, v] of Object.entries(d.prix)) prix[k] = Math.round(v * (1 - d.promotion) * 100) / 100;
+  const bonusSegments: Record<string, number> = {};
+  const fidelite = PARAMETRES_MARKETING.fidelite;
+  for (const seg of ctx.segments) {
+    const p = personaParId(seg.id);
+    bonusSegments[seg.id] =
+      effets.commandeEnLigne * p.numerique +
+      secteur.sensibilites.prix * p.sensibilites.prix * ent.marketing.adhesionFidelite * fidelite.rabais;
+  }
+  const ete = ctx.mois >= 5 && ctx.mois <= 9;
+  const heuresMarketing = heuresPoste(ent, 'marketing');
+
   return {
     capacite,
+    capaciteCuisine,
+    sansCuisinier,
     heuresPersonnel,
     heuresEffectives,
+    heuresProprietaire,
+    qualiteLignes,
+    qualiteGlobale,
+    coutLignes,
+    effets,
+    competenceMoyenne,
+    moralPondere,
+    bonusService,
+    ambiance,
+    eco,
+    local,
+    bonusConversion: 0.25 * Math.min(1, heuresMarketing / 15),
+    promotionsRecentes: recentes,
     messages,
     offre: {
       id: ent.id,
-      prix: d.prix,
+      prix,
       qualite: ent.clientele.qualitePercue,
       service: ent.clientele.service,
-      ambiance: amenagement.ambiance,
+      ambiance,
       notoriete: ent.clientele.notoriete,
+      notorieteSegments: ent.marketing.notorieteSegments,
       note: ent.clientele.note,
       heuresOuverture: heuresEffectives,
       capaciteVisites: capacite,
-      tauxRupture: tauxRupture(d.stockJoursCible),
       bonusEmplacement: Math.log(emplacement.achalandage),
       facteurPrixClient: ent.fiscal.inscritTaxes ? FACTEUR_TAXES : 1,
+      eco,
+      local,
+      livraison: d.livraison,
+      lignes: lignesOffre(ent, secteur, (id) => qualiteLignes[id] ?? qualite.score),
+      bonusUtilite:
+        bonusGamme(ent, secteur) +
+        (d.promotion > 0 ? 0 : malusFatiguePromo(recentes)) -
+        2 * ent.marketing.tauxRupturePercu,
+      bonusSegments,
+      image: ent.marketing.image,
+      // Les membres du programme de fidélité viennent environ 25 % plus souvent.
+      facteurDemande: (1 + (ete ? effets.demandeEte : 0)) * (1 + 0.25 * ent.marketing.adhesionFidelite),
     },
   };
 }
@@ -1089,6 +564,9 @@ function resultatVide(): ResultatOffre {
     ventes: [],
     chiffreAffaires: 0,
     ticketMoyen: 0,
+    parSegment: {},
+    ventesLivraison: [],
+    chiffreAffairesLivraison: 0,
   };
 }
 
@@ -1106,15 +584,7 @@ function ajouterPaie(
   brut: number,
   r: ReturnType<typeof retenuesEmploye>,
 ) {
-  const c = cumuls[cle] ?? {
-    nom,
-    brut: 0,
-    impotFederal: 0,
-    impotQuebec: 0,
-    rrq: 0,
-    rqap: 0,
-    assuranceEmploi: 0,
-  };
+  const c = cumuls[cle] ?? { nom, brut: 0, impotFederal: 0, impotQuebec: 0, rrq: 0, rqap: 0, assuranceEmploi: 0 };
   c.brut = Math.round((c.brut + brut) * 100) / 100;
   c.impotFederal = Math.round((c.impotFederal + r.impotFederal) * 100) / 100;
   c.impotQuebec = Math.round((c.impotQuebec + r.impotQuebec) * 100) / 100;
@@ -1124,142 +594,212 @@ function ajouterPaie(
   cumuls[cle] = c;
 }
 
-function simulerEntreprise(
-  ent: Entreprise,
-  prep: Preparation,
-  r: ResultatOffre,
-  ctx: ContexteMois,
-): Message[] {
+// ---------------------------------------------------------------------------
+// Simulation d'une entreprise
+// ---------------------------------------------------------------------------
+
+function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre, ctx: ContexteMois): Message[] {
   const L = ent.livre;
   const d = ent.decisions;
   const f = ent.fiscal;
   const { secteur, ville, conj, rng } = ctx;
   const messages: Message[] = [...prep.messages];
   const societe = estSocieteActions(ent.formeJuridique);
+  const prime = tauxPreferentiel(conj);
 
   // Nouvelle année : les cumuls de salaire pour les plafonds de cotisation repartent à zéro.
   if (ctx.mois === 1) for (const emp of ent.employes) emp.cumulBrutAnnee = 0;
-
-  // Le salaire ne peut être inférieur au salaire minimum en vigueur.
-  if (d.salaireHoraire < ctx.salaireMinimum) {
-    d.salaireHoraire = ctx.salaireMinimum;
-    messages.push({
-      code: 'salaireAjusteMinimum',
-      niveau: 'info',
-      params: { salaire: ctx.salaireMinimum },
-    });
-  }
 
   // a) Opérations ponctuelles demandées par le joueur
   if (d.apportPonctuel > 0) {
     ecritureSimple(
       L,
-      societe
-        ? 'Émission d’actions additionnelles au fondateur'
-        : 'Apport additionnel du propriétaire',
+      societe ? 'Émission d’actions additionnelles au fondateur' : 'Apport additionnel du propriétaire',
       'encaisse',
       societe ? 'capitalActions' : 'capital',
       versCents(d.apportPonctuel),
       'apportsProprietaire',
     );
-    messages.push({
-      code: 'apportPonctuel',
-      niveau: 'info',
-      params: { montant: d.apportPonctuel },
-    });
+    messages.push({ code: 'apportPonctuel', niveau: 'info', params: { montant: d.apportPonctuel } });
   }
   const pretPrincipal = ent.prets.find((p) => p.solde > 0);
   if (d.remboursementAnticipe > 0 && pretPrincipal) {
     const montant = rembourserPartiellement(pretPrincipal, versCents(d.remboursementAnticipe));
-    ecritureSimple(
-      L,
-      'Remboursement anticipé de l’emprunt',
-      'empruntBancaire',
-      'encaisse',
-      montant,
-      'remboursementsEmprunts',
-    );
-    messages.push({
-      code: 'remboursementAnticipe',
-      niveau: 'info',
-      params: { montant: versDollars(montant) },
-    });
+    ecritureSimple(L, `Remboursement anticipé – ${pretPrincipal.nom}`, 'empruntBancaire', 'encaisse', montant, 'remboursementsEmprunts');
+    messages.push({ code: 'remboursementAnticipe', niveau: 'info', params: { montant: versDollars(montant) } });
   }
 
   // b) Paiements du mois précédent : fournisseurs (net 30), retenues à la source et cotisations (DAS)
-  ecritureSimple(
-    L,
-    'Paiement des fournisseurs (achats du mois précédent)',
-    'comptesFournisseurs',
-    'encaisse',
-    -L.soldes.comptesFournisseurs,
-    'paiementsFournisseurs',
-  );
-  solderComptes(
-    L,
-    'Remise des retenues à la source et des cotisations (Revenu Québec et ARC)',
-    ['retenuesAPayer', 'cotisationsAPayer'],
-    'remisesGouvernementales',
-  );
+  ecritureSimple(L, 'Paiement des fournisseurs (achats du mois précédent)', 'comptesFournisseurs', 'encaisse', -L.soldes.comptesFournisseurs, 'paiementsFournisseurs');
+  solderComptes(L, 'Remise des retenues à la source et des cotisations (Revenu Québec et ARC)', ['retenuesAPayer', 'cotisationsAPayer'], 'remisesGouvernementales');
 
   // c) Remise de la TPS et de la TVQ de la période précédente (taxes perçues − CTI − RTI)
   if (ctx.index > 0 && moisDeRemiseTaxes(f.frequenceTaxes, ctx.mois)) {
-    const net = solderComptes(
-      L,
-      'Remise de la TPS et de la TVQ (perçues moins CTI et RTI)',
-      ['tpsAPayer', 'tvqAPayer', 'ctiARecouvrer', 'rtiARecouvrer'],
-      'remisesTaxes',
-    );
+    const net = solderComptes(L, 'Remise de la TPS et de la TVQ (perçues moins CTI et RTI)', ['tpsAPayer', 'tvqAPayer', 'ctiARecouvrer', 'rtiARecouvrer'], 'remisesTaxes');
     if (net !== 0)
-      messages.push({
-        code: net > 0 ? 'remiseTaxes' : 'remboursementTaxes',
-        niveau: 'info',
-        params: { montant: Math.abs(versDollars(net)) },
-      });
+      messages.push({ code: net > 0 ? 'remiseTaxes' : 'remboursementTaxes', niveau: 'info', params: { montant: Math.abs(versDollars(net)) } });
   }
 
   // d) Impôt des sociétés : acomptes provisionnels mensuels et solde de l'an dernier (mars)
   if (societe && f.acompteMensuel > 0) {
-    ecritureSimple(
-      L,
-      'Acompte provisionnel d’impôt (fédéral et Québec)',
-      'impotsAPayer',
-      'encaisse',
-      versCents(f.acompteMensuel),
-      'impotsPayes',
-    );
+    ecritureSimple(L, 'Acompte provisionnel d’impôt (fédéral et Québec)', 'impotsAPayer', 'encaisse', versCents(f.acompteMensuel), 'impotsPayes');
     f.acomptesVersesAnnee = Math.round((f.acomptesVersesAnnee + f.acompteMensuel) * 100) / 100;
   }
   if (ctx.mois === 3 && f.soldeImpotAPayer !== 0) {
     ecritureSimple(
       L,
-      f.soldeImpotAPayer > 0
-        ? 'Paiement du solde d’impôt de l’an dernier'
-        : 'Remboursement d’impôt de l’an dernier',
+      f.soldeImpotAPayer > 0 ? 'Paiement du solde d’impôt de l’an dernier' : 'Remboursement d’impôt de l’an dernier',
       'impotsAPayer',
       'encaisse',
       versCents(f.soldeImpotAPayer),
       'impotsPayes',
     );
-    messages.push({
-      code: f.soldeImpotAPayer > 0 ? 'soldeImpotPaye' : 'remboursementImpot',
-      niveau: 'info',
-      params: { montant: Math.abs(f.soldeImpotAPayer) },
-    });
+    messages.push({ code: f.soldeImpotAPayer > 0 ? 'soldeImpotPaye' : 'remboursementImpot', niveau: 'info', params: { montant: Math.abs(f.soldeImpotAPayer) } });
     f.soldeImpotAPayer = 0;
   }
 
-  // e) Ventes (avec TPS et TVQ si l'entreprise est inscrite) et frais de cartes
-  const ventesHT = r.chiffreAffaires;
-  let encaissement = ventesHT;
+  // e) Prêts à taux variable : le taux suit le taux préférentiel
+  if (ent.prets.some((p) => ajusterTauxVariable(p, prime)))
+    messages.push({ code: 'tauxVariableAjuste', niveau: 'info', params: { prime } });
+
+  // f) Approvisionnement, cuisine et ventes réelles (au jour le jour)
+  const lignes = lignesStock(ent, secteur);
+  const demandeMarche = new Map(r.ventes.map((v) => [v.ligneId, v.unites]));
+  const demandeLivraison = new Map(r.ventesLivraison.map((v) => [v.ligneId, v.unites]));
+  const traiteurActif = produitActif(ent, 'traiteur');
+  if (!traiteurActif) ent.b2b.contrats = [];
+  const demandeB2B = ent.b2b.contrats.reduce((a, c) => a + c.repasParMois, 0);
+  const demandeLigne = (id: string) => (demandeMarche.get(id) ?? 0) + (id === 'traiteur' ? demandeB2B : 0);
+  const demandeCuisine = lignes.filter((l) => l.cuisine).reduce((a, l) => a + demandeLigne(l.id), 0);
+  const ratioCuisine = demandeCuisine > prep.capaciteCuisine ? prep.capaciteCuisine / demandeCuisine : 1;
+  const utilisation = prep.capacite > 0 ? r.demande / prep.capacite : r.demande > 0 ? 2 : 0;
+  const tauxDefauts = borner(
+    0.015 +
+      0.06 * Math.max(0, 1.05 - prep.competenceMoyenne) +
+      0.04 * Math.max(0, utilisation - 0.9) +
+      0.03 * usureEquipement(ent),
+    0.005,
+    0.15,
+  );
+  ent.operations.tauxDefauts = Math.round(tauxDefauts * 1000) / 1000;
+  const precision = prep.effets.pertesStocks < 1 ? 0.6 : 1;
+  const siCents = L.soldes.stocks;
+  const resultatsStock = new Map<string, ResultatStockLigne>();
+  const rapportStocks: StockLigneMois[] = [];
+  const actives = new Set(lignes.map((l) => l.id));
+  let coutPerimes = 0;
+  for (const ligne of lignes) {
+    const stock = (ent.operations.stocks[ligne.id] ??= stockVide());
+    let politique = d.approvisionnement[ligne.id];
+    if (!politique) {
+      politique = politiqueParDefaut(ligne, secteur.fournisseursDefaut[ligne.categorieAppro], demandeLigne(ligne.id), conj);
+      d.approvisionnement[ligne.id] = politique;
+    }
+    const fournisseur = fournisseurParId(politique.fournisseurId);
+    const cout = prep.coutLignes[ligne.id];
+    const conservation = fournisseur.conservationJours ?? ligne.conservationJours;
+    const demande = demandeLigne(ligne.id);
+    if (politique.auto) {
+      const calcul = politiqueRecommandee(stock.demandeRecente || demande, cout, fournisseur, conservation, precision);
+      politique.pointCommande = calcul.pointCommande;
+      politique.quantite = calcul.quantite;
+    }
+    const res = simulerStockLigne(
+      stock,
+      {
+        demande,
+        capacitePreparation: ligne.cuisine ? Math.floor(demande * ratioCuisine) : Infinity,
+        tauxDefauts,
+        coutUnitaire: cout,
+        fournisseur,
+        conservationJours: conservation,
+        pointCommande: politique.pointCommande,
+        quantite: politique.quantite,
+        methode: d.methodeInventaire,
+        auto: politique.auto ? { precision } : undefined,
+      },
+      rng,
+    );
+    if (politique.auto) {
+      politique.pointCommande = res.pointCommande;
+      politique.quantite = res.quantite;
+    }
+    resultatsStock.set(ligne.id, res);
+    coutPerimes += res.coutPerimees;
+    rapportStocks.push({
+      ligneId: ligne.id,
+      demandees: demande,
+      vendues: res.vendues,
+      perdues: res.perdues + res.perduesPreparation,
+      perimees: res.perimees,
+      refaites: res.refaites,
+      commandes: res.commandes,
+      unitesAchetees: res.receptions.reduce((a, x) => a + x.quantite, 0),
+      coutAchats: Math.round(res.receptions.reduce((a, x) => a + x.cout, 0) * 100) / 100,
+      stockFinUnites: unitesEnStock(stock),
+      valeurFin: Math.round(res.valeurFin * 100) / 100,
+      pointCommande: politique.pointCommande,
+      quantite: politique.quantite,
+    });
+  }
+  // Produits retirés : le stock restant est jeté.
+  for (const [id, stock] of Object.entries(ent.operations.stocks)) {
+    if (actives.has(id)) continue;
+    coutPerimes += valeurStock(stock, d.methodeInventaire);
+    delete ent.operations.stocks[id];
+  }
+
+  // Ventes réelles par canal (magasin, livraison, entreprises).
+  let ventesBrutes = 0;
+  let ventesLivraisonBrutes = 0;
+  let perduesCuisine = 0;
+  let perduesStockVisites = 0;
+  let unitesB2B = 0;
+  const ventesParLigne: { ligneId: string; unites: number; chiffreAffaires: number }[] = [];
+  const ligneCle = secteur.lignes.reduce((a, l) => (l.tauxAchat > a.tauxAchat ? l : a), secteur.lignes[0]);
+  for (const ligne of lignes) {
+    const res = resultatsStock.get(ligne.id);
+    if (!res) continue;
+    const demande = demandeLigne(ligne.id);
+    const part = demande > 0 ? res.vendues / demande : 0;
+    const marche = demandeMarche.get(ligne.id) ?? 0;
+    const magasinEtLivraison = Math.min(res.vendues, Math.round(marche * part));
+    const livraison = Math.round((demandeLivraison.get(ligne.id) ?? 0) * part);
+    if (ligne.id === 'traiteur') unitesB2B = res.vendues - magasinEtLivraison;
+    const prix = d.prix[ligne.id] ?? prixReference(ligne, conj.indicePrix);
+    ventesBrutes += magasinEtLivraison * prix;
+    ventesLivraisonBrutes += livraison * prix;
+    ventesParLigne.push({ ligneId: ligne.id, unites: magasinEtLivraison, chiffreAffaires: Math.round(magasinEtLivraison * prix * 100) / 100 });
+    perduesCuisine += res.perduesPreparation;
+    perduesStockVisites += res.perdues * (ligne.id === ligneCle.id ? 1 : 0.3);
+  }
+  ventesBrutes = Math.round(ventesBrutes * 100) / 100;
+  ventesLivraisonBrutes = Math.round(ventesLivraisonBrutes * 100) / 100;
+  const perduesRupture = Math.min(r.servies, Math.round(perduesStockVisites));
+  const servies = r.servies - perduesRupture;
+
+  // Rabais : promotion, récompenses de fidélité, tasses réutilisables et gestes commerciaux.
+  const fid = PARAMETRES_MARKETING.fidelite;
+  const rabaisPromo = ventesBrutes * d.promotion;
+  const apresPromo = ventesBrutes - rabaisPromo;
+  const rabaisFidelite = d.programmeFidelite ? (apresPromo - ventesLivraisonBrutes) * ent.marketing.adhesionFidelite * fid.rabais : 0;
+  const tasse = INITIATIVES_ECO.find((i) => i.id === 'tasse');
+  const rabaisTasse = d.initiativesEco.includes('tasse') && tasse ? servies * tasse.coutParVisite : 0;
+  const compensations = d.reponseAvis === 'compenser' ? apresPromo * 0.008 : 0;
+  const rabais = Math.round(Math.max(0, Math.min(ventesBrutes, rabaisPromo + rabaisFidelite + rabaisTasse + compensations)) * 100) / 100;
+  const ventesNettes = Math.round((ventesBrutes - rabais) * 100) / 100;
+
+  // g) Ventes au détail (avec TPS et TVQ si l'entreprise est inscrite) et frais de cartes
+  let encaissement = ventesNettes;
   if (f.inscritTaxes) {
-    const t = taxesSur(ventesHT);
+    const t = taxesSur(ventesNettes);
     passerEcriture(L, {
-      libelle: 'Ventes du mois (TPS et TVQ perçues)',
+      libelle: 'Ventes du mois (TPS et TVQ perçues sur le prix après rabais)',
       flux: 'encaissementsClients',
       lignes: [
-        { compte: 'encaisse', debit: versCents(ventesHT) + versCents(t.tps) + versCents(t.tvq) },
-        { compte: 'ventes', credit: versCents(ventesHT) },
+        { compte: 'encaisse', debit: versCents(ventesNettes) + versCents(t.tps) + versCents(t.tvq) },
+        { compte: 'rabaisPromotions', debit: versCents(rabais) },
+        { compte: 'ventes', credit: versCents(ventesBrutes) },
         { compte: 'tpsAPayer', credit: versCents(t.tps) },
         { compte: 'tvqAPayer', credit: versCents(t.tvq) },
       ],
@@ -1268,159 +808,147 @@ function simulerEntreprise(
     f.taxesAnnee.tvqPercue += t.tvq;
     encaissement += t.total;
   } else {
-    ecritureSimple(
-      L,
-      'Ventes du mois (petit fournisseur : aucune taxe perçue)',
-      'encaisse',
-      'ventes',
-      versCents(ventesHT),
-      'encaissementsClients',
-    );
+    passerEcriture(L, {
+      libelle: 'Ventes du mois (petit fournisseur : aucune taxe perçue)',
+      flux: 'encaissementsClients',
+      lignes: [
+        { compte: 'encaisse', debit: versCents(ventesNettes) },
+        { compte: 'rabaisPromotions', debit: versCents(rabais) },
+        { compte: 'ventes', credit: versCents(ventesBrutes) },
+      ],
+    });
   }
-  ecritureSimple(
-    L,
-    'Frais de traitement des cartes de débit et de crédit',
-    'fraisCartes',
-    'encaisse',
-    versCents(encaissement * PART_VENTES_CARTES * FRAIS_TRAITEMENT_CARTES.taux),
-    'fraisBancaires',
-  );
+  const partMagasin = ventesBrutes > 0 ? 1 - ventesLivraisonBrutes / ventesBrutes : 1;
+  ecritureSimple(L, 'Frais de traitement des cartes de débit et de crédit', 'fraisCartes', 'encaisse', versCents(encaissement * partMagasin * PART_VENTES_CARTES * FRAIS_TRAITEMENT_CARTES.taux), 'fraisBancaires');
+  if (ventesLivraisonBrutes > 0) {
+    payer(L, ent, 'Commissions de la plateforme de livraison', 'commissions', ventesLivraisonBrutes * PARAMETRES_MARKETING.livraison.commission, true, 'commissionsLivraison');
+  }
+
+  // h) Ventes aux entreprises : livraisons facturées à crédit (comptes clients)
+  let ventesB2B = 0;
+  const ratioB2B = demandeB2B > 0 ? Math.max(0, unitesB2B) / demandeB2B : 0;
+  for (const c of ent.b2b.contrats) {
+    const livres = Math.round(c.repasParMois * ratioB2B);
+    const ht = Math.round(livres * c.prixUnitaire * 100) / 100;
+    if (ht > 0) {
+      const t = f.inscritTaxes ? taxesSur(ht) : { tps: 0, tvq: 0, total: 0 };
+      const facture = {
+        id: nouvelId(ent, 'fact'),
+        contratId: c.id,
+        client: c.client,
+        cote: c.cote,
+        emission: ctx.index,
+        echeance: ctx.index + moisEcheance(c.delaiPaiementJours),
+        ht: versCents(ht),
+        tps: versCents(t.tps),
+        tvq: versCents(t.tvq),
+        statut: 'ouverte' as const,
+      };
+      passerEcriture(L, {
+        libelle: `Facture à ${c.client} (${livres} repas, ${c.delaiPaiementJours} jours)`,
+        lignes: [
+          { compte: 'comptesClients', debit: facture.ht + facture.tps + facture.tvq },
+          { compte: 'ventes', credit: facture.ht },
+          { compte: 'tpsAPayer', credit: facture.tps },
+          { compte: 'tvqAPayer', credit: facture.tvq },
+        ],
+      });
+      if (f.inscritTaxes) {
+        f.taxesAnnee.tpsPercue += t.tps;
+        f.taxesAnnee.tvqPercue += t.tvq;
+      }
+      ent.b2b.factures.push(facture);
+      ventesB2B += ht;
+    }
+    const ratio = c.repasParMois > 0 ? livres / c.repasParMois : 1;
+    c.satisfaction =
+      ratio < 0.95
+        ? borner(c.satisfaction - 0.6 * (1 - ratio), 0, 1)
+        : borner(lisser(c.satisfaction, 0.85 + 0.2 * ((prep.qualiteLignes.traiteur ?? 0.5) - 0.5), 0.3), 0, 1);
+    c.moisRestants -= 1;
+  }
+  for (const c of ent.b2b.contrats) {
+    if (c.satisfaction < 0.45) messages.push({ code: 'contratAnnule', niveau: 'alerte', params: { client: c.client } });
+    else if (c.moisRestants <= 0) messages.push({ code: 'contratTermine', niveau: 'info', params: { client: c.client } });
+  }
+  ent.b2b.contrats = ent.b2b.contrats.filter((c) => c.satisfaction >= 0.45 && c.moisRestants > 0);
+  if (ventesB2B > 0 && !prep.effets.livraisonPropre) {
+    payer(L, ent, 'Livraisons du traiteur par coursier', 'commissions', ventesB2B * FRAIS_COURSIER, true, 'commissionsLivraison');
+  }
 
   // Seuil du petit fournisseur (ventes taxables des 4 derniers trimestres)
-  f.ventesTaxablesMois = [...f.ventesTaxablesMois.slice(-11), ventesHT];
+  const ventesTaxables = ventesNettes + ventesB2B;
+  f.ventesTaxablesMois = [...f.ventesTaxablesMois.slice(-11), ventesTaxables];
   if (!f.inscritTaxes) {
     const ventes12 = f.ventesTaxablesMois.reduce((a, x) => a + x, 0);
     if (!f.doitSInscrire && depasseSeuilPetitFournisseur(ventes12)) {
       f.doitSInscrire = true;
       messages.push({ code: 'seuilTaxesDepasse', niveau: 'danger', params: { ventes: ventes12 } });
     } else if (f.doitSInscrire) {
-      f.ventesNonTaxees += ventesHT;
-      messages.push({
-        code: 'inscriptionTaxesRequise',
-        niveau: 'danger',
-        params: { ventes: f.ventesNonTaxees },
-      });
+      f.ventesNonTaxees += ventesTaxables;
+      messages.push({ code: 'inscriptionTaxesRequise', niveau: 'danger', params: { ventes: f.ventesNonTaxees } });
     }
   }
 
-  // f) Coût des ventes et réapprovisionnement (une partie des achats est taxable)
-  const qualite = qualiteDe(secteur, d.qualiteId);
-  let coutVentes = 0;
-  let coutPerissables = 0;
-  for (const v of r.ventes) {
-    const ligne = secteur.lignes.find((l) => l.id === v.ligneId);
-    if (!ligne) continue;
-    const cout = v.unites * ligne.coutUnitaire * qualite.multiplicateurCout * conj.indiceCouts;
-    coutVentes += cout;
-    if (ligne.perissable) coutPerissables += cout;
+  // i) Achats reçus selon les conditions de paiement, puis coût des ventes (inventaire périodique)
+  const achats = { comptant: 0, net30: 0, escompte: 0 };
+  for (const res of resultatsStock.values()) {
+    for (const rec of res.receptions) {
+      if (rec.conditions === 'comptant') achats.comptant += rec.cout;
+      else if (rec.conditions === 'net30') achats.net30 += rec.cout;
+      else achats.escompte += rec.cout;
+    }
   }
-  const reappro = reapprovisionner(
-    versDollars(L.soldes.stocks),
-    coutVentes,
-    coutPerissables,
-    d.stockJoursCible,
-  );
-  const achatsTaxables = reappro.achats * secteur.partAchatsTaxables;
-  ecritureSimple(
-    L,
-    'Achats d’aliments détaxés (payables dans 30 jours)',
-    'stocks',
-    'comptesFournisseurs',
-    versCents(reappro.achats - achatsTaxables),
-  );
-  if (f.inscritTaxes) {
-    payer(
-      L,
-      ent,
-      'Achats d’emballages et de fournitures (payables dans 30 jours)',
-      'stocks',
-      achatsTaxables,
-      true,
-      'paiementsFournisseurs',
-      'comptesFournisseurs',
-    );
+  const part = secteur.partAchatsTaxables;
+  acheterMarchandises(L, ent, 'Achats payés à la livraison', achats.comptant, part, 'encaisse');
+  acheterMarchandises(L, ent, 'Achats à crédit (net 30 jours)', achats.net30, part, 'comptesFournisseurs');
+  if (d.prendreEscomptes && achats.escompte > 0) {
+    acheterMarchandises(L, ent, 'Achats payés en 10 jours (2/10 net 30)', achats.escompte, part, 'encaisse');
+    ecritureSimple(L, 'Escompte de 2 % obtenu pour paiement rapide', 'encaisse', 'escomptesAchats', versCents(achats.escompte * TAUX_ESCOMPTE), 'paiementsFournisseurs');
   } else {
-    const t = taxesSur(achatsTaxables);
-    passerEcriture(L, {
-      libelle: 'Achats d’emballages et de fournitures (taxes non récupérables)',
-      lignes: [
-        { compte: 'stocks', debit: versCents(achatsTaxables) },
-        { compte: 'coutMarchandises', debit: versCents(t.tps) + versCents(t.tvq) },
-        {
-          compte: 'comptesFournisseurs',
-          credit: versCents(achatsTaxables) + versCents(t.tps) + versCents(t.tvq),
-        },
-      ],
-    });
+    acheterMarchandises(L, ent, 'Achats à crédit (2/10 net 30, escompte non pris)', achats.escompte, part, 'comptesFournisseurs');
   }
-  ecritureSimple(
-    L,
-    'Coût des marchandises vendues',
-    'coutMarchandises',
-    'stocks',
-    versCents(coutVentes),
+  const achatsCents = L.soldes.stocks - siCents;
+  const sfCents = versCents(
+    Object.values(ent.operations.stocks).reduce((a, s) => a + valeurStock(s, d.methodeInventaire), 0),
   );
-  ecritureSimple(
-    L,
-    'Produits périmés jetés',
-    'pertesStocks',
-    'stocks',
-    Math.min(versCents(reappro.pertes), Math.max(0, L.soldes.stocks)),
-  );
-  if (L.soldes.stocks < 0) {
-    ecritureSimple(
-      L,
-      'Achat d’appoint de marchandises',
-      'stocks',
-      'comptesFournisseurs',
-      -L.soldes.stocks,
-    );
-  }
+  const pertesCents = versCents(coutPerimes);
+  ecritureSimple(L, 'Produits périmés jetés', 'pertesStocks', 'stocks', pertesCents);
+  ecritureSimple(L, 'Coût des marchandises vendues (stock d’ouverture + achats − stock de clôture)', 'coutMarchandises', 'stocks', siCents + achatsCents - pertesCents - sfCents);
 
-  // g) Paie : salaire brut → retenues à la source → salaire net; cotisations de l'employeur
+  // j) Paie : salaire brut → retenues à la source → salaire net; cotisations de l'employeur
   const dirigeant = societe && d.salaireDirigeant > 0 ? d.salaireDirigeant : 0;
   const masseAnnuelle =
-    (ent.employes.reduce((a, x) => a + salaireMensuel(d.salaireHoraire, x.heuresSemaine), 0) +
-      dirigeant) *
-    12;
+    (ent.employes.reduce((a, x) => a + salaireMensuel(x.salaireHoraire, x.heuresSemaine), 0) + dirigeant) * 12;
+  const feries = JOURS_FERIES_PAR_MOIS[ctx.mois - 1];
+  const primeParEmploye = ent.employes.length > 0 ? ent.effetsMois.primes / ent.employes.length : 0;
   let salaires = 0;
   let vacances = 0;
   let retenues = 0;
   let cotisations = 0;
+  let coutAvantages = 0;
   for (const emp of ent.employes) {
-    const brut = salaireMensuel(d.salaireHoraire, emp.heuresSemaine);
-    const vac = Math.round(brut * TAUX_VACANCES * 100) / 100;
-    const c = cotisationsEmployeur(
-      brut + vac,
-      emp.cumulBrutAnnee,
-      secteur.tauxCnesst,
-      masseAnnuelle,
-    );
-    const ret = retenuesEmploye(brut + vac, emp.cumulBrutAnnee, true);
-    emp.cumulBrutAnnee += brut + vac;
-    ajouterPaie(f.paieAnnee, emp.id, `${emp.prenom} ${emp.nom}`, brut + vac, ret);
+    const brut = salaireMensuel(emp.salaireHoraire, emp.heuresSemaine * (1 - emp.absenteisme)) + primeParEmploye;
+    const ferie = feries * indemniteJourFerie(emp.salaireHoraire, emp.heuresSemaine);
+    const vac = Math.round((brut + ferie) * tauxVacances(emp.moisAnciennete) * 100) / 100;
+    const total = brut + ferie + vac;
+    const c = cotisationsEmployeur(total, emp.cumulBrutAnnee, secteur.tauxCnesst, masseAnnuelle);
+    const ret = retenuesEmploye(total, emp.cumulBrutAnnee, true);
+    emp.cumulBrutAnnee += total;
+    ajouterPaie(f.paieAnnee, emp.id, `${emp.prenom} ${emp.nom}`, total, ret);
     f.heuresRemunereesAnnee += emp.heuresSemaine * SEMAINES_PAR_MOIS;
     salaires += brut;
-    vacances += vac;
+    vacances += vac + ferie;
     retenues += ret.total;
     cotisations += c.total;
+    coutAvantages += effetsAvantages(d.avantages, emp.heuresSemaine).cout;
   }
   if (ent.enAttente.indemnites > 0) {
     const ret = retenuesEmploye(ent.enAttente.indemnites, 0, true);
-    ajouterPaie(
-      f.paieAnnee,
-      'indemnites',
-      'Anciens employés (indemnités de préavis)',
-      ent.enAttente.indemnites,
-      ret,
-    );
+    ajouterPaie(f.paieAnnee, 'indemnites', 'Anciens employés (indemnités de préavis)', ent.enAttente.indemnites, ret);
     salaires += ent.enAttente.indemnites;
     retenues += ret.total;
-    messages.push({
-      code: 'indemnitesPreavis',
-      niveau: 'info',
-      params: { montant: ent.enAttente.indemnites },
-    });
+    messages.push({ code: 'indemnitesPreavis', niveau: 'info', params: { montant: ent.enAttente.indemnites } });
   }
   let cDirigeant = 0;
   if (dirigeant > 0) {
@@ -1438,7 +966,10 @@ function simulerEntreprise(
   const cVacances = versCents(vacances);
   const cRetenues = versCents(retenues);
   passerEcriture(L, {
-    libelle: 'Paie du mois (salaires bruts, retenues à la source et salaires nets versés)',
+    libelle:
+      feries > 0
+        ? 'Paie du mois (salaires, vacances, indemnité de jour férié, retenues à la source)'
+        : 'Paie du mois (salaires bruts, retenues à la source et salaires nets versés)',
     flux: 'salairesVerses',
     lignes: [
       { compte: 'salaires', debit: cSalaires },
@@ -1448,269 +979,261 @@ function simulerEntreprise(
       { compte: 'encaisse', credit: cSalaires + cVacances + cDirigeant - cRetenues },
     ],
   });
-  ecritureSimple(
-    L,
-    'Cotisations de l’employeur (RRQ, RQAP, AE, FSS, CNT, CNESST)',
-    'chargesSociales',
-    'cotisationsAPayer',
-    versCents(cotisations),
-  );
+  ecritureSimple(L, 'Cotisations de l’employeur (RRQ, RQAP, AE, FSS, CNT, CNESST)', 'chargesSociales', 'cotisationsAPayer', versCents(cotisations));
+  ecritureSimple(L, 'Avantages sociaux (assurance collective, repas, rabais)', 'avantagesSociaux', 'encaisse', versCents(coutAvantages), 'formationAvantages');
 
-  // h) Loyer (indexé à chaque anniversaire du bail) et frais fixes
+  // k) Loyer (indexé à chaque anniversaire du bail) et frais fixes
   if (ctx.index > 0 && ctx.index % 12 === 0) {
     ent.bail.loyerMensuel = Math.round(ent.bail.loyerMensuel * (1 + ent.bail.indexation));
-    messages.push({
-      code: 'indexationLoyer',
-      niveau: 'info',
-      params: { loyer: versDollars(ent.bail.loyerMensuel), taux: ent.bail.indexation },
-    });
+    messages.push({ code: 'indexationLoyer', niveau: 'info', params: { loyer: versDollars(ent.bail.loyerMensuel), taux: ent.bail.indexation } });
   }
-  payer(
-    L,
-    ent,
-    'Loyer et frais communs',
-    'loyer',
-    versDollars(ent.bail.loyerMensuel),
-    true,
-    'loyerEtFrais',
-  );
-  for (const [cle, montant] of Object.entries(secteur.fraisFixesMensuels) as [
-    keyof FraisFixesMensuels,
-    number,
-  ][]) {
+  payer(L, ent, 'Loyer et frais communs', 'loyer', versDollars(ent.bail.loyerMensuel), true, 'loyerEtFrais');
+  const commis = Math.min(1, heuresPoste(ent, 'administration') / 10);
+  for (const [cle, montant] of Object.entries(secteur.fraisFixesMensuels) as [keyof FraisFixesMensuels, number][]) {
     const { compte, libelle, taxable } = COMPTES_FRAIS_FIXES[cle];
     if (cle === 'assurances' && !ent.demarches.assurances) continue;
     let base = montant;
     if (cle === 'comptable') {
       base += fraisComptablesForme(ent.formeJuridique);
-      if (!ent.demarches.compteBancaire)
-        base += demarche('compteBancaire').fraisComptablesSupplementaires ?? 0;
+      if (!ent.demarches.compteBancaire) base += demarche('compteBancaire').fraisComptablesSupplementaires ?? 0;
+      // Un commis comptable à l'interne fait une partie du travail du comptable externe.
+      base *= 1 - 0.6 * commis;
     }
     payer(L, ent, libelle, compte, base * conj.indicePrix, taxable, 'loyerEtFrais');
   }
-
-  // i) Publicité et recrutement
-  payer(L, ent, 'Publicité', 'publicite', d.budgetPublicite, true, 'publicite');
-  payer(
-    L,
-    ent,
-    'Affichage de postes et intégration des nouveaux employés',
-    'recrutement',
-    ent.enAttente.recrutement,
-    true,
-    'publicite',
+  payer(L, ent, 'Frais d’utilisation des investissements (abonnements, véhicule, terrasse)', 'logiciels', fraisInvestissements(ent, secteur, ctx.mois) * conj.indicePrix, true, 'loyerEtFrais');
+  const ecoMensuel = INITIATIVES_ECO.filter((i) => d.initiativesEco.includes(i.id) && i.id !== 'tasse').reduce(
+    (a, i) => a + i.coutMensuel + i.coutParVisite * servies,
+    0,
   );
+  payer(L, ent, 'Initiatives écoresponsables (emballages, compost, certification)', 'ecoresponsabilite', ecoMensuel, true, 'loyerEtFrais');
 
-  // j) Emprunts et marge de crédit
+  // l) Marketing : publicité par canal et programme de fidélité
+  const pub = totalPublicite(d.publicite);
+  payer(L, ent, 'Publicité (tous les canaux)', 'publicite', pub, true, 'publicite');
+  if (d.programmeFidelite) payer(L, ent, 'Logiciel du programme de fidélité', 'publicite', fid.coutLogicielMensuel, true, 'publicite');
+  planifierEffetsPublicite(ent.marketing, secteur, d.publicite, ctx.index, prep.bonusConversion);
+  const gainsPub = effetsPubliciteDuMois(ent.marketing, ctx.index);
+
+  // m) Emprunts et marge de crédit
   for (const pret of ent.prets) {
     if (pret.solde <= 0) continue;
     const v = effectuerVersement(pret);
-    ecritureSimple(
-      L,
-      `Intérêts – ${pret.nom}`,
-      'interets',
-      'encaisse',
-      v.interets,
-      'interetsPayes',
-    );
-    ecritureSimple(
-      L,
-      `Remboursement du capital – ${pret.nom}`,
-      'empruntBancaire',
-      'encaisse',
-      v.capital,
-      'remboursementsEmprunts',
-    );
+    ecritureSimple(L, `Intérêts – ${pret.nom}`, 'interets', 'encaisse', v.interets, 'interetsPayes');
+    ecritureSimple(L, `Remboursement du capital – ${pret.nom}`, 'empruntBancaire', 'encaisse', v.capital, 'remboursementsEmprunts');
   }
   const margeUtilisee = -L.soldes.margeCredit;
   if (margeUtilisee > 0) {
-    const taux = tauxPreferentiel(conj) + ent.margeCredit.ecartTaux;
-    ecritureSimple(
-      L,
-      'Intérêts sur la marge de crédit',
-      'interets',
-      'encaisse',
-      Math.round((margeUtilisee * taux) / 12),
-      'interetsPayes',
-    );
+    ecritureSimple(L, 'Intérêts sur la marge de crédit', 'interets', 'encaisse', Math.round((margeUtilisee * (prime + ent.margeCredit.ecartTaux)) / 12), 'interetsPayes');
   }
 
-  // k) Amortissement comptable (linéaire, sur la durée de vie ou la durée du bail)
-  const amortir = (actif: CompteId, cumul: CompteId, duree: number, libelle: string) => {
-    const cout = L.soldes[actif];
-    const net = cout + L.soldes[cumul];
-    const montant = Math.min(Math.round(cout / duree), net);
-    ecritureSimple(L, libelle, 'amortissement', cumul, Math.max(0, montant));
-  };
-  amortir(
-    'equipement',
-    'amortCumEquipement',
-    ent.dureeAmortEquipement,
-    'Amortissement de l’équipement',
-  );
-  amortir(
-    'ameliorationsLocatives',
-    'amortCumAmeliorations',
-    ent.dureeAmortAmeliorations,
-    'Amortissement des améliorations locatives',
-  );
+  // n) Placements : intérêts du mois et certificats échus
+  for (const p of ent.finance.placements) {
+    ecritureSimple(L, 'Intérêts sur les placements', 'encaisse', 'revenusPlacement', Math.round((p.montant * p.taux) / 12), 'interetsRecus');
+  }
+  for (const p of ent.finance.placements.filter((x) => x.echeance !== null && x.echeance <= ctx.index)) {
+    ecritureSimple(L, 'Échéance d’un certificat de placement garanti', 'encaisse', 'placements', p.montant, 'placementsNets');
+    messages.push({ code: 'placementEchu', niveau: 'info', params: { montant: versDollars(p.montant) } });
+  }
+  ent.finance.placements = ent.finance.placements.filter((x) => x.echeance === null || x.echeance > ctx.index);
 
-  // l) Rémunération des propriétaires : prélèvements (individuelle, société de personnes) ou dividendes
+  // o) Amortissement comptable (linéaire, bien par bien)
+  for (const [type, montant] of amortirImmobilisations(ent)) {
+    const c = COMPTES_IMMOBILISATIONS[type];
+    ecritureSimple(L, `Amortissement ${c.libelle}`, 'amortissement', c.cumul, montant);
+  }
+
+  // p) Comptes clients : encaissements, retards et mauvaises créances
+  for (const fa of ent.b2b.factures) {
+    if (fa.statut !== 'ouverte' || fa.echeance > ctx.index) continue;
+    if (rng.chance(PONCTUALITE[fa.cote])) {
+      ecritureSimple(L, `Paiement reçu de ${fa.client}`, 'encaisse', 'comptesClients', fa.ht + fa.tps + fa.tvq, 'encaissementsClients');
+      fa.statut = 'payee';
+    }
+  }
+  const clientsEnDefaut = new Set<string>();
+  for (const client of new Set(ent.b2b.factures.filter((x) => x.statut === 'ouverte').map((x) => x.client))) {
+    const ouvertes = ent.b2b.factures.filter((x) => x.client === client && x.statut === 'ouverte');
+    const enRetard = ouvertes.some((x) => x.echeance < ctx.index);
+    if (rng.chance(RISQUE_DEFAUT[ouvertes[0].cote] * (enRetard ? 3 : 1))) clientsEnDefaut.add(client);
+    else if (enRetard) messages.push({ code: 'clientEnRetard', niveau: 'alerte', params: { client } });
+  }
+  for (const client of clientsEnDefaut) {
+    const ouvertes = ent.b2b.factures.filter((x) => x.client === client && x.statut === 'ouverte');
+    const ht = ouvertes.reduce((a, x) => a + x.ht, 0);
+    const tps = ouvertes.reduce((a, x) => a + x.tps, 0);
+    const tvq = ouvertes.reduce((a, x) => a + x.tvq, 0);
+    passerEcriture(L, {
+      libelle: `Radiation des factures de ${client} (créance irrécouvrable; taxes récupérées)`,
+      lignes: [
+        { compte: 'creancesIrrecouvrables', debit: ht },
+        { compte: 'tpsAPayer', debit: tps },
+        { compte: 'tvqAPayer', debit: tvq },
+        { compte: 'comptesClients', credit: ht + tps + tvq },
+      ],
+    });
+    for (const x of ouvertes) x.statut = 'radiee';
+    ent.b2b.contrats = ent.b2b.contrats.filter((c) => c.client !== client);
+    messages.push({ code: 'creanceIrrecouvrable', niveau: 'danger', params: { client, montant: versDollars(ht + tps + tvq) } });
+  }
+  ent.b2b.factures = ent.b2b.factures.filter((x) => x.statut === 'ouverte' || x.emission >= ctx.index - 12);
+
+  // q) Rémunération des propriétaires : prélèvements (individuelle, société de personnes) ou dividendes
   if (!societe) {
-    ecritureSimple(
-      L,
-      'Prélèvements du propriétaire',
-      'prelevements',
-      'encaisse',
-      versCents(d.prelevements),
-      'prelevementsProprietaire',
-    );
+    ecritureSimple(L, 'Prélèvements du propriétaire', 'prelevements', 'encaisse', versCents(d.prelevements), 'prelevementsProprietaire');
     if (ent.associe && ent.associe.part < 1) {
       const partAssocie = (d.prelevements * ent.associe.part) / (1 - ent.associe.part);
-      ecritureSimple(
-        L,
-        `Prélèvements de l’associé (${ent.associe.nom})`,
-        'prelevementsAssocie',
-        'encaisse',
-        versCents(partAssocie),
-        'prelevementsProprietaire',
-      );
+      ecritureSimple(L, `Prélèvements de l’associé (${ent.associe.nom})`, 'prelevementsAssocie', 'encaisse', versCents(partAssocie), 'prelevementsProprietaire');
     }
   } else if (d.dividendePonctuel > 0) {
-    ecritureSimple(
-      L,
-      'Dividendes versés à l’actionnaire (non déterminés)',
-      'dividendes',
-      'encaisse',
-      versCents(d.dividendePonctuel),
-      'dividendesVerses',
-    );
-    messages.push({
-      code: 'dividendeVerse',
-      niveau: 'info',
-      params: { montant: d.dividendePonctuel },
-    });
+    ecritureSimple(L, 'Dividendes versés aux actionnaires (non déterminés)', 'dividendes', 'encaisse', versCents(d.dividendePonctuel), 'dividendesVerses');
+    messages.push({ code: 'dividendeVerse', niveau: 'info', params: { montant: d.dividendePonctuel } });
   }
 
-  // m) Marge de crédit automatique
+  // r) Marge de crédit automatique
   const limite = ent.margeCredit.limite;
   const utilisee = -L.soldes.margeCredit;
   if (L.soldes.encaisse < 0 && utilisee < limite) {
     const tirage = Math.min(limite - utilisee, -L.soldes.encaisse);
-    ecritureSimple(
-      L,
-      'Tirage sur la marge de crédit',
-      'encaisse',
-      'margeCredit',
-      tirage,
-      'margeCredit',
-    );
-    messages.push({
-      code: 'tirageMarge',
-      niveau: 'alerte',
-      params: { montant: versDollars(tirage) },
-    });
+    ecritureSimple(L, 'Tirage sur la marge de crédit', 'encaisse', 'margeCredit', tirage, 'margeCredit');
+    messages.push({ code: 'tirageMarge', niveau: 'alerte', params: { montant: versDollars(tirage) } });
   } else if (d.remboursementAutoMarge && utilisee > 0) {
     const coussin = versCents(REGLES_FINANCEMENT.coussinEncaisse);
     const remb = Math.min(utilisee, L.soldes.encaisse - coussin);
-    if (remb > 0)
-      ecritureSimple(
-        L,
-        'Remboursement de la marge de crédit',
-        'margeCredit',
-        'encaisse',
-        remb,
-        'margeCredit',
-      );
+    if (remb > 0) ecritureSimple(L, 'Remboursement de la marge de crédit', 'margeCredit', 'encaisse', remb, 'margeCredit');
   }
 
-  // n) Clientèle : qualité perçue, service, satisfaction, avis et notoriété
-  const equipement = equipementDe(secteur, ent.equipementId);
-  const amenagement = amenagementDe(secteur, ent.amenagementId);
+  // s) Clientèle : qualité perçue, service, satisfaction, avis, notoriété, image et fidélité
   const emplacement = emplacementDe(ville, ent.emplacementId);
   const cl = ent.clientele;
-  const utilisation = prep.capacite > 0 ? r.demande / prep.capacite : r.demande > 0 ? 2 : 0;
+  const m = ent.marketing;
   const ip = indicePrixOffre(d.prix, secteur, conj.indicePrix);
   const ipClient = indicePrixClient(prep.offre, secteur, conj.indicePrix);
-  cl.qualitePercue = lisser(
-    cl.qualitePercue,
-    borner(qualite.score + equipement.bonusQualite, 0, 1),
-    0.35,
-  );
-
-  const heuresTotales = prep.heuresPersonnel;
-  const moralPondere =
-    heuresTotales > 0
-      ? (ent.employes.reduce((a, x) => a + x.moral * x.heuresSemaine, 0) +
-          80 * d.heuresProprietaire) /
-        heuresTotales
-      : 50;
-  const competencePonderee =
-    heuresTotales > 0
-      ? (ent.employes.reduce((a, x) => a + x.competence * x.heuresSemaine, 0) +
-          1.1 * d.heuresProprietaire) /
-        heuresTotales
-      : 0.8;
+  cl.qualitePercue = lisser(cl.qualitePercue, borner(prep.qualiteGlobale, 0, 1), 0.35);
   const serviceCible = borner(
     0.3 +
-      0.3 * (moralPondere / 100) +
-      0.2 * ((competencePonderee - 0.8) / 0.4) +
-      0.25 * (1 - borner((utilisation - 0.75) / 0.5, 0, 1)),
+      0.3 * (prep.moralPondere / 100) +
+      0.2 * ((prep.competenceMoyenne - 0.8) / 0.4) +
+      0.25 * (1 - borner((utilisation - 0.75) / 0.5, 0, 1)) +
+      prep.bonusService,
     0.1,
     0.95,
   );
   cl.service = lisser(cl.service, serviceCible, 0.5);
-  const tauxAttente = r.demande > 0 ? (r.perduesCapacite + 0.5 * r.perduesRupture) / r.demande : 0;
-  cl.satisfaction = satisfactionClients(
-    cl.qualitePercue,
-    cl.service,
-    amenagement.ambiance,
-    ipClient,
-    tauxAttente,
+  const tauxAttente =
+    r.demande > 0 ? (r.perduesCapacite + 0.5 * perduesRupture + 0.15 * perduesCuisine) / r.demande : 0;
+  const plaintes = Math.round(servies * tauxDefauts * 0.35 * (d.satisfactionGarantie ? 0.4 : 1));
+  cl.satisfaction = borner(
+    satisfactionClients(cl.qualitePercue, cl.service, prep.ambiance, ipClient, tauxAttente) -
+      0.6 * tauxDefauts * (d.satisfactionGarantie ? 0.4 : 1),
+    0.05,
+    0.98,
   );
-  const nouveauxAvis = Math.round(r.servies * TAUX_AVIS);
+  const nouveauxAvis = Math.round(servies * TAUX_AVIS);
   if (nouveauxAvis > 0) {
-    const noteMois = borner(noteCible(cl.satisfaction) + rng.normal(0, 0.2), 1, 5);
+    const noteMois = noteDuMois(noteCible(cl.satisfaction) + rng.normal(0, 0.2), d.reponseAvis);
     cl.note = nouvelleNote(cl.note, cl.nbAvis, noteMois, nouveauxAvis);
     cl.nbAvis += nouveauxAvis;
   }
-  const effetNouveaute = ctx.index === 0 ? 0.06 : 0;
-  cl.notoriete = borner(
-    evoluerNotoriete(
-      cl.notoriete,
-      d.budgetPublicite,
-      emplacement.visibilite,
-      ctx.potentiel > 0 ? r.servies / ctx.potentiel : 0,
-      cl.satisfaction,
-    ) + effetNouveaute,
-    0.01,
-    0.98,
-  );
+  m.tauxRupturePercu = lisser(m.tauxRupturePercu, r.servies > 0 ? perduesRupture / r.servies : 0, 0.5);
+  m.adhesionFidelite = evoluerAdhesion(m.adhesionFidelite, d.programmeFidelite);
+  const retentionAvant = m.retention;
+  m.retention = retentionClients({ satisfaction: cl.satisfaction, note: cl.note, adhesion: m.adhesionFidelite, tauxRupture: m.tauxRupturePercu });
+  const oubli = 0.07 * (1.3 - 0.6 * m.retention);
+  const fatigue = prep.promotionsRecentes >= PARAMETRES_MARKETING.promotion.moisFatigue;
+  for (const seg of ctx.segments) {
+    const persona = personaParId(seg.id);
+    const promo = d.promotion > 0 ? d.promotion * 0.25 * persona.sensibilites.prix * (fatigue ? 0.5 : 1) : 0;
+    const potentielSeg = ctx.potentiel * seg.part;
+    const serviesSeg = r.parSegment[seg.id]?.servies ?? 0;
+    const n = m.notorieteSegments[seg.id] ?? cl.notoriete;
+    m.notorieteSegments[seg.id] = borner(
+      evoluerNotoriete(n, 0, emplacement.visibilite, potentielSeg > 0 ? serviesSeg / potentielSeg : 0, cl.satisfaction, oubli, combinerGains([gainsPub[seg.id] ?? 0, promo])) +
+        (ctx.index === 0 ? 0.06 : 0),
+      0.01,
+      0.98,
+    );
+  }
+  cl.notoriete = notorieteMoyenne(secteur, m.notorieteSegments);
+  const bonusCommandites = Math.min(0.08, (d.publicite.commandites ?? 0) / 10_000 + (d.publicite.evenements ?? 0) / 15_000);
+  m.image = evoluerImage(m.image, imageCible({ qualite: cl.qualitePercue, ambiance: prep.ambiance, note: cl.note, eco: prep.eco, local: prep.local, satisfaction: cl.satisfaction, bonusCommandites }));
+  const clientsActifs = Math.round(servies / secteur.visitesParClientMois);
+  const nouveauxClients = Math.max(0, Math.round(clientsActifs - retentionAvant * m.clientsActifs));
+  m.clientsActifs = clientsActifs;
+  if (d.promotion > 0) m.historiquePromos = [...m.historiquePromos.filter((i) => i >= ctx.index - 12), ctx.index];
 
-  // o) Ressources humaines : moral, ancienneté et démissions
-  const poste = posteParId(secteur.postes[0]);
-  const salaireDuMarche = poste.salaireMedian * ville.indiceSalaires * conj.indicePrix;
-  const restants: Employe[] = [];
+  // t) Ressources humaines : moral, compétence, ancienneté, départs et syndicalisation
+  const penurie = penurieDuMois(ville.penurieMainOeuvre, conj.phase, ctx.mois);
+  const gerant = heuresPoste(ent, 'gestion') > 0;
+  const syndique = ent.rh.syndicat.statut === 'accredite';
+  const restants = [];
   for (const emp of ent.employes) {
+    const poste = posteParId(emp.posteId);
+    const trait = traitParId(emp.trait);
+    const av = effetsAvantages(d.avantages, emp.heuresSemaine);
     emp.moral = evoluerMoral(
       emp,
-      moralCible(d.salaireHoraire, salaireDuMarche, utilisation, emp.heuresSemaine),
+      moralCible({
+        salaireHoraire: emp.salaireHoraire,
+        salaireMarche: salaireMarchePoste(poste, ville.indiceSalaires, conj.indicePrix),
+        utilisation,
+        heuresSemaine: emp.heuresSemaine,
+        trait,
+        avantages: av.moral,
+        gerant: gerant && poste.role !== 'gestion',
+        syndique,
+        moisDepuisEvaluation: emp.derniereEvaluation === null ? null : ctx.index - emp.derniereEvaluation,
+        moisDepuisAugmentation: ctx.index - (emp.derniereAugmentation ?? ctx.index - emp.moisAnciennete),
+        moisAnciennete: emp.moisAnciennete,
+      }),
       rng,
     );
+    emp.competence = progressionCompetence(emp);
     emp.moisAnciennete += 1;
-    if (rng.chance(probabiliteDepart(emp.moral, ville.penurieMainOeuvre))) {
-      messages.push({
-        code: 'demission',
-        niveau: 'alerte',
-        params: { nom: `${emp.prenom} ${emp.nom}`, moral: emp.moral },
-      });
+    if (rng.chance(probabiliteDepart(emp.moral, penurie, trait, av.depart))) {
+      ent.rh.departs.push({ index: ctx.index, type: 'demission' });
+      messages.push({ code: 'demission', niveau: 'alerte', params: { nom: `${emp.prenom} ${emp.nom}`, moral: emp.moral } });
     } else {
       restants.push(emp);
     }
   }
   ent.employes = restants;
+  ent.rh.departs = ent.rh.departs.filter((x) => x.index > ctx.index - 12);
+  const moralMoyen = ent.employes.length > 0 ? ent.employes.reduce((a, x) => a + x.moral, 0) / ent.employes.length : 70;
+  ent.rh.moisMoralBas = moralMoyen < 40 && ent.employes.length >= 4 ? ent.rh.moisMoralBas + 1 : 0;
+  if (!syndique && ent.rh.moisMoralBas >= 6 && rng.chance(0.25)) {
+    ent.rh.syndicat = { statut: 'accredite', depuis: ctx.index };
+    for (const emp of ent.employes)
+      if (posteParId(emp.posteId).role !== 'gestion')
+        emp.salaireHoraire = Math.round(emp.salaireHoraire * 1.05 * 100) / 100;
+    messages.push({ code: 'syndicatAccredite', niveau: 'danger' });
+  }
 
-  // p) Fin d'exercice fiscal (31 décembre) : DPA, impôts, relevés T4 et RL-1
+  // u) Préparation du mois suivant : candidats, dilemme, appels d'offres
+  const suivant = ctx.index + 1;
+  const moisSuivant = (ctx.mois % 12) + 1;
+  ent.rh.candidats = ent.rh.candidats.filter((c) => c.expire > ctx.index);
+  for (const aff of ent.rh.affichages.filter((a) => a.moisCandidats === suivant)) {
+    const poste = posteParId(aff.posteId);
+    const pen = penurieDuMois(ville.penurieMainOeuvre, conj.phase, moisSuivant);
+    const n = nombreCandidats(aff.plateformeId, pen, rng);
+    for (let i = 0; i < n; i++) {
+      ent.rh.candidats.push(
+        genererCandidat(
+          nouvelId(ent, 'cand'),
+          poste,
+          plateformeParId(aff.plateformeId),
+          { salaireMarche: salaireMarchePoste(poste, ville.indiceSalaires, conj.indicePrix), salaireMinimum: ctx.salaireMinimum, penurie: pen },
+          suivant,
+          rng,
+        ),
+      );
+    }
+    messages.push({ code: n > 0 ? 'candidatsRecus' : 'aucunCandidat', niveau: n > 0 ? 'info' : 'alerte', params: { n, poste: poste.nom } });
+  }
+  ent.rh.affichages = ent.rh.affichages.filter((a) => a.moisCandidats > suivant);
+
+  // v) Fin d'exercice fiscal (31 décembre) : DPA, impôts, relevés T4 et RL-1
   if (ctx.mois === 12) {
     const mouvementsAnnee = cumulerMouvements([
       ...ent.archives.filter((a) => a.annee === ctx.annee).map((a) => a.mouvements),
@@ -1720,58 +1243,78 @@ function simulerEntreprise(
     messages.push({
       code: societe ? 'declarationsSociete' : 'declarationsPersonnelles',
       niveau: 'info',
-      params: {
-        annee: ctx.annee,
-        impot: societe ? (decl.societe?.total ?? 0) : decl.personnel.total,
-        revenu: decl.revenuFiscal,
-        feuillets: decl.feuillets.length,
-      },
+      params: { annee: ctx.annee, impot: societe ? (decl.societe?.total ?? 0) : decl.personnel.total, revenu: decl.revenuFiscal, feuillets: decl.feuillets.length },
     });
   }
 
-  // q) Suivi des difficultés financières
+  // w) Suivi des difficultés financières
   if (L.soldes.encaisse < 0) ent.moisEnDefaut += 1;
   else ent.moisEnDefaut = 0;
 
-  // r) Indicateurs du mois
+  // x) Indicateurs du mois
   const resultats = etatResultats(L.mouvementsMois);
   const coutMainOeuvre = versDollars(cSalaires + cVacances + cDirigeant + versCents(cotisations));
+  const chiffreAffaires = resultats.ventes;
+  const depensesMarketing = pub + (d.programmeFidelite ? fid.coutLogicielMensuel : 0);
+  const margeBrute = resultats.margeBrute;
+  const serviesSegments: Record<string, number> = {};
+  for (const [k, v] of Object.entries(r.parSegment)) serviesSegments[k] = v.servies;
   const indicateurs: Indicateurs = {
     potentiel: ctx.potentiel,
     demande: r.demande,
-    servies: r.servies,
+    servies,
     perduesCapacite: r.perduesCapacite,
-    perduesRupture: r.perduesRupture,
+    perduesRupture,
+    perduesCuisine,
     partMarche: r.part,
-    ventesParLigne: r.ventes,
-    chiffreAffaires: r.chiffreAffaires,
-    ticketMoyen: r.ticketMoyen,
+    ventesParLigne,
+    chiffreAffaires,
+    ventesMagasin: Math.round((ventesBrutes - ventesLivraisonBrutes) * 100) / 100,
+    ventesLivraison: ventesLivraisonBrutes,
+    ventesB2B: Math.round(ventesB2B * 100) / 100,
+    rabais,
+    ticketMoyen: servies > 0 ? ventesNettes / servies : 0,
     beneficeNet: resultats.beneficeNet,
     tauxMargeBrute: resultats.tauxMargeBrute,
-    tauxMainOeuvre: r.chiffreAffaires > 0 ? coutMainOeuvre / r.chiffreAffaires : 0,
+    tauxMainOeuvre: chiffreAffaires > 0 ? coutMainOeuvre / chiffreAffaires : 0,
     encaisse: versDollars(L.soldes.encaisse),
     margeCreditUtilisee: versDollars(-L.soldes.margeCredit),
     notoriete: cl.notoriete,
+    notorieteSegments: { ...m.notorieteSegments },
+    serviesSegments,
     qualitePercue: cl.qualitePercue,
     service: cl.service,
     satisfaction: cl.satisfaction,
     note: cl.note,
     nbAvis: cl.nbAvis,
-    moral:
-      ent.employes.length > 0
-        ? ent.employes.reduce((a, x) => a + x.moral, 0) / ent.employes.length
-        : 0,
+    nps: netPromoterScore(cl.satisfaction),
+    image: m.image,
+    retention: m.retention,
+    clientsActifs,
+    nouveauxClients,
+    cac: nouveauxClients > 0 ? depensesMarketing / nouveauxClients : 0,
+    clv: clientsActifs > 0 ? valeurVieClient(margeBrute / clientsActifs, m.retention) : 0,
+    depensesMarketing,
+    tauxDefauts,
+    plaintes,
+    moral: ent.employes.length > 0 ? ent.employes.reduce((a, x) => a + x.moral, 0) / ent.employes.length : 0,
     nbEmployes: ent.employes.length,
+    absenteisme:
+      ent.employes.length > 0 ? ent.employes.reduce((a, x) => a + x.absenteisme, 0) / ent.employes.length : 0,
     heuresOuvertureEffectives: prep.heuresEffectives,
     capacite: prep.capacite,
+    capaciteCuisine: prep.capaciteCuisine,
     utilisation,
     tauxDirecteur: conj.tauxDirecteur,
-    tauxPreferentiel: tauxPreferentiel(conj),
+    tauxPreferentiel: prime,
     inflation: conj.inflationAnnuelle,
+    tauxChange: conj.tauxChange,
     salaireMinimum: ctx.salaireMinimum,
     indicePrixOffre: ip,
     coutMainOeuvre,
   };
+  if (prep.sansCuisinier && perduesCuisine > 0)
+    messages.push({ code: 'sansCuisinier', niveau: 'alerte', params: { perdues: perduesCuisine } });
 
   const archive: MoisArchive = {
     index: ctx.index,
@@ -1783,38 +1326,61 @@ function simulerEntreprise(
     ecritures: L.ecrituresMois,
     portionCouranteDette: ent.prets.reduce((a, p) => a + portionCourante(p), 0),
     indicateurs,
+    stocks: rapportStocks,
+    prevision: d.prevision,
     messages: [],
     concurrents: [],
   };
   const precedente = ent.archives.at(-1);
-  archive.messages = [
-    ...messages,
-    ...ctx.messagesCommuns,
-    ...analyserMois(archive, precedente, d, secteur, ent, prep.heuresEffectives),
-  ];
+  archive.messages = [...messages, ...ctx.messagesCommuns, ...analyserMois(archive, precedente, d, secteur, ent, prep.heuresEffectives)];
   ent.archives.push(archive);
   ouvrirNouveauMois(L);
 
-  // s) Clôture de l'exercice comptable
+  // y) Clôture de l'exercice comptable
   if (ctx.mois === 12) {
-    const resultatAnnee = cloturerExercice(
-      L,
-      typeCapitaux(ent.formeJuridique),
-      ent.associe?.part ?? 0,
-    );
-    archive.messages.push({
-      code: 'finExercice',
-      niveau: 'info',
-      params: { annee: ctx.annee, benefice: versDollars(resultatAnnee) },
-    });
+    const resultatAnnee = cloturerExercice(L, typeCapitaux(ent.formeJuridique), ent.associe?.part ?? 0);
+    archive.messages.push({ code: 'finExercice', niveau: 'info', params: { annee: ctx.annee, benefice: versDollars(resultatAnnee) } });
   }
 
-  // t) Remise à zéro des opérations ponctuelles
+  // z) Remise à zéro des opérations ponctuelles et des effets du mois
   d.apportPonctuel = 0;
   d.remboursementAnticipe = 0;
   d.dividendePonctuel = 0;
-  ent.enAttente = { recrutement: 0, indemnites: 0, embauches: 0 };
+  d.promotion = 0;
+  d.prevision = null;
+  ent.enAttente = { indemnites: 0 };
+  ent.effetsMois = {
+    capacite: 1,
+    heuresProprietaire: 0,
+    primes: 0,
+    pertesRecurrentes: ent.effetsMois.pertesRecurrentes.filter((p) => p.moisRestants > 0),
+  };
   return archive.messages;
+}
+
+/** Après la simulation : nouveau dilemme et appels d'offres pour le mois suivant. */
+function preparerMoisSuivant(ent: Entreprise, etat: EtatPartie, ctx: ContexteMois): void {
+  const suivant = ctx.index + 1;
+  if (ent.enFaillite || suivant >= etat.config.dureeMois) return;
+  const moisSuivant = (ctx.mois % 12) + 1;
+  const diff = DIFFICULTES[etat.config.difficulte];
+  const dilemme = tirerDilemme(
+    ent,
+    DILEMMES,
+    { mois: moisSuivant, derniere: ent.archives.at(-1), index: suivant, probabilite: diff.dilemmes, id: nouvelId(ent, 'dil') },
+    ctx.rng,
+  );
+  if (dilemme) {
+    ent.dilemmes.push(dilemme);
+    ent.archives.at(-1)?.messages.push({ code: 'nouveauDilemme', niveau: 'alerte', params: { titre: dilemmeParId(dilemme.defId).titre } });
+  }
+  if (produitActif(ent, 'traiteur')) {
+    const p = ctx.secteur.nouveauxProduits.find((x) => x.id === 'traiteur');
+    const appels = genererAppels(ent, (p?.prixReference ?? 15) * ctx.conj.indicePrix, suivant, moisSuivant, () => nouvelId(ent, 'appel'), ctx.rng);
+    ent.b2b.appels = appels;
+    if (appels.length > 0)
+      ent.archives.at(-1)?.messages.push({ code: 'appelsOffres', niveau: 'info', params: { n: appels.length } });
+  }
 }
 
 /** Observation publique des joueurs par les concurrents (données du mois précédent). */
@@ -1826,30 +1392,17 @@ function observerJoueurs(etat: EtatPartie, secteur: Secteur): ObservationMarche 
   let part = 0;
   for (const ent of actives) {
     const derniere = ent.archives.at(-1);
-    ip += derniere
-      ? derniere.indicateurs.indicePrixOffre
-      : indicePrixOffre(ent.decisions.prix, secteur, etat.conjoncture.indicePrix);
+    ip += derniere ? derniere.indicateurs.indicePrixOffre : indicePrixOffre(ent.decisions.prix, secteur, etat.conjoncture.indicePrix);
     q += ent.clientele.qualitePercue;
     part += derniere ? derniere.indicateurs.partMarche : 0;
   }
-  return {
-    indicePrixJoueurs: ip / actives.length,
-    qualiteJoueurs: q / actives.length,
-    partJoueurs: part,
-  };
+  return { indicePrixJoueurs: ip / actives.length, qualiteJoueurs: q / actives.length, partJoueurs: part };
 }
 
 /** Révision annuelle du salaire minimum (1er mai), arrondie à 0,05 $. */
-function salaireMinimumDuMois(
-  actuel: number,
-  annee: number,
-  mois: number,
-): { taux: number; hausse: boolean } {
+function salaireMinimumDuMois(actuel: number, annee: number, mois: number): { taux: number; hausse: boolean } {
   if (mois === SALAIRE_MINIMUM.moisRevision && annee > 2026) {
-    return {
-      taux: Math.round(actuel * (1 + SALAIRE_MINIMUM.hausseAnnuelleSimulee) * 20) / 20,
-      hausse: true,
-    };
+    return { taux: Math.round(actuel * (1 + SALAIRE_MINIMUM.hausseAnnuelleSimulee) * 20) / 20, hausse: true };
   }
   return { taux: actuel, hausse: false };
 }
@@ -1878,11 +1431,7 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
   const sm = salaireMinimumDuMois(etat.salaireMinimum, annee, mois);
   if (sm.hausse) {
     etat.salaireMinimum = sm.taux;
-    messagesCommuns.push({
-      code: 'hausseSalaireMinimum',
-      niveau: 'info',
-      params: { taux: sm.taux },
-    });
+    messagesCommuns.push({ code: 'hausseSalaireMinimum', niveau: 'info', params: { taux: sm.taux } });
   }
 
   // 2. Potentiel du marché ce mois-ci (saison, confiance des consommateurs, difficulté)
@@ -1901,12 +1450,7 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
     const appliquees = deciderConcurrent(c, perso, observation, index, diff.agressivite, rng);
     for (const r of appliquees) {
       messagesCommuns.push({
-        code:
-          r.type === 'prix'
-            ? 'concurrentPrix'
-            : r.type === 'publicite'
-              ? 'concurrentPublicite'
-              : 'concurrentQualite',
+        code: r.type === 'prix' ? 'concurrentPrix' : r.type === 'publicite' ? 'concurrentPublicite' : 'concurrentQualite',
         niveau: 'alerte',
         params: { nom: c.nom, valeur: r.valeur },
       });
@@ -1927,36 +1471,31 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
     rng,
     messagesCommuns,
     config: etat.config,
+    segments: segmentsMarche(secteur),
   };
   const actives = etat.entreprises.filter((e) => !e.enFaillite);
   const preparations = new Map<string, Preparation>();
   for (const ent of actives) {
     const debut = debutDeMois(ent, ctx);
-    ent.decisions = validerDecisions(
-      ent.decisions,
-      secteur,
-      Math.min(ent.decisions.salaireHoraire, etat.salaireMinimum),
-      ent.formeJuridique,
-    );
+    ent.decisions = validerDecisions(ent.decisions, secteur, ent.formeJuridique, lignesStock(ent, secteur));
     preparations.set(ent.id, preparerOffre(ent, ctx, debut));
   }
   const offres: Offre[] = [
     ...actives.map((e) => (preparations.get(e.id) as Preparation).offre),
     ...etat.concurrents.filter((c) => c.actif).map(offreConcurrent),
   ];
-  const marche = simulerMarche(offres, secteur, potentiel, conj.indicePrix);
+  const marche = simulerMarche(offres, secteur, potentiel, conj.indicePrix, {
+    segments: ctx.segments,
+    livraison: {
+      part: secteur.partLivraison,
+      majoration: PARAMETRES_MARKETING.livraison.majorationClient,
+      panier: secteur.panierLivraison,
+    },
+  });
 
   // 5. Résultats des concurrents
   for (const c of etat.concurrents) {
-    majConcurrentApresMarche(
-      c,
-      personnaliteParId(c.personnaliteId),
-      marche.resultats[c.id],
-      secteur,
-      conj,
-      potentiel,
-      rng,
-    );
+    majConcurrentApresMarche(c, personnaliteParId(c.personnaliteId), marche.resultats[c.id], secteur, conj, potentiel, rng);
   }
 
   // 6. Résultats et comptabilité de chaque entreprise des joueurs
@@ -1973,11 +1512,9 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
     }));
     if (ent.moisEnDefaut >= 3) {
       ent.enFaillite = true;
-      archive.messages.push({
-        code: estSocieteActions(ent.formeJuridique) ? 'failliteSociete' : 'faillite',
-        niveau: 'danger',
-      });
+      archive.messages.push({ code: estSocieteActions(ent.formeJuridique) ? 'failliteSociete' : 'faillite', niveau: 'danger' });
     }
+    preparerMoisSuivant(ent, etat, ctx);
   }
 
   // 7. Fin du mois
@@ -1996,15 +1533,14 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
 /** Prix de référence actuel d'une ligne (avec l'inflation). Utile pour l'interface. */
 export function prixMarche(etat: EtatPartie, ligneId: string): number {
   const secteur = secteurParId(etat.config.secteurId);
-  const ligne = parId(secteur.lignes, ligneId);
+  const ligne = [...secteur.lignes, ...secteur.nouveauxProduits].find((l) => l.id === ligneId);
+  if (!ligne) throw new Error(`Ligne introuvable : ${ligneId}`);
   return prixReference(ligne, etat.conjoncture.indicePrix);
 }
 
-/** Salaire de référence du marché pour le poste principal. */
-export function salaireMarche(etat: EtatPartie): number {
+/** Salaire de référence du marché pour un poste (par défaut : le poste de base). */
+export function salaireMarche(etat: EtatPartie, posteId?: string): number {
   const secteur = secteurParId(etat.config.secteurId);
   const ville = villeParId(etat.config.villeId);
-  return (
-    posteParId(secteur.postes[0]).salaireMedian * ville.indiceSalaires * etat.conjoncture.indicePrix
-  );
+  return salaireMarchePoste(posteParId(posteId ?? secteur.postes[0]), ville.indiceSalaires, etat.conjoncture.indicePrix);
 }

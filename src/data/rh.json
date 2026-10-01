@@ -1,0 +1,227 @@
+{
+  "_meta": {
+    "description": "Recrutement, formation, avantages sociaux et personnalités des employés.",
+    "sources": [
+      {
+        "url": "https://www.quebec.ca/sante/alimentation/salubrite-aliments-prevention-risques/etablissements-alimentaires/hygiene-nettoyage/formation-obligatoire-hygiene-salubrite-alimentaires/gestionnaire-etablissement-alimentaire",
+        "verifie": "2026-10-01",
+        "note": "Formation obligatoire en hygiène et salubrité alimentaires : gestionnaire d'établissement (12 h) et manipulateur d'aliments (6 h). Les prix sont fixés par les formateurs autorisés."
+      },
+      {
+        "url": "https://www.cnesst.gouv.qc.ca/fr/conditions-travail",
+        "verifie": "2026-09-30",
+        "note": "Loi sur les normes du travail : vacances (4 %, puis 6 % après 3 ans), jours fériés, obligations familiales, harcèlement psychologique."
+      }
+    ],
+    "avertissement": "Coûts des plateformes, des formations et des avantages : estimations de conception (À VÉRIFIER)."
+  },
+  "plateformes": [
+    {
+      "id": "vitrine",
+      "nom": "Affiche en vitrine et bouche-à-oreille",
+      "description": "Gratuit, mais peu de candidats et souvent peu d'expérience.",
+      "cout": 0,
+      "pourcentageSalaire": 0,
+      "delaiMois": 1,
+      "candidatsMoyens": 1.3,
+      "bonusCompetence": -0.03
+    },
+    {
+      "id": "guichetEmplois",
+      "nom": "Guichet-Emplois et Québec emploi",
+      "description": "Sites d'emploi gouvernementaux gratuits. Il faut attendre un peu les candidatures.",
+      "cout": 0,
+      "pourcentageSalaire": 0,
+      "delaiMois": 1,
+      "candidatsMoyens": 2.2,
+      "bonusCompetence": 0
+    },
+    {
+      "id": "ecole",
+      "nom": "Service de placement d'un cégep ou d'une école hôtelière",
+      "description": "Gratuit : des finissants motivés, mais avec peu d'expérience.",
+      "cout": 0,
+      "pourcentageSalaire": 0,
+      "delaiMois": 1,
+      "candidatsMoyens": 2.4,
+      "bonusCompetence": -0.02
+    },
+    {
+      "id": "sitePrive",
+      "nom": "Site d'emploi privé (annonce commanditée)",
+      "description": "Annonce mise en avant pendant 30 jours : beaucoup de candidats rapidement.",
+      "cout": 375,
+      "pourcentageSalaire": 0,
+      "delaiMois": 0,
+      "candidatsMoyens": 3.5,
+      "bonusCompetence": 0
+    },
+    {
+      "id": "agence",
+      "nom": "Agence de placement",
+      "description": "Candidats présélectionnés tout de suite. Frais de 15 % du salaire annuel à l'embauche.",
+      "cout": 0,
+      "pourcentageSalaire": 0.15,
+      "delaiMois": 0,
+      "candidatsMoyens": 2.2,
+      "bonusCompetence": 0.08
+    }
+  ],
+  "formations": [
+    {
+      "id": "service",
+      "nom": "Service à la clientèle",
+      "description": "Accueil, gestion des plaintes, vente suggestive (1 jour).",
+      "cout": 300,
+      "postes": null,
+      "gainCompetence": 0.05,
+      "gainMoral": 4
+    },
+    {
+      "id": "barista",
+      "nom": "Barista certifié",
+      "description": "Extraction, mouture, lait et latte art (2 jours).",
+      "cout": 650,
+      "postes": ["barista", "gerant"],
+      "gainCompetence": 0.1,
+      "gainMoral": 5
+    },
+    {
+      "id": "cuisine",
+      "nom": "Perfectionnement culinaire",
+      "description": "Techniques, rapidité et constance en cuisine (2 jours).",
+      "cout": 700,
+      "postes": ["cuisinier", "aideCuisine"],
+      "gainCompetence": 0.1,
+      "gainMoral": 5
+    },
+    {
+      "id": "manipulateur",
+      "nom": "Hygiène et salubrité : manipulateur d'aliments",
+      "description": "Formation obligatoire du MAPAQ de 6 heures pour les employés qui préparent des aliments.",
+      "cout": 110,
+      "postes": null,
+      "gainCompetence": 0.02,
+      "gainMoral": 1,
+      "hygiene": true
+    },
+    {
+      "id": "supervision",
+      "nom": "Supervision d'équipe",
+      "description": "Horaires, rétroaction, gestion des conflits (3 soirs).",
+      "cout": 900,
+      "postes": ["gerant"],
+      "gainCompetence": 0.08,
+      "gainMoral": 6
+    }
+  ],
+  "formationGestionnaireHygiene": {
+    "nom": "Hygiène et salubrité : gestionnaire d'établissement alimentaire",
+    "description": "Formation obligatoire du MAPAQ de 12 heures pour la personne responsable de l'hygiène. Sans personne formée, tu risques un constat d'infraction lors d'une inspection.",
+    "cout": 220
+  },
+  "avantages": [
+    {
+      "id": "repas",
+      "nom": "Repas gratuits pendant les quarts",
+      "description": "Un repas et des cafés à volonté pendant le travail.",
+      "coutMensuelParEmploye": 45,
+      "gainMoral": 4,
+      "reductionDepart": 0.002,
+      "effetCapacite": 0,
+      "heuresMin": 0
+    },
+    {
+      "id": "assurance",
+      "nom": "Assurance collective (santé et dentaire)",
+      "description": "Part de l'employeur pour les employés de 20 h et plus par semaine. Au Québec, la prime payée par l'employeur est un avantage imposable pour l'impôt provincial.",
+      "coutMensuelParEmploye": 160,
+      "gainMoral": 8,
+      "reductionDepart": 0.008,
+      "effetCapacite": 0,
+      "heuresMin": 20
+    },
+    {
+      "id": "flexibilite",
+      "nom": "Horaires flexibles",
+      "description": "Les employés choisissent une partie de leurs quarts : aucun coût, mais un peu moins de personnel aux heures de pointe.",
+      "coutMensuelParEmploye": 0,
+      "gainMoral": 4,
+      "reductionDepart": 0.003,
+      "effetCapacite": -0.03,
+      "heuresMin": 0
+    },
+    {
+      "id": "rabais",
+      "nom": "Rabais employé de 50 %",
+      "description": "Sur les consommations prises en dehors des quarts.",
+      "coutMensuelParEmploye": 15,
+      "gainMoral": 2,
+      "reductionDepart": 0.001,
+      "effetCapacite": 0,
+      "heuresMin": 0
+    }
+  ],
+  "traits": [
+    {
+      "id": "fiable",
+      "nom": "Fiable",
+      "description": "Toujours là, toujours à l'heure.",
+      "absenteisme": -0.012,
+      "depart": -0.004,
+      "volatilite": 0.7,
+      "service": 0,
+      "surcharge": 1,
+      "apprentissage": 1,
+      "frequence": 25
+    },
+    {
+      "id": "sociable",
+      "nom": "Sociable",
+      "description": "Les clients l'adorent : le service est plus chaleureux.",
+      "absenteisme": 0,
+      "depart": 0,
+      "volatilite": 1,
+      "service": 0.03,
+      "surcharge": 1,
+      "apprentissage": 1,
+      "frequence": 22
+    },
+    {
+      "id": "ambitieux",
+      "nom": "Ambitieux",
+      "description": "Apprend vite, mais veut progresser : sans augmentation ni formation, il finit par partir.",
+      "absenteisme": 0,
+      "depart": 0.004,
+      "volatilite": 1,
+      "service": 0,
+      "surcharge": 1,
+      "apprentissage": 1.8,
+      "frequence": 18
+    },
+    {
+      "id": "calme",
+      "nom": "Calme sous pression",
+      "description": "Garde le sourire même quand la file déborde.",
+      "absenteisme": 0,
+      "depart": 0,
+      "volatilite": 0.8,
+      "service": 0.01,
+      "surcharge": 0.5,
+      "apprentissage": 1,
+      "frequence": 20
+    },
+    {
+      "id": "irregulier",
+      "nom": "Irrégulier",
+      "description": "Talentueux, mais souvent absent ou en retard.",
+      "absenteisme": 0.035,
+      "depart": 0.003,
+      "volatilite": 1.4,
+      "service": 0,
+      "surcharge": 1.2,
+      "apprentissage": 1,
+      "frequence": 15
+    }
+  ]
+}

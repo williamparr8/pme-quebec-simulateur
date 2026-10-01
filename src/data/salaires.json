@@ -1,11 +1,21 @@
 {
   "_meta": {
-    "description": "Salaires horaires de référence au Québec (médiane du marché). Le salaire minimum est dans fiscalite.ts.",
+    "description": "Postes et salaires horaires de référence au Québec (médiane du marché, région de Montréal). Le salaire minimum est dans fiscalite.ts.",
     "sources": [
+      {
+        "url": "https://www.guichetemplois.gc.ca/rapportmarche/salaire-profession/6224/22446",
+        "verifie": "2026-10-01",
+        "note": "Guichet-Emplois : cuisiniers (CNP 63200), région de Montréal, médiane 20,00 $ (16,60 $ à 26,00 $), données du 19/11/2025."
+      },
+      {
+        "url": "https://www.jobbank.gc.ca/marketreport/wages-occupation/2031/QC",
+        "verifie": "2026-10-01",
+        "note": "Guichet-Emplois : gérants de restaurant (CNP 60030), région de Montréal, médiane 24,50 $ (18,25 $ à 43,27 $)."
+      },
       {
         "url": "https://www.guichetemplois.gc.ca/salaire-heure",
         "verifie": "2026-09-30",
-        "note": "Guichet-Emplois (gouvernement du Canada). Les médianes ci-dessous sont des estimations pour la région de Montréal, à confirmer."
+        "note": "Guichet-Emplois (gouvernement du Canada) pour les autres postes. Les valeurs marquées « À VÉRIFIER » sont des estimations."
       }
     ]
   },
@@ -14,11 +24,83 @@
       "id": "barista",
       "nom": "Barista",
       "cnp": "65201",
+      "description": "Prépare les boissons, sert les clients et tient la caisse.",
       "salaireMedian": 17.25,
       "salaireMin": 16.6,
       "salaireMax": 21.0,
       "heuresSemaineDefaut": 28,
+      "role": "service",
+      "productiviteService": 1,
+      "productiviteCuisine": 0,
       "note": "À VÉRIFIER : médiane estimée (Toronto 17,60 $, Halifax 16,75 $ selon Guichet-Emplois 2026)."
+    },
+    {
+      "id": "cuisinier",
+      "nom": "Cuisinier",
+      "cnp": "63200",
+      "description": "Prépare les repas, les soupes et les sandwichs et veille à l'hygiène de la cuisine.",
+      "salaireMedian": 20.0,
+      "salaireMin": 16.6,
+      "salaireMax": 26.0,
+      "heuresSemaineDefaut": 32,
+      "role": "cuisine",
+      "productiviteService": 0.2,
+      "productiviteCuisine": 1
+    },
+    {
+      "id": "aideCuisine",
+      "nom": "Aide-cuisinier",
+      "cnp": "65201",
+      "description": "Plonge, mise en place et assemblage simple; donne aussi un coup de main au comptoir.",
+      "salaireMedian": 16.9,
+      "salaireMin": 16.6,
+      "salaireMax": 19.0,
+      "heuresSemaineDefaut": 25,
+      "role": "cuisine",
+      "productiviteService": 0.3,
+      "productiviteCuisine": 0.55,
+      "note": "À VÉRIFIER : estimation pour les aides de cuisine à Montréal."
+    },
+    {
+      "id": "gerant",
+      "nom": "Gérant",
+      "cnp": "60030",
+      "description": "Supervise l'équipe, fait les horaires, commande la marchandise et remplace le propriétaire.",
+      "salaireMedian": 24.5,
+      "salaireMin": 18.25,
+      "salaireMax": 35.0,
+      "heuresSemaineDefaut": 40,
+      "role": "gestion",
+      "productiviteService": 0.6,
+      "productiviteCuisine": 0
+    },
+    {
+      "id": "commisComptable",
+      "nom": "Commis comptable",
+      "cnp": "13102",
+      "description": "Tient les livres, prépare la paie et les remises; réduit les honoraires du comptable externe.",
+      "salaireMedian": 25.0,
+      "salaireMin": 19.0,
+      "salaireMax": 30.0,
+      "heuresSemaineDefaut": 10,
+      "role": "administration",
+      "productiviteService": 0,
+      "productiviteCuisine": 0,
+      "note": "À VÉRIFIER : CNP 13102 (commis à la paie et tenue de livres), estimation pour Montréal."
+    },
+    {
+      "id": "marketeur",
+      "nom": "Responsable marketing",
+      "cnp": "11202",
+      "description": "Gère les réseaux sociaux, les publicités et les partenariats : tes canaux de promotion deviennent plus efficaces.",
+      "salaireMedian": 30.0,
+      "salaireMin": 22.0,
+      "salaireMax": 40.0,
+      "heuresSemaineDefaut": 12,
+      "role": "marketing",
+      "productiviteService": 0,
+      "productiviteCuisine": 0,
+      "note": "À VÉRIFIER : CNP 11202 (professionnels de la publicité et du marketing), estimation pour Montréal."
     }
   ]
 }

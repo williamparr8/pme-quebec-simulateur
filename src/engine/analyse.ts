@@ -86,7 +86,46 @@ export function analyserMois(
     });
   }
   if (i.perduesRupture > 0) {
-    m.push({ code: 'ruptureStock', niveau: 'alerte', params: { perdues: i.perduesRupture } });
+    const lignes = archive.stocks
+      .filter((s) => s.perdues > 0 && s.demandees > 0 && s.perdues / s.demandees > 0.02)
+      .map((s) => s.ligneId);
+    m.push({
+      code: 'ruptureStock',
+      niveau: 'alerte',
+      params: { perdues: i.perduesRupture, lignes: lignes.join(',') },
+    });
+  }
+  if (i.perduesCuisine > 0 && i.chiffreAffaires > 0) {
+    m.push({ code: 'cuisineInsuffisante', niveau: 'alerte', params: { perdues: i.perduesCuisine } });
+  }
+  const cmv = (archive.mouvements.coutMarchandises ?? 0) / 100;
+  const perimes = (archive.mouvements.pertesStocks ?? 0) / 100;
+  if (cmv > 0 && perimes / cmv > 0.04) {
+    m.push({ code: 'pertesPeremption', niveau: 'alerte', params: { montant: perimes, pct: perimes / cmv } });
+  }
+  if (i.tauxDefauts > 0.06) {
+    m.push({ code: 'defautsEleves', niveau: 'alerte', params: { taux: i.tauxDefauts, plaintes: i.plaintes } });
+  }
+
+  // Prévision (budget) : écart entre le prévu et le réel
+  if (archive.prevision && archive.prevision.ventes > 0) {
+    const ecart = i.chiffreAffaires / archive.prevision.ventes - 1;
+    m.push({
+      code: Math.abs(ecart) <= 0.05 ? 'previsionJuste' : 'previsionEcart',
+      niveau: Math.abs(ecart) <= 0.05 ? 'succes' : 'info',
+      params: {
+        prevu: archive.prevision.ventes,
+        reel: i.chiffreAffaires,
+        ecart,
+        beneficePrevu: archive.prevision.benefice,
+        beneficeReel: i.beneficeNet,
+      },
+    });
+  }
+
+  // Marketing : coût d'acquisition et valeur à vie d'un client
+  if (i.nouveauxClients >= 20 && i.clv > 0 && i.cac > i.clv) {
+    m.push({ code: 'cacSuperieurClv', niveau: 'alerte', params: { cac: i.cac, clv: i.clv } });
   }
   if (heuresEffectives < d.heuresOuverture) {
     m.push({
@@ -154,6 +193,8 @@ export function analyserMois(
   // Ressources humaines
   if (i.nbEmployes > 0 && i.moral < 45)
     m.push({ code: 'moralBas', niveau: 'alerte', params: { moral: i.moral } });
+  if (i.nbEmployes > 0 && i.absenteisme > 0.08)
+    m.push({ code: 'absenteismeEleve', niveau: 'alerte', params: { taux: i.absenteisme } });
 
   // Trésorerie
   if (ent.moisEnDefaut === 1)

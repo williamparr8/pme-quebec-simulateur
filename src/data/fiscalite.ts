@@ -258,15 +258,41 @@ export const IMPOT_SOCIETES = {
 
 /** Déduction pour amortissement (DPA) : taux des catégories utilisées. */
 export const DPA = {
-  /** Catégorie 8 : mobilier et équipement, 20 % dégressif. */
-  equipement: { categorie: 8, taux: 0.2 },
-  /** Catégorie 13 : améliorations locatives, linéaire sur la durée du bail. */
-  ameliorations: { categorie: 13 },
-  /** Biens acquis avant 2028 : incitatif à l'investissement accéléré, pas de règle de la demi-année. */
-  regleDemiAnneeApres: 2027,
+  /** Taux dégressifs (la catégorie 13 est linéaire sur la durée du bail). */
+  taux: { '8': 0.2, '10': 0.3, '12': 1, '13': 0, '50': 0.55 },
+  noms: {
+    '8': 'Catégorie 8 – mobilier et équipement (20 %)',
+    '10': 'Catégorie 10 – véhicules (30 %)',
+    '12': 'Catégorie 12 – logiciels (100 %)',
+    '13': 'Catégorie 13 – améliorations locatives (durée du bail)',
+    '50': 'Catégorie 50 – matériel informatique (55 %)',
+  },
+  /**
+   * Incitatif à l'investissement accéléré (rétabli par le budget fédéral 2025, projet de loi C-15) :
+   * l'année d'acquisition, la DPA vaut 1,5 fois le taux normal (au lieu de la moitié avec la
+   * règle de la demi-année) pour les biens prêts à être mis en service avant 2030. De 2030 à
+   * 2033, seule la règle de la demi-année est suspendue; ensuite, elle s'applique de nouveau.
+   */
+  facteurPremiereAnnee: (annee: number): number =>
+    annee <= 2029 ? 1.5 : annee <= 2033 ? 1 : 0.5,
   source: {
-    url: 'https://www.canada.ca/fr/agence-revenu/services/impot/entreprises/sujets/entreprise-individuelle-societe-personnes/declarer-revenus-depenses-entreprise/reclamer-deduction-amortissement/categories-biens-amortissables.html',
+    url: 'https://www.mccarthy.ca/fr/references/blogues/consumer-markets-perspectives/le-budget-2025-comprend-des-incitatifs-fiscaux-appeles-superdeduction-a-la-productivite-et-l-elimination-de-la-taxe-de-luxe-sur-certains-aeronefs-et-navires',
     verifie: '2026-10-01',
+    note: 'Catégories de DPA (ARC) et incitatif à l’investissement accéléré prolongé (budget 2025, « super-déduction à la productivité »).',
+  } satisfies Source,
+} as const;
+
+/** Taux de change du dollar américain (prix des fournisseurs importés). */
+export const TAUX_CHANGE = {
+  /** Dollars canadiens pour 1 $ US au début de la partie. */
+  usdCadInitial: 1.38,
+  /** Taux de référence des prix des fournisseurs en $ US. */
+  reference: 1.38,
+  bornes: { min: 1.2, max: 1.55 },
+  source: {
+    url: 'https://www.poundsterlinglive.com/history/CAD-USD-2026',
+    verifie: '2026-10-01',
+    note: 'Environ 0,72 $ US pour 1 $ CA en septembre 2026, soit environ 1,38 $ CA pour 1 $ US.',
   } satisfies Source,
 } as const;
 

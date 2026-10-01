@@ -18,6 +18,7 @@ export type GroupeCompte =
   | 'passifLong'
   | 'capitaux'
   | 'produits'
+  | 'autresProduits'
   | 'cmv'
   | 'exploitation'
   | 'financieres'
@@ -35,6 +36,12 @@ interface DefinitionCompte {
 
 export const PLAN_COMPTABLE = {
   encaisse: { numero: '1000', nom: 'Encaisse', classe: 'actif', groupe: 'actifCourt' },
+  placements: {
+    numero: '1050',
+    nom: 'Placements à court terme',
+    classe: 'actif',
+    groupe: 'actifCourt',
+  },
   comptesClients: { numero: '1100', nom: 'Comptes clients', classe: 'actif', groupe: 'actifCourt' },
   stocks: { numero: '1200', nom: 'Stocks de marchandises', classe: 'actif', groupe: 'actifCourt' },
   ctiARecouvrer: {
@@ -76,6 +83,27 @@ export const PLAN_COMPTABLE = {
     groupe: 'immobilisations',
     contrepartie: true,
   },
+  vehicules: { numero: '1540', nom: 'Véhicules', classe: 'actif', groupe: 'immobilisations' },
+  amortCumVehicules: {
+    numero: '1550',
+    nom: 'Amortissement cumulé – véhicules',
+    classe: 'actif',
+    groupe: 'immobilisations',
+    contrepartie: true,
+  },
+  informatique: {
+    numero: '1560',
+    nom: 'Matériel informatique et logiciels',
+    classe: 'actif',
+    groupe: 'immobilisations',
+  },
+  amortCumInformatique: {
+    numero: '1570',
+    nom: 'Amortissement cumulé – informatique',
+    classe: 'actif',
+    groupe: 'immobilisations',
+    contrepartie: true,
+  },
   margeCredit: { numero: '2050', nom: 'Marge de crédit', classe: 'passif', groupe: 'passifCourt' },
   comptesFournisseurs: {
     numero: '2100',
@@ -111,7 +139,7 @@ export const PLAN_COMPTABLE = {
   },
   empruntBancaire: {
     numero: '2500',
-    nom: 'Emprunt bancaire',
+    nom: 'Emprunts à long terme',
     classe: 'passif',
     groupe: 'passifLong',
   },
@@ -158,6 +186,24 @@ export const PLAN_COMPTABLE = {
     groupe: 'capitaux',
   },
   ventes: { numero: '4000', nom: 'Ventes', classe: 'produit', groupe: 'produits' },
+  rabaisPromotions: {
+    numero: '4100',
+    nom: 'Rabais, promotions et récompenses de fidélité',
+    classe: 'produit',
+    groupe: 'produits',
+  },
+  revenusPlacement: {
+    numero: '4500',
+    nom: 'Revenus de placement',
+    classe: 'produit',
+    groupe: 'autresProduits',
+  },
+  subventions: {
+    numero: '4600',
+    nom: 'Subventions',
+    classe: 'produit',
+    groupe: 'autresProduits',
+  },
   coutMarchandises: {
     numero: '5000',
     nom: 'Coût des marchandises vendues',
@@ -170,10 +216,16 @@ export const PLAN_COMPTABLE = {
     classe: 'charge',
     groupe: 'cmv',
   },
+  escomptesAchats: {
+    numero: '5060',
+    nom: 'Escomptes sur achats',
+    classe: 'charge',
+    groupe: 'cmv',
+  },
   salaires: { numero: '5100', nom: 'Salaires', classe: 'charge', groupe: 'exploitation' },
   vacances: {
     numero: '5105',
-    nom: 'Indemnités de vacances',
+    nom: 'Indemnités de vacances et de jours fériés',
     classe: 'charge',
     groupe: 'exploitation',
   },
@@ -183,9 +235,21 @@ export const PLAN_COMPTABLE = {
     classe: 'charge',
     groupe: 'exploitation',
   },
+  avantagesSociaux: {
+    numero: '5115',
+    nom: 'Avantages sociaux',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
   recrutement: {
     numero: '5120',
     nom: 'Frais de recrutement',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  formation: {
+    numero: '5140',
+    nom: 'Formation du personnel',
     classe: 'charge',
     groupe: 'exploitation',
   },
@@ -233,9 +297,39 @@ export const PLAN_COMPTABLE = {
     groupe: 'exploitation',
   },
   publicite: { numero: '5300', nom: 'Publicité', classe: 'charge', groupe: 'exploitation' },
+  etudesMarche: {
+    numero: '5310',
+    nom: 'Études de marché',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  developpementProduits: {
+    numero: '5320',
+    nom: 'Développement de nouveaux produits',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  commissions: {
+    numero: '5330',
+    nom: 'Commissions des plateformes et frais de livraison',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  ecoresponsabilite: {
+    numero: '5340',
+    nom: 'Initiatives écoresponsables',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
   fraisCartes: {
     numero: '5400',
     nom: 'Frais bancaires et de cartes',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  creancesIrrecouvrables: {
+    numero: '5410',
+    nom: 'Créances irrécouvrables',
     classe: 'charge',
     groupe: 'exploitation',
   },
@@ -259,7 +353,7 @@ export const PLAN_COMPTABLE = {
   },
   sinistres: {
     numero: '5480',
-    nom: 'Pertes non assurées',
+    nom: 'Pertes non assurées et vols',
     classe: 'charge',
     groupe: 'exploitation',
   },
@@ -306,9 +400,16 @@ export const FLUX = {
   impotsPayes: { nom: 'Impôts sur le revenu payés', activite: 'exploitation' },
   droitsEtAmendes: { nom: 'Droits, permis, amendes et sinistres', activite: 'exploitation' },
   loyerEtFrais: { nom: 'Loyer et frais d’exploitation', activite: 'exploitation' },
-  publicite: { nom: 'Publicité et recrutement', activite: 'exploitation' },
+  publicite: { nom: 'Publicité, marketing et recrutement', activite: 'exploitation' },
+  formationAvantages: { nom: 'Formation et avantages sociaux', activite: 'exploitation' },
+  commissionsLivraison: {
+    nom: 'Commissions des plateformes et frais de livraison',
+    activite: 'exploitation',
+  },
   fraisBancaires: { nom: 'Frais bancaires et de cartes', activite: 'exploitation' },
   interetsPayes: { nom: 'Intérêts payés', activite: 'exploitation' },
+  interetsRecus: { nom: 'Intérêts reçus', activite: 'exploitation' },
+  subventionsRecues: { nom: 'Subventions reçues', activite: 'exploitation' },
   achatStockInitial: { nom: 'Achat du stock initial', activite: 'exploitation' },
   fraisDemarrage: { nom: 'Frais de démarrage', activite: 'exploitation' },
   acquisitionImmobilisations: {
@@ -316,6 +417,7 @@ export const FLUX = {
     activite: 'investissement',
   },
   depotGarantie: { nom: 'Dépôt de garantie versé', activite: 'investissement' },
+  placementsNets: { nom: 'Placements à court terme (net)', activite: 'investissement' },
   apportsProprietaire: {
     nom: 'Apports des propriétaires et émission d’actions',
     activite: 'financement',

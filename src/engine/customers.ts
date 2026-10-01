@@ -27,6 +27,18 @@ export function satisfactionClients(
   );
 }
 
+/**
+ * Note des avis du mois selon la gestion des avis : répondre aux avis négatifs adoucit
+ * leur effet (les lecteurs voient que le commerce s'en occupe); offrir un geste commercial
+ * (produit gratuit, remboursement) encore davantage.
+ */
+export function noteDuMois(note: number, reponse: 'ignorer' | 'repondre' | 'compenser'): number {
+  const negatif = note < 4;
+  const bonus =
+    reponse === 'repondre' ? (negatif ? 0.12 : 0.03) : reponse === 'compenser' ? (negatif ? 0.25 : 0.05) : 0;
+  return borner(note + bonus, 1, 5);
+}
+
 /** Note moyenne (sur 5) que donnent des clients ayant ce niveau de satisfaction. */
 export function noteCible(satisfaction: number): number {
   return borner(1.4 + 3.6 * satisfaction, 1, 5);

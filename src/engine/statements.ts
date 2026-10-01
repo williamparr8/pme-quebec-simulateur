@@ -22,6 +22,10 @@ export interface LignePoste {
 }
 
 export interface EtatResultats {
+  /** Ventes avant les rabais, promotions et récompenses de fidélité. */
+  ventesBrutes: number;
+  rabais: number;
+  /** Ventes nettes. */
   ventes: number;
   coutMarchandises: number;
   margeBrute: number;
@@ -35,6 +39,8 @@ export interface EtatResultats {
   /** Bénéfice d'exploitation (BAII). */
   baii: number;
   interets: number;
+  /** Revenus de placement et subventions. */
+  autresProduits: number;
   beneficeAvantImpot: number;
   impots: number;
   beneficeNet: number;
@@ -64,6 +70,7 @@ export function cumulerFlux(liste: readonly MouvementsFlux[]): MouvementsFlux {
 export function etatResultats(mouvements: Mouvements): EtatResultats {
   const m = (id: CompteId): Cents => mouvements[id] ?? 0;
   let ventes = 0;
+  let autresProduits = 0;
   let cmv = 0;
   let exploitation = 0;
   let interets = 0;
@@ -73,8 +80,10 @@ export function etatResultats(mouvements: Mouvements): EtatResultats {
 
   for (const id of COMPTES) {
     const def = PLAN_COMPTABLE[id];
-    if (def.classe === 'produit') ventes -= m(id);
-    else if (def.classe === 'charge') {
+    if (def.classe === 'produit') {
+      if (def.groupe === 'autresProduits') autresProduits -= m(id);
+      else ventes -= m(id);
+    } else if (def.classe === 'charge') {
       switch (def.groupe) {
         case 'cmv':
           cmv += m(id);
@@ -100,8 +109,10 @@ export function etatResultats(mouvements: Mouvements): EtatResultats {
   const margeBrute = ventes - cmv;
   const baiia = margeBrute - exploitation;
   const baii = baiia - amortissement;
-  const bai = baii - interets;
+  const bai = baii - interets + autresProduits;
   return {
+    ventesBrutes: versDollars(-m('ventes')),
+    rabais: versDollars(m('rabaisPromotions')),
     ventes: versDollars(ventes),
     coutMarchandises: versDollars(cmv),
     margeBrute: versDollars(margeBrute),
@@ -112,6 +123,7 @@ export function etatResultats(mouvements: Mouvements): EtatResultats {
     amortissement: versDollars(amortissement),
     baii: versDollars(baii),
     interets: versDollars(interets),
+    autresProduits: versDollars(autresProduits),
     beneficeAvantImpot: versDollars(bai),
     // Entreprise individuelle et société de personnes : aucun impôt ici, le bénéfice est imposé
     // dans la déclaration personnelle des propriétaires. Société par actions : impôt des sociétés.
@@ -167,6 +179,7 @@ export function bilan(soldes: Soldes, portionCouranteDette: Cents = 0): Bilan {
   if (encaisse >= 0) ajouter(actifCourt, 'encaisse', encaisse);
   // Comptes à court terme dont le solde peut être débiteur (actif) ou créditeur (passif).
   const courants: CompteId[] = [
+    'placements',
     'comptesClients',
     'stocks',
     'ctiARecouvrer',
@@ -199,26 +212,22 @@ export function bilan(soldes: Soldes, portionCouranteDette: Cents = 0): Bilan {
 
   const actifLong: LignePoste[] = [];
   ajouter(actifLong, 'depotGarantie', s('depotGarantie'));
-  const immobilisations = [
-    {
-      libelle: PLAN_COMPTABLE.equipement.nom,
-      cout: versDollars(s('equipement')),
-      amortCumule: versDollars(-s('amortCumEquipement')),
-      net: versDollars(s('equipement') + s('amortCumEquipement')),
-    },
-    {
-      libelle: PLAN_COMPTABLE.ameliorationsLocatives.nom,
-      cout: versDollars(s('ameliorationsLocatives')),
-      amortCumule: versDollars(-s('amortCumAmeliorations')),
-      net: versDollars(s('ameliorationsLocatives') + s('amortCumAmeliorations')),
-    },
-  ].filter((i) => i.cout !== 0);
+  const paires: [CompteId, CompteId][] = [
+    ['equipement', 'amortCumEquipement'],
+    ['ameliorationsLocatives', 'amortCumAmeliorations'],
+    ['vehicules', 'amortCumVehicules'],
+    ['informatique', 'amortCumInformatique'],
+  ];
+  const immobilisations = paires
+    .map(([actif, cumul]) => ({
+      libelle: PLAN_COMPTABLE[actif].nom,
+      cout: versDollars(s(actif)),
+      amortCumule: versDollars(-s(cumul)),
+      net: versDollars(s(actif) + s(cumul)),
+    }))
+    .filter((i) => i.cout !== 0);
   const totalActifLong =
-    s('depotGarantie') +
-    s('equipement') +
-    s('amortCumEquipement') +
-    s('ameliorationsLocatives') +
-    s('amortCumAmeliorations');
+    s('depotGarantie') + paires.reduce((a, [actif, cumul]) => a + s(actif) + s(cumul), 0);
 
   const emprunt = -s('empruntBancaire');
   const portionCourante = Math.min(Math.max(0, portionCouranteDette), emprunt);

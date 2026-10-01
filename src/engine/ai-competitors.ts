@@ -37,6 +37,9 @@ export interface Concurrent {
   qualite: number;
   service: number;
   ambiance: number;
+  eco: number;
+  local: number;
+  livraison: boolean;
   notoriete: number;
   note: number;
   nbAvis: number;
@@ -96,6 +99,9 @@ export function creerConcurrent(
     qualite: p.qualite,
     service: p.service,
     ambiance: p.ambiance,
+    eco: p.eco,
+    local: p.local,
+    livraison: p.livraison,
     notoriete: p.notorieteInitiale,
     note: p.noteInitiale,
     nbAvis: 180,
@@ -120,10 +126,14 @@ export function offreConcurrent(c: Concurrent): Offre {
     qualite: c.qualite,
     service: c.service,
     ambiance: c.ambiance,
+    eco: c.eco,
+    local: c.local,
+    livraison: c.livraison,
     notoriete: c.notoriete,
     note: c.note,
     heuresOuverture: c.heuresOuverture,
     capaciteVisites: c.capaciteMensuelle,
+    image: Math.min(1, 0.4 * c.qualite + 0.3 * c.notoriete + 0.3 * ((c.note - 1) / 4)),
   };
 }
 

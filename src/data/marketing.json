@@ -1,0 +1,240 @@
+{
+  "_meta": {
+    "description": "Canaux de promotion, études de marché, programme de fidélité et initiatives écoresponsables.",
+    "avertissement": "Les coûts par mille (CPM), les audiences et les taux de conversion sont des estimations de conception pour une zone urbaine québécoise; ils varient beaucoup selon le ciblage. Voir DECISIONS.md (À VÉRIFIER)."
+  },
+  "canaux": [
+    {
+      "id": "meta",
+      "nom": "Facebook et Instagram (Meta)",
+      "description": "Publicités ciblées par quartier et par âge. Effet rapide, s'arrête dès qu'on cesse de payer.",
+      "cpm": 9,
+      "audience": 30000,
+      "frequenceEfficace": 3,
+      "couverture": 0.75,
+      "conversion": 0.07,
+      "delaiMois": 0,
+      "dureeEffetMois": 1,
+      "budgetMinimum": 50,
+      "affinites": { "etudiants": 0.9, "familles": 1.25, "professionnels": 1.0, "retraites": 0.7 }
+    },
+    {
+      "id": "tiktok",
+      "nom": "TikTok",
+      "description": "Courtes vidéos très populaires chez les jeunes. Peu efficace auprès des plus âgés.",
+      "cpm": 7,
+      "audience": 20000,
+      "frequenceEfficace": 3,
+      "couverture": 0.45,
+      "conversion": 0.06,
+      "delaiMois": 0,
+      "dureeEffetMois": 1,
+      "budgetMinimum": 50,
+      "affinites": { "etudiants": 1.7, "familles": 0.6, "professionnels": 0.8, "retraites": 0.2 }
+    },
+    {
+      "id": "google",
+      "nom": "Google Ads (recherche et cartes)",
+      "description": "Annonces vues par les gens qui cherchent « café près de moi ». Coûteux par impression, mais ces gens veulent acheter.",
+      "cpm": 45,
+      "audience": 6000,
+      "frequenceEfficace": 1.5,
+      "couverture": 0.25,
+      "conversion": 0.18,
+      "delaiMois": 0,
+      "dureeEffetMois": 1,
+      "budgetMinimum": 50,
+      "affinites": { "etudiants": 1.0, "familles": 1.0, "professionnels": 1.3, "retraites": 0.6 }
+    },
+    {
+      "id": "influenceurs",
+      "nom": "Influenceurs locaux",
+      "description": "Publications de créateurs de contenu du quartier. Leurs abonnés leur font confiance; l'effet dure un peu.",
+      "cpm": 25,
+      "audience": 15000,
+      "frequenceEfficace": 2,
+      "couverture": 0.3,
+      "conversion": 0.09,
+      "delaiMois": 0,
+      "dureeEffetMois": 2,
+      "budgetMinimum": 250,
+      "affinites": { "etudiants": 1.5, "familles": 1.0, "professionnels": 1.0, "retraites": 0.3 }
+    },
+    {
+      "id": "radio",
+      "nom": "Radio locale",
+      "description": "Messages pendant les heures de pointe. Grande portée, mais une partie de l'auditoire vit loin du commerce. L'effet se bâtit avec la répétition.",
+      "cpm": 12,
+      "audience": 80000,
+      "frequenceEfficace": 4,
+      "couverture": 0.7,
+      "conversion": 0.035,
+      "delaiMois": 1,
+      "dureeEffetMois": 2,
+      "budgetMinimum": 1500,
+      "affinites": { "etudiants": 0.5, "familles": 1.0, "professionnels": 1.3, "retraites": 1.3 }
+    },
+    {
+      "id": "journal",
+      "nom": "Journal de quartier",
+      "description": "Annonce dans l'hebdo local, papier et Web. Très lu par les retraités.",
+      "cpm": 30,
+      "audience": 18000,
+      "frequenceEfficace": 2,
+      "couverture": 0.45,
+      "conversion": 0.06,
+      "delaiMois": 0,
+      "dureeEffetMois": 1,
+      "budgetMinimum": 300,
+      "affinites": { "etudiants": 0.3, "familles": 0.9, "professionnels": 0.6, "retraites": 1.8 }
+    },
+    {
+      "id": "affichage",
+      "nom": "Affichage (abribus et panneaux)",
+      "description": "Coût par mille bas et grande visibilité, mais message court et achat minimal élevé.",
+      "cpm": 6,
+      "audience": 40000,
+      "frequenceEfficace": 4,
+      "couverture": 0.6,
+      "conversion": 0.04,
+      "delaiMois": 0,
+      "dureeEffetMois": 2,
+      "budgetMinimum": 1200,
+      "affinites": { "etudiants": 1.0, "familles": 1.0, "professionnels": 1.2, "retraites": 0.9 }
+    },
+    {
+      "id": "flyers",
+      "nom": "Circulaires de porte-à-porte",
+      "description": "Coupons livrés dans les boîtes aux lettres du quartier (Courrier de quartier). Cher par mille, mais très ciblé.",
+      "cpm": 180,
+      "audience": 9000,
+      "frequenceEfficace": 1,
+      "couverture": 0.25,
+      "conversion": 0.08,
+      "delaiMois": 0,
+      "dureeEffetMois": 1,
+      "budgetMinimum": 200,
+      "affinites": { "etudiants": 0.4, "familles": 1.4, "professionnels": 0.7, "retraites": 1.5 }
+    },
+    {
+      "id": "evenements",
+      "nom": "Événements et dégustations",
+      "description": "Soirées, ateliers et dégustations : peu de monde, mais une expérience qui convertit très bien.",
+      "cpm": 60,
+      "audience": 4000,
+      "frequenceEfficace": 1,
+      "couverture": 0.08,
+      "conversion": 0.22,
+      "delaiMois": 0,
+      "dureeEffetMois": 2,
+      "budgetMinimum": 300,
+      "affinites": { "etudiants": 1.3, "familles": 1.1, "professionnels": 0.8, "retraites": 0.9 }
+    },
+    {
+      "id": "commandites",
+      "nom": "Commandites locales",
+      "description": "Commanditer une équipe sportive, un festival ou une école : bâtit l'image de marque lentement, sur plusieurs mois.",
+      "cpm": 20,
+      "audience": 12000,
+      "frequenceEfficace": 2,
+      "couverture": 0.3,
+      "conversion": 0.05,
+      "delaiMois": 1,
+      "dureeEffetMois": 4,
+      "budgetMinimum": 500,
+      "affinites": { "etudiants": 0.8, "familles": 1.4, "professionnels": 0.8, "retraites": 1.1 }
+    }
+  ],
+  "etudes": [
+    {
+      "id": "donneesSecondaires",
+      "nom": "Données secondaires",
+      "description": "Statistique Canada, associations et rapports sectoriels : taille du marché, saisonnalité et profil des clients du quartier. Peu coûteux, mais général.",
+      "cout": 400,
+      "taille": null
+    },
+    {
+      "id": "sondageEclair",
+      "nom": "Sondage en ligne (100 répondants)",
+      "description": "Mesure ta notoriété par segment, la satisfaction et le prix jugé acceptable. Petit échantillon : grande marge d'erreur.",
+      "cout": 900,
+      "taille": 100
+    },
+    {
+      "id": "sondageComplet",
+      "nom": "Sondage représentatif (400 répondants)",
+      "description": "Les mêmes mesures avec un échantillon 4 fois plus grand : la marge d'erreur est 2 fois plus petite.",
+      "cout": 2800,
+      "taille": 400
+    },
+    {
+      "id": "groupeDiscussion",
+      "nom": "Groupe de discussion (8 participants)",
+      "description": "Une animatrice discute avec des clients : ce qu'ils valorisent, ce qu'ils pensent de toi et quels nouveaux produits les intéressent. Riche, mais pas représentatif.",
+      "cout": 1600,
+      "taille": null
+    },
+    {
+      "id": "analyseConcurrence",
+      "nom": "Analyse de la concurrence",
+      "description": "Une firme estime les parts de marché, les budgets publicitaires et les forces de tes concurrents.",
+      "cout": 2000,
+      "taille": null
+    }
+  ],
+  "parametres": {
+    "fidelite": {
+      "coutLogicielMensuel": 49,
+      "rabais": 0.05,
+      "adhesionMax": 0.35,
+      "adhesionMensuelle": 0.06,
+      "bonusRetention": 0.08
+    },
+    "livraison": {
+      "commission": 0.3,
+      "majorationClient": 0.2
+    },
+    "promotion": {
+      "rabaisMax": 0.3,
+      "moisFatigue": 3
+    }
+  },
+  "initiativesEco": [
+    {
+      "id": "emballages",
+      "nom": "Emballages compostables",
+      "description": "Gobelets, couvercles et contenants compostables : environ 0,08 $ de plus par client.",
+      "score": 0.18,
+      "coutMensuel": 0,
+      "coutParVisite": 0.08,
+      "coutInitial": 0
+    },
+    {
+      "id": "tasse",
+      "nom": "Rabais pour tasse réutilisable",
+      "description": "0,25 $ de rabais aux clients qui apportent leur tasse (environ 15 % des boissons).",
+      "score": 0.1,
+      "coutMensuel": 0,
+      "coutParVisite": 0.035,
+      "coutInitial": 0
+    },
+    {
+      "id": "compost",
+      "nom": "Collecte du compost et du recyclage",
+      "description": "Collecte des matières organiques et récupération des contenants consignés : environ 85 $ par mois.",
+      "score": 0.1,
+      "coutMensuel": 85,
+      "coutParVisite": 0,
+      "coutInitial": 0
+    },
+    {
+      "id": "certification",
+      "nom": "Certification écoresponsable",
+      "description": "Audit et attestation de gestion des matières résiduelles (de type « ICI on recycle + ») : 1 200 $ au départ, puis 40 $ par mois.",
+      "score": 0.15,
+      "coutMensuel": 40,
+      "coutParVisite": 0,
+      "coutInitial": 1200
+    }
+  ]
+}

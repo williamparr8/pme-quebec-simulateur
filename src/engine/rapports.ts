@@ -68,15 +68,25 @@ export function etatsFinanciers(ent: Entreprise, periode: Periode): EtatsFinanci
 export interface Ratio {
   id:
     | 'liquidite'
+    | 'liquiditeImmediate'
+    | 'fondsRoulement'
     | 'endettement'
     | 'margeBrute'
     | 'margeNette'
     | 'couvertureInterets'
-    | 'rendementActif';
+    | 'rendementActif'
+    | 'rendementCapitaux'
+    | 'rotationStocks'
+    | 'delaiRecouvrement';
   valeur: number | null;
   /** Zone visée pour une PME de ce secteur. */
   cible: [number, number];
-  format: 'fois' | 'pourcentage';
+  format: 'fois' | 'pourcentage' | 'argent' | 'jours';
+}
+
+/** Montant d'un poste du bilan (actif à court terme) par compte. */
+function poste(b: EtatsFinanciers['bilan'], compte: string): number {
+  return b.actifCourt.find((l) => l.compte === compte)?.montant ?? 0;
 }
 
 export function ratios(
@@ -87,12 +97,26 @@ export function ratios(
   const { resultats: r, bilan: b, nbMois } = etats;
   const div = (a: number, c: number): number | null => (c !== 0 ? a / c : null);
   const annualisation = nbMois > 0 ? 12 / nbMois : 0;
+  const stocks = poste(b, 'stocks');
+  const clients = poste(b, 'comptesClients');
   return [
     {
       id: 'liquidite',
       valeur: div(b.totalActifCourt, b.totalPassifCourt),
       cible: [1.2, 2],
       format: 'fois',
+    },
+    {
+      id: 'liquiditeImmediate',
+      valeur: div(b.totalActifCourt - stocks, b.totalPassifCourt),
+      cible: [0.8, 1.5],
+      format: 'fois',
+    },
+    {
+      id: 'fondsRoulement',
+      valeur: b.totalActifCourt - b.totalPassifCourt,
+      cible: [5_000, 100_000],
+      format: 'argent',
     },
     {
       id: 'endettement',
@@ -119,6 +143,27 @@ export function ratios(
         b.totalActif > 0 && nbMois > 0 ? (r.beneficeNet * annualisation) / b.totalActif : null,
       cible: [0.05, 0.2],
       format: 'pourcentage',
+    },
+    {
+      id: 'rendementCapitaux',
+      valeur:
+        b.capitaux.total > 0 && nbMois > 0
+          ? (r.beneficeNet * annualisation) / b.capitaux.total
+          : null,
+      cible: [0.08, 0.3],
+      format: 'pourcentage',
+    },
+    {
+      id: 'rotationStocks',
+      valeur: stocks > 0 && nbMois > 0 ? (r.coutMarchandises * annualisation) / stocks : null,
+      cible: [40, 120],
+      format: 'fois',
+    },
+    {
+      id: 'delaiRecouvrement',
+      valeur: r.ventes > 0 && nbMois > 0 ? (clients / (r.ventes * annualisation)) * 365 : null,
+      cible: [0, 30],
+      format: 'jours',
     },
   ];
 }
@@ -171,6 +216,9 @@ export interface BilanPartie {
   moralMoyen: number;
   /** Valeur estimée de l'entreprise : 3 × BAIIA des 12 derniers mois + encaisse − dettes. */
   valeurEntreprise: number;
+  /** Part de l'entreprise détenue par le joueur (après un investisseur ou un associé). */
+  partProprietaire: number;
+  valeurPourProprietaire: number;
   /** Note globale sur 100. */
   note: number;
 }
@@ -191,6 +239,9 @@ export function bilanPartie(ent: Entreprise): BilanPartie {
   const encaisse = Math.max(0, fin ? fin.indicateurs.encaisse : 0);
   const baiiaAnnuel = (derniers12.baiia * 12) / Math.max(1, Math.min(12, ent.archives.length));
   const valeurEntreprise = Math.max(0, 3 * baiiaAnnuel + encaisse - dettes);
+  const partProprietaire =
+    ent.finance.actionnaires.find((a) => a.type === 'fondateur')?.part ??
+    (ent.associe ? 1 - ent.associe.part : 1);
 
   // Note : rendement pour le propriétaire (50), clients (25), employés (10), part de marché (15).
   const richesse = b.capitaux.total + prelevementsCumules - apportsTotal;
@@ -218,6 +269,8 @@ export function bilanPartie(ent: Entreprise): BilanPartie {
     satisfactionMoyenne,
     moralMoyen,
     valeurEntreprise,
+    partProprietaire,
+    valeurPourProprietaire: Math.round(valeurEntreprise * partProprietaire),
     note,
   };
 }

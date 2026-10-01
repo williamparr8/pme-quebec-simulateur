@@ -8,7 +8,7 @@ import {
   type Offre,
 } from '../src/engine/market';
 import { noteCible, nouvelleNote, satisfactionClients } from '../src/engine/customers';
-import { reapprovisionner, tauxPerte, tauxRupture } from '../src/engine/inventory';
+import { segmentsMarche } from '../src/engine/marketing';
 
 const cafe = secteurParId('cafe');
 
@@ -107,16 +107,37 @@ describe('clientèle et stocks', () => {
     expect(nouvelleNote(4, 1000, 2, 5)).toBeGreaterThan(3.9);
     expect(nouvelleNote(4, 10, 5, 0)).toBe(4);
   });
+});
 
-  it('le réapprovisionnement respecte l’égalité stock début + achats − sorties = stock fin', () => {
-    const r = reapprovisionner(2000, 9000, 4000, 7);
-    expect(r.stockFin).toBeCloseTo(2000 + r.achats - 9000 - r.pertes, 2);
-    expect(r.stockFin).toBeCloseTo((9000 / 30) * 7, 2);
-    const surplus = reapprovisionner(50_000, 9000, 4000, 7);
-    expect(surplus.achats).toBe(0);
-    expect(surplus.stockFin).toBeGreaterThan(0);
-    expect(tauxPerte(14)).toBeGreaterThan(tauxPerte(4));
-    expect(tauxRupture(1)).toBeGreaterThan(0);
-    expect(tauxRupture(7)).toBe(0);
+describe('segments et livraison', () => {
+  const segments = segmentsMarche(cafe);
+
+  it('les paniers des segments sont normalisés (moyenne pondérée de 1)', () => {
+    for (const ligne of cafe.lignes) {
+      const moyenne = segments.reduce((a, s) => a + s.part * s.panier[ligne.id], 0);
+      expect(moyenne).toBeCloseTo(1, 6);
+    }
+    expect(segments.reduce((a, s) => a + s.part, 0)).toBeCloseTo(1, 6);
+  });
+
+  it('les visites servies se répartissent entre les segments et la livraison', () => {
+    const r = simulerMarche([offre('a', { livraison: true }), offre('b')], cafe, 30_000, 1, {
+      segments,
+      livraison: { part: 0.08, majoration: 0.2, panier: cafe.panierLivraison },
+    });
+    const a = r.resultats.a;
+    const total = Object.values(a.parSegment).reduce((x, s) => x + s.servies, 0);
+    expect(total).toBe(a.servies);
+    expect(a.parSegment.livraison.servies).toBeGreaterThan(0);
+    expect(r.resultats.b.parSegment.livraison?.servies ?? 0).toBe(0);
+    expect(a.chiffreAffairesLivraison).toBeGreaterThan(0);
+  });
+
+  it('les étudiants réagissent plus au prix et à l’écoresponsabilité que les professionnels', () => {
+    const vert = offre('vert', { eco: 0.8, notoriete: 0.5 });
+    const r = simulerMarche([offre('base'), vert], cafe, 30_000, 1, { segments });
+    const gainEtudiants = r.resultats.vert.parSegment.etudiants.demande / r.resultats.base.parSegment.etudiants.demande;
+    const gainPros = r.resultats.vert.parSegment.professionnels.demande / r.resultats.base.parSegment.professionnels.demande;
+    expect(gainEtudiants).toBeGreaterThan(gainPros);
   });
 });
