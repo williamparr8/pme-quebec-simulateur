@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import { INITIATIVES_ECO, PARAMETRES_MARKETING, TYPES_ETUDES, personaParId } from '../../../data';
+import {
+  PARAMETRES_MARKETING,
+  TYPES_ETUDES,
+  initiativesSecteur,
+  personaParId,
+} from '../../../data';
 import type { IdTypeEtude } from '../../../engine/data-types';
 import { margeErreur } from '../../../engine/etudes';
 import { effetsInvestissements } from '../../../engine/immobilisations';
@@ -275,7 +280,7 @@ function VueProduits() {
         </ul>
         <p className="mt-2">
           Une <Terme id="imageMarque">image de marque</Terme> forte rend tes clients moins sensibles
-          au prix : c’est ce qui permet aux cafés réputés de vendre plus cher.
+          au prix : c’est ce qui permet aux commerces réputés de vendre plus cher.
         </p>
       </Astuce>
     </div>
@@ -338,6 +343,7 @@ function VuePromotion() {
               .filter(([, v]) => v >= 1.25)
               .map(([k]) => personaParId(k).nom.toLowerCase());
             const sousMin = budget > 0 && budget < canal.budgetMinimum;
+            const efficacite = secteur.canaux?.[canal.id] ?? 1;
             return (
               <li key={canal.id} className="space-y-1 rounded-lg border border-bordure p-3">
                 <Curseur
@@ -360,6 +366,11 @@ function VuePromotion() {
                     ? ` · effet réparti sur ${canal.dureeEffetMois} mois`
                     : ''}
                   {cibles.length > 0 ? ` · surtout : ${cibles.join(', ')}` : ''}
+                  {efficacite >= 1.25
+                    ? ' · très efficace dans ton secteur'
+                    : efficacite <= 0.7
+                      ? ' · peu efficace dans ton secteur'
+                      : ''}
                 </p>
                 {budget > 0 && (
                   <p className={`chiffres text-sm ${sousMin ? 'font-semibold text-danger' : ''}`}>
@@ -468,7 +479,7 @@ function VueClientele() {
         >
           <fieldset className="space-y-2 text-sm">
             <legend className="mb-1 font-semibold">Initiatives</legend>
-            {INITIATIVES_ECO.map((i) => (
+            {initiativesSecteur(secteur).map((i) => (
               <label key={i.id} className="flex items-start gap-2">
                 <input
                   type="checkbox"
@@ -505,36 +516,48 @@ function VueClientele() {
           </fieldset>
         </Carte>
 
-        <Carte titre={<Terme id="distribution">Place : livraison par une plateforme</Terme>}>
-          <label className="flex items-start gap-2 text-sm">
-            <input
-              type="checkbox"
-              className="mt-1"
-              checked={d.livraison}
-              onChange={(e) => changer({ livraison: e.target.checked })}
-            />
-            <span>
-              Offrir mes produits sur une plateforme de livraison. Tu rejoins les clients qui
-              commandent de chez eux, mais la plateforme garde{' '}
-              {pourcentage(PARAMETRES_MARKETING.livraison.commission, 0)} de chaque vente et les
-              commandes occupent ton personnel.
-            </span>
-          </label>
-          {derniere && derniere.indicateurs.ventesLivraison > 0 && (
-            <p className="chiffres mt-2 text-sm">
-              Ventes livrées le mois dernier : {argentRond(derniere.indicateurs.ventesLivraison)}{' '}
-              (commission d’environ{' '}
-              {argentRond(
-                derniere.indicateurs.ventesLivraison * PARAMETRES_MARKETING.livraison.commission,
-              )}
-              )
+        {secteur.partLivraison <= 0 ? (
+          <Carte titre={<Terme id="distribution">Place : distribution</Terme>}>
+            <p className="text-sm">
+              {ent.emplacementId === 'enLigne'
+                ? 'Ton canal de distribution est ton site Web : les commandes sont expédiées par la poste ou par messagerie. Les frais d’expédition réduisent ta marge sur chaque commande.'
+                : ent.emplacementId === 'industriel'
+                  ? 'Tes clients te trouvent surtout par la publicité, le bouche-à-oreille et le Web : ton local n’attire presque pas de passants.'
+                  : 'Tes clients viennent sur place. Il n’existe pas de plateforme de livraison importante dans ce secteur; un site Web (Finance) peut ajouter la commande en ligne.'}
             </p>
-          )}
-          <p className="mt-2 text-sm text-doux">
-            La commande en ligne pour emporter (site Web) est un investissement (Finance) : pas de
-            commission, mais un coût de départ.
-          </p>
-        </Carte>
+          </Carte>
+        ) : (
+          <Carte titre={<Terme id="distribution">Place : livraison par une plateforme</Terme>}>
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={d.livraison}
+                onChange={(e) => changer({ livraison: e.target.checked })}
+              />
+              <span>
+                Offrir mes produits sur une plateforme de livraison. Tu rejoins les clients qui
+                commandent de chez eux, mais la plateforme garde{' '}
+                {pourcentage(PARAMETRES_MARKETING.livraison.commission, 0)} de chaque vente et les
+                commandes occupent ton personnel.
+              </span>
+            </label>
+            {derniere && derniere.indicateurs.ventesLivraison > 0 && (
+              <p className="chiffres mt-2 text-sm">
+                Ventes livrées le mois dernier : {argentRond(derniere.indicateurs.ventesLivraison)}{' '}
+                (commission d’environ{' '}
+                {argentRond(
+                  derniere.indicateurs.ventesLivraison * PARAMETRES_MARKETING.livraison.commission,
+                )}
+                )
+              </p>
+            )}
+            <p className="mt-2 text-sm text-doux">
+              La commande en ligne pour emporter (site Web) est un investissement (Finance) : pas de
+              commission, mais un coût de départ.
+            </p>
+          </Carte>
+        )}
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
 
 ---
 
-## Ce que le jeu permet (Jalons 1 à 3)
+## Ce que le jeu permet (Jalons 1 à 4)
 
 - **Créer son entreprise** : nom, emplacement (rue commerciale, centre commercial, quartier résidentiel), équipement,
   aménagement et financement (mise de fonds et prêt bancaire, avec le ratio exigé par la banque).
@@ -23,9 +23,9 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
 - **Finance** : états financiers produits par une **comptabilité en partie double** (état des résultats, bilan
   toujours équilibré, flux de trésorerie, journal général), ratios, seuil de rentabilité, prêt avec tableau
   d’amortissement, marge de crédit et prélèvements.
-- **Concurrents IA** : « Le Géant » (chaîne à bas prix) et « Le Local branché » (café de spécialité), qui réagissent
-  avec un délai.
-- **Conjoncture** : taux directeur de la Banque du Canada, inflation, salaire minimum révisé chaque 1er mai.
+- **Concurrents IA** : 5 personnalités (voir le Jalon 4), qui réagissent avec un délai.
+- **Conjoncture** : cycle économique, chômage, taux directeur de la Banque du Canada, inflation, salaire minimum
+  révisé chaque 1er mai.
 - **Rapport mensuel pédagogique** : ce qui a fonctionné, ce qui n’a pas fonctionné, et **pourquoi**.
 - **Glossaire** et infobulles (touche `I`), thème clair ou sombre, sauvegarde automatique et 3 emplacements,
   export/import de la partie en fichier `.json` (pratique pour la remettre à l’enseignant).
@@ -66,6 +66,25 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
   placements, investissements (équipement, rénovation, terrasse, véhicule, logiciels) avec registre des
   immobilisations et DPA par catégorie; budget et prévisions (prévu et réel); nouveaux ratios (liquidité immédiate,
   rendement des capitaux propres, rotation des stocks, délai de recouvrement, fonds de roulement).
+
+### Monde vivant (Jalon 4)
+
+- **7 secteurs** : café-bistro, boutique de vêtements, boutique en ligne, salon de coiffure et d’esthétique,
+  paysagement et déneigement, atelier d’ébénisterie et épicerie fine. Chacun a ses produits (certains saisonniers ou
+  détaxés), ses marges, son temps de production, ses postes, ses fournisseurs (au moins 3 par catégorie), ses
+  nouveaux produits, ses ventes aux entreprises, ses investissements et ses permis (RACJ, pesticides, Loi 25…).
+- **8 villes** : Montréal, Québec, Laval, Gatineau, Sherbrooke, Trois-Rivières, Saguenay et Rimouski, avec leur
+  population, leur revenu médian, le chômage de leur région, leurs loyers et l’intensité de la concurrence; 5 types
+  d’emplacements (rue commerciale, centre commercial, quartier résidentiel, local industriel, 100 % en ligne).
+- **5 concurrents** aux personnalités différentes (le Géant, le Local branché, l’Agressif qui copie tes idées, le
+  Prudent et le Nouveau joueur financé par du capital de risque), qui réagissent avec un délai, peuvent faire
+  faillite ou être rachetés.
+- **73 événements** (météo, opérations, marketing, juridique, finance, fiscalité, marché, RH) avec 2 à 4 choix, des
+  conséquences parfois différées et une leçon d’affaires : tempête de verglas, chantier devant le commerce,
+  rançongiciel, plainte à l’OQLF, vérification fiscale, offre de rachat, concurrent qui ouvre en face…
+- **Conjoncture** : cycle économique (expansion, ralentissement, récession, reprise), chômage, inflation, taux
+  directeur et taux de change; les secteurs cycliques souffrent plus d’une récession. Un panneau « Nouvelles du
+  mois » résume la situation au tableau de bord.
 
 ## Jouer au clavier
 
@@ -114,14 +133,16 @@ src/
 │            accounting, statements, market, marketing, etudes, produits, ai-competitors, payroll,
 │            hr, events, inventory, b2b, loans, financement, immobilisations, tax, annuel,
 │            economy, customers, previsions, analyse, rapports, creation, actions, simulation, rng
+│            (le moteur est générique : les 7 secteurs ne diffèrent que par leurs données)
 ├─ data/     données réalistes sourcées (fiscalite.ts, secteurs, villes, salaires, personas, marketing,
-│            fournisseurs, rh, financement, evenements, concurrents, glossaire)
+│            fournisseurs, rh, financement, evenements, concurrents, demarches, glossaire)
 ├─ store/    état de l’interface (Zustand) et sauvegardes (localStorage)
 ├─ ui/       composants React par écran et par département
 ├─ scene/    scène 2D du commerce (SVG en blocs; PixiJS prévu au Jalon 6)
 └─ i18n/     textes en français québécois et formatage (1 234,56 $, JJ/MM/AAAA)
-tests/       tests Vitest (bilan équilibré sur 100 parties de 60 mois, paie, prêts, stocks, B2B,
-             déterminisme, textes et glossaire…)
+tests/       tests Vitest (bilan équilibré sur 100 parties de 60 mois dans tous les secteurs et toutes
+             les villes, 36 mois par secteur, paie, prêts, stocks, B2B, événements, concurrents,
+             conjoncture, déterminisme, textes et glossaire…)
 ```
 
 Stack : Vite, React 18, TypeScript (strict), Zustand, Tailwind CSS, Recharts, Vitest, ESLint et Prettier.
@@ -131,7 +152,7 @@ Stack : Vite, React 18, TypeScript (strict), Zustand, Tailwind CSS, Recharts, Vi
 1. ✅ **Fondations** : moteur, café à Montréal, 2 concurrents, états financiers, sauvegarde, clavier, mise en ligne.
 2. ✅ **Fiscalité et juridique** : formes juridiques, REQ, TPS/TVQ, impôts, paie complète, checklist de démarrage.
 3. ✅ **Départements complets** : marketing détaillé, RH, opérations et stocks, financement.
-4. **Monde vivant** : 7 secteurs, 8 villes, 5 concurrents, 60+ événements, conjoncture économique.
+4. ✅ **Monde vivant** : 7 secteurs, 8 villes, 5 concurrents, 73 événements, conjoncture économique.
 5. **Multijoueur local et pédagogie** : équipes en alternance, glossaire complet, conseiller, tutoriel, quiz.
 6. **Finition** : scène animée, sons, équilibrage sur 1 000 parties, accessibilité et performance.
 

@@ -43,7 +43,9 @@ function VueCapacite() {
     ent.employes
       .filter((e) => posteParId(e.posteId).productiviteService >= 0.25)
       .reduce((a, x) => a + x.heuresSemaine, 0) + d.heuresProprietaire;
-  const cuisiniers = ent.employes.filter((e) => posteParId(e.posteId).productiviteCuisine > 0);
+  const producteurs = ent.employes.filter((e) => posteParId(e.posteId).role === 'production');
+  const aProduction = [...secteur.lignes, ...secteur.nouveauxProduits].some((l) => l.production);
+  const posteProduction = secteur.postes.map(posteParId).find((p) => p.role === 'production');
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -67,12 +69,25 @@ function VueCapacite() {
           terme="capacite"
           detail="par mois"
         />
-        <Indicateur
-          libelle="Capacité de la cuisine"
-          valeur={i ? `${nombre(i.capaciteCuisine)} plats` : '—'}
-          detail={cuisiniers.length === 0 ? 'sans cuisinier' : 'par mois'}
-          ton={i && i.perduesCuisine > 0 ? 'alerte' : 'neutre'}
-        />
+        {aProduction ? (
+          <Indicateur
+            libelle={`Capacité : ${secteur.libelleProduction.toLowerCase()}`}
+            valeur={i ? `${nombre(i.capaciteProduction)} h` : '—'}
+            detail={
+              i
+                ? `demande : ${nombre(i.demandeProduction)} h${producteurs.length === 0 ? ' · aucun employé de production' : ''}`
+                : undefined
+            }
+            ton={i && i.perduesProduction > 0 ? 'alerte' : 'neutre'}
+          />
+        ) : (
+          <Indicateur
+            libelle="Clients perdus (capacité)"
+            valeur={i ? nombre(i.perduesCapacite) : '—'}
+            detail="par mois"
+            ton={i && i.perduesCapacite > 0 ? 'alerte' : 'neutre'}
+          />
+        )}
         <Indicateur
           libelle="Taux de défauts"
           valeur={i ? pourcentage(i.tauxDefauts, 1) : '—'}
@@ -91,14 +106,14 @@ function VueCapacite() {
             decimales={0}
             format={(v) => `${v} h`}
             onChange={(v) => changer({ heuresOuverture: v })}
-            aide={`Référence du secteur : ${secteur.heuresOuvertureReference} h (7 jours × 12 h). Plus d’heures attirent plus de clients, avec des rendements décroissants.`}
+            aide={`Référence du secteur : ${secteur.heuresOuvertureReference} h par semaine. Plus d’heures attirent plus de clients, avec des rendements décroissants.`}
           />
           <p
             className={`mt-3 text-sm ${heuresService < d.heuresOuverture ? 'font-semibold text-danger' : 'text-doux'}`}
           >
             {heuresService < d.heuresOuverture
-              ? `Attention : ton personnel au comptoir ne couvre que ${heuresService} h par semaine (il faut au moins une personne sur place). Embauche ou augmente les heures (R).`
-              : `Ton personnel au comptoir (${heuresService} h par semaine au total) couvre toutes les heures d’ouverture.`}
+              ? `Attention : ton personnel de service ne couvre que ${heuresService} h par semaine (il faut au moins une personne disponible). Embauche ou augmente les heures (R).`
+              : `Ton personnel de service (${heuresService} h par semaine au total) couvre toutes les heures d’ouverture.`}
           </p>
         </Carte>
         <Carte titre={<Terme id="capacite">Comment se calcule ta capacité</Terme>}>
@@ -109,10 +124,26 @@ function VueCapacite() {
               {decimal(SEMAINES_PAR_MOIS, 2)} semaines. L’absentéisme et le premier mois d’un nouvel
               employé la réduisent.
             </li>
-            <li>
-              Cuisine : un cuisinier prépare environ {secteur.unitesCuisineParHeure} plats par
-              heure. Sans cuisinier, ton équipe assemble les repas lentement et la qualité baisse.
-            </li>
+            {aProduction && (
+              <li>
+                {secteur.libelleProduction} : chaque produit ou service exige un temps de travail
+                (ex.{' '}
+                {[...secteur.lignes]
+                  .filter((l) => l.production)
+                  .map(
+                    (l) =>
+                      `${l.nom.toLowerCase()} : ${nombre(l.minutesProduction ?? secteur.minutesProductionDefaut)} min`,
+                  )
+                  .join('; ')}
+                ). La capacité vient des employés de production
+                {posteProduction ? ` (${posteProduction.nom.toLowerCase()})` : ''}
+                {secteur.productionProprietaire > 0
+                  ? ` et de ${pourcentage(secteur.productionProprietaire, 0)} de tes propres heures`
+                  : ''}
+                . Les heures inutilisées un jour servent les jours suivants, mais pas le mois
+                suivant.
+              </li>
+            )}
             <li>
               Les défauts augmentent quand l’équipe est peu compétente, surchargée ou que
               l’équipement vieillit.
@@ -154,7 +185,10 @@ function CarteLigne({ ligne }: { ligne: LigneProduit }) {
     effets.pertesStocks < 1 ? 0.6 : 1,
   );
   const rapport = derniere?.stocks.find((s) => s.ligneId === ligne.id);
-  const fournisseurs = fournisseursCategorie(ligne.categorieAppro);
+  const fermes = ent.operations.fournisseursFermes ?? [];
+  const fournisseurs = fournisseursCategorie(ligne.categorieAppro).filter(
+    (x) => !fermes.includes(x.id),
+  );
 
   const appliquer = (auto: boolean, p = point, q = quantite) =>
     changer({
@@ -269,7 +303,7 @@ function CarteLigne({ ligne }: { ligne: LigneProduit }) {
             </span>
             ,{' '}
             <span className={rapport.perimees > 0 ? 'font-semibold text-alerte' : ''}>
-              {nombre(rapport.perimees)} périmés
+              {nombre(rapport.perimees)} perdus ({secteur.libellePertes})
             </span>
             , {nombre(rapport.refaites)} refaits · {rapport.commandes} commande
             {rapport.commandes > 1 ? 's' : ''} · stock final {nombre(rapport.stockFinUnites)} (
@@ -400,9 +434,9 @@ function VueStocks() {
         Un stock, c’est de l’argent immobilisé sur une tablette : environ{' '}
         {pourcentage(TAUX_POSSESSION, 0)} de sa valeur par année en financement, espace, assurance
         et pertes (le coût de possession). Trop peu : des <Terme id="rupture">ruptures</Terme> et
-        des clients déçus. Trop : des produits périmés jetés. La{' '}
+        des clients déçus. Trop : des pertes ({secteur.libellePertes}). La{' '}
         <Terme id="qec">quantité économique</Terme> équilibre le coût de commander souvent et le
-        coût de garder du stock, mais elle ignore la péremption : pour des croissants qui se gardent
+        coût de garder du stock, mais elle ignore la péremption : pour un produit frais qui se garde
         2 jours, on commande chaque jour.
       </Astuce>
     </div>

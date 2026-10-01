@@ -44,7 +44,96 @@ confirmer. Il est mis à jour à chaque jalon.
 | Règlements des plaintes (normes du travail, harcèlement)      | `src/data/evenements.json`   | 1 500 $ à 5 000 $                            | Ordres de grandeur pédagogiques                                                           |
 | Valeur accordée par un investisseur providentiel              | `src/engine/financement.ts`  | 2 × la mise de fonds × (0,6 + score du plan) | Règle simplifiée; en réalité négociée au cas par cas                                      |
 
+### Valeurs ajoutées au Jalon 4
+
+| Valeur                                                           | Fichier                      | Valeur utilisée                                     | Pourquoi elle est incertaine                                                         |
+| ---------------------------------------------------------------- | ---------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Taux CNESST des 6 nouveaux secteurs                              | `src/data/secteurs.json`     | de 1,05 % (coiffure) à 3,4 % (paysagement)          | Estimations autour du taux moyen de 1,54 $ par 100 $; le vrai taux dépend de l’unité |
+| Prix, coûts, taux d’achat et temps de production des produits    | `src/data/secteurs.json`     | ex. coupe 48 $ et 60 min, table 2 250 $ et 24 h     | Ordres de grandeur pour une PME québécoise, calibrés pour des résultats plausibles   |
+| Potentiel des marchés par secteur et par ville                   | `src/data/villes.json`       | de 1 650 (paysagement) à 28 600 visites (café, MTL) | Paramètres de conception, ajustés par la calibration                                 |
+| Loyers hors de Montréal                                          | `src/data/villes.json`       | rue : de 18 $ (Rimouski) à 30 $/pi² (Laval)         | Estimations; seul le loyer industriel de Québec (13,41 $) vient d’un rapport (CBRE)  |
+| Revenu médian des ménages (6 villes)                             | `src/data/villes.json`       | de 60 000 $ à 80 000 $                              | Seuls le Québec (72 500 $) et Montréal (66 500 $) sont confirmés (Recensement 2021)  |
+| Indice des salaires et intensité de la concurrence des villes    | `src/data/villes.json`       | indices de 0,94 à 1,03 et de 0,8 à 1,1              | Estimations de conception                                                            |
+| Salaires des nouveaux postes (vendeur, coiffeur, paysagiste…)    | `src/data/salaires.json`     | de 17 $ à 26 $/h                                    | Estimations inspirées de Guichet-Emplois; les pourboires des coiffeurs sont ignorés  |
+| 36 nouveaux fournisseurs                                         | `src/data/fournisseurs.json` | indices de 0,72 à 1,18                              | Fournisseurs fictifs, ordres de grandeur                                             |
+| Frais d’expédition (commerce en ligne) et carburant (paysagiste) | `src/data/secteurs.json`     | 6,50 $ par commande; 12 $ par client par mois       | Moyennes nettes des frais facturés aux clients                                       |
+| Coût des permis RACJ, pesticides et Loi 25                       | `src/data/demarches.json`    | 450 $, 400 $ et 600 $                               | Les tarifs varient (catégorie de permis, ville, honoraires d’un avocat)              |
+| Paramètres des 5 personnalités de concurrents                    | `src/data/concurrents.json`  | parts de capacité et de publicité, marge visée      | Paramètres de conception                                                             |
+| Montants et probabilités des 63 nouveaux événements              | `src/data/evenements.json`   | dépenses de 200 $ à 9 000 $                         | Ordres de grandeur pédagogiques                                                      |
+| Phases du cycle économique et probabilités de transition         | `src/engine/economy.ts`      | récession : chômage 7,8 %, confiance 0,89           | Modèle simplifié; une récession dure environ 9 mois en moyenne                       |
+
 ## Hypothèses du modèle
+
+### Monde vivant (Jalon 4)
+
+**Secteurs**
+
+- Les 7 secteurs partagent le même moteur; tout ce qui les distingue est dans `src/data/secteurs.json` : produits
+  (prix, coût, taux d’achat, élasticité, conservation, saisonnalité propre, taxable ou détaxé), temps de production,
+  postes et équipe de départ, emplacements permis, importance de l’achalandage, fournisseurs, nouveaux produits,
+  produit vendu aux entreprises, investissements, initiatives écoresponsables, efficacité des canaux de publicité,
+  permis, cyclicité et croissance tendancielle du marché.
+- Une « visite » est un client servi (café, boutique, salon, épicerie), une commande (commerce en ligne) ou un compte
+  client actif ce mois-ci (paysagement, avec des forfaits mensuels d’entretien l’été et de déneigement l’hiver).
+- **Production** : chaque produit fabriqué ou service rendu exige des minutes de travail (ex. 60 min pour une coupe,
+  24 h pour une table). La capacité vient des heures des employés de production (× compétence × moral) et d’une part
+  des heures du propriétaire (60 % pour un coiffeur ou un ébéniste, 0 % au café). Les heures non utilisées un jour
+  servent les jours suivants du même mois. Tous les professionnels d’un salon partagent le même temps (un coiffeur
+  peut faire un soin) : simplification assumée.
+- **Taxes par produit** : les produits détaxés (fromages, épicerie de base, café en grains) ne portent pas de TPS ni
+  de TVQ, mais donnent droit aux CTI et RTI; les rabais sont répartis entre les ventes taxables et détaxées. Les
+  fournitures exonérées n’existent pas dans les secteurs du jeu.
+- **Frais variables** : frais d’expédition nets par commande (en ligne) et carburant par client (paysagement).
+- **Emplacement** : l’effet de l’achalandage et de la visibilité est multiplié par l’importance de l’emplacement du
+  secteur (1,2 pour une boutique, 0,1 pour un paysagiste, 0 en ligne). Un commerce en ligne a seulement un entrepôt.
+- **Ventes aux entreprises** : chaque secteur (sauf le salon) a un produit B2B avec ses quantités, ses clients types,
+  sa saisonnalité des appels d’offres et un coursier ou non (traiteur, uniformes brodés, cadeaux d’entreprise,
+  contrats d’entretien et de déneigement, ventes aux détaillants, paniers-cadeaux).
+
+**Villes**
+
+- 8 villes avec leur population, leur revenu médian, le chômage de leur région (août 2026), un indice des salaires,
+  l’intensité de la concurrence, le potentiel de chaque marché et 5 emplacements (rue, centre commercial, quartier
+  résidentiel, local industriel, 100 % en ligne).
+- Revenu médian : la sensibilité au prix est multipliée par √(72 500 $ ÷ revenu médian de la ville).
+- Chômage : la pénurie de main-d’œuvre vaut 0,95 − 7 × chômage (bornée), réduite de 25 % l’été (étudiants). Moins de
+  candidats, des attentes plus élevées et plus de départs quand le chômage est bas.
+
+**Conjoncture**
+
+- Chaîne de Markov à 5 phases (expansion, croissance stable, ralentissement, récession, reprise). Chaque mois, la
+  confiance des consommateurs, le chômage et l’inflation se rapprochent des valeurs typiques de la phase. En
+  récession, la Banque du Canada baisse plus souvent son taux et le dollar canadien s’affaiblit un peu.
+- Effet sur la demande : 1 + cyclicité × (confiance − 1); la cyclicité va de 0,6 (coiffure) à 1,5 (meubles). Les
+  clients deviennent aussi plus sensibles au prix quand la confiance baisse.
+- Le risque de récession est réduit en mode Facile (× 0,6) et augmenté en mode Expert (× 1,5).
+
+**Concurrents**
+
+- 5 personnalités : le Géant (prix bas, gros budget publicitaire, renfloué par son siège social), le Local branché
+  (qualité et image, ne fait pas de guerre de prix), l’Agressif (riposte vite aux baisses de prix et copie les bonnes
+  idées des joueurs : livraison, fidélité, écoresponsabilité, nouveaux produits), le Prudent (réagit lentement) et le
+  Nouveau joueur (arrive entre le 6e et le 18e mois, plus tôt en mode Expert, financé par du capital de risque).
+- Les frais fixes de chaque concurrent sont estimés à la création pour qu’il atteigne sa marge visée dans un marché
+  moyen (moyenne des 12 mois, avec un nouvel entrant typique et le Nouveau joueur installé). Un concurrent qui perd
+  des clients perd donc de l’argent : après 3 mois de trésorerie négative, il peut être racheté par le Géant
+  (12 % par mois) et il fait faillite s’il perd plus de 2 mois de frais fixes ou reste 8 mois dans le rouge.
+- Les noms et les descriptions des concurrents dépendent du secteur; ils sont fictifs.
+
+**Événements**
+
+- 73 événements (dont les 10 dilemmes RH du Jalon 3) dans 8 catégories, avec une condition d’apparition, parfois des
+  secteurs et des mois, un poids, 2 à 4 choix et une leçon d’affaires. Au plus un événement à la fois; le même
+  événement ne revient pas avant 12 mois.
+- Probabilité mensuelle : 35 % (Facile), 45 % (Réaliste), 55 % (Expert). Le poids des événements négatifs est
+  multiplié par 0,5 en Facile et 1,4 en Expert; celui des vérifications fiscales par 2,5 en Expert.
+- Nouveaux effets : demande, coûts des marchandises, capacité, frais par client, pénurie et délais de livraison
+  temporaires; fermeture; perte de stock; note et image; encaissements (subvention, assurance, cachet); revenus
+  récurrents; hausse de loyer; changement de prix ou de publicité; faillite d’un fournisseur; embauche; recouvrement
+  ou radiation d’une créance; arrivée ou fermeture d’un concurrent; vente de l’entreprise (fin de la partie);
+  effets conditionnels (« si l’entreprise est assurée »).
+- Offre de rachat : à partir du 18e mois, si l’entreprise est rentable; prix ≈ 1,1 × la valeur utilisée pour un
+  investisseur (le plus élevé des capitaux propres et de 4 × le bénéfice des 12 derniers mois).
 
 ### Départements complets (Jalon 3)
 
@@ -217,7 +306,7 @@ comme le revenu d’entreprise. Les sauvegardes du Jalon 2 ne peuvent pas être 
 - **Saisonnalité du café** : creux en juillet (vacances de la construction, départ des étudiants), sommet à l’automne
   et en décembre.
 - Les sensibilités (prix 2,5; qualité 1,6; service 1,0; note 0,5; ambiance 0,6; heures 0,6) et le marché potentiel de
-  Montréal (21 000 visites par mois dans la zone) sont des **paramètres de conception** calibrés pour obtenir des
+  Montréal (28 600 visites par mois dans la zone au Jalon 4) sont des **paramètres de conception** calibrés pour obtenir des
   résultats plausibles (voir ci-dessous). Ils sont dans `src/data/` et peuvent être ajustés.
 
 ### Concurrents IA
@@ -269,6 +358,46 @@ Lecture : la qualité et la fidélisation paient; la livraison rapporte peu quan
 place de clients en magasin plus rentables); les rabais permanents et la pénétration à −15 % détruisent la marge;
 au-delà de 1 500 $ par mois, la publicité a des rendements décroissants. Un joueur passif (qui ne remplace pas les
 employés qui partent) finit débordé, puis en faillite : le jeu récompense la gestion active.
+
+## Calibration (Jalon 4)
+
+36 mois, 10 graines, « Réaliste », emplacement typique du secteur à Montréal. « Actif » embauche du personnel de
+service quand des clients sont perdus, du personnel de production quand la production déborde (jusqu’à 4 à la fois
+en haute saison), met à pied en saison creuse et tranche les événements avec le choix par défaut.
+
+| Secteur               | Gestionnaire actif | Faillites | Aucune gestion | Faillites |
+| --------------------- | ------------------ | --------- | -------------- | --------- |
+| Café-bistro           | ≈ 67 000 $         | 0 / 10    | ≈ −20 000 $    | 9 / 10    |
+| Boutique de vêtements | ≈ 64 000 $         | 0 / 10    | ≈ 47 000 $     | 1 / 10    |
+| Boutique en ligne     | ≈ 74 000 $         | 0 / 10    | ≈ 86 000 $     | 0 / 10    |
+| Salon de coiffure     | ≈ 65 000 $         | 0 / 10    | ≈ 50 000 $     | 2 / 10    |
+| Paysagement           | ≈ 123 000 $        | 0 / 10    | ≈ 10 000 $     | 4 / 10    |
+| Atelier d’ébénisterie | ≈ 102 000 $        | 0 / 10    | ≈ 40 000 $     | 3 / 10    |
+| Épicerie fine         | ≈ 43 000 $         | 1 / 10    | ≈ 61 000 $     | 1 / 10    |
+
+Stratégies du café (gestionnaire actif) avec 4 concurrents au départ et un Nouveau joueur en cours de partie :
+
+| Stratégie                                  | Bénéfice cumulé moyen (3 ans) | Faillites |
+| ------------------------------------------ | ----------------------------- | --------- |
+| Actif, qualité supérieure, prix +8 %       | ≈ 115 000 $                   | 0 / 10    |
+| Actif, salaires +10 %                      | ≈ 97 000 $                    | 0 / 10    |
+| Actif, écoresponsabilité et Panier Bleu    | ≈ 96 000 $                    | 0 / 10    |
+| Actif, traiteur (soumissions au prix visé) | ≈ 85 000 $                    | 0 / 10    |
+| Actif, programme de fidélité               | ≈ 79 000 $                    | 0 / 10    |
+| Gestionnaire actif                         | ≈ 67 000 $                    | 0 / 10    |
+| Actif, sans publicité                      | ≈ 47 000 $                    | 1 / 10    |
+| Actif, livraison par plateforme            | ≈ 29 000 $                    | 0 / 10    |
+| Actif, prix +15 %                          | ≈ −6 000 $                    | 6 / 10    |
+| Actif, publicité de 5 000 $/mois           | ≈ −32 000 $                   | 6 / 10    |
+| Actif, qualité économique, prix −10 %      | ≈ −36 000 $                   | 10 / 10   |
+| Actif, prix −15 %                          | ≈ −75 000 $                   | 10 / 10   |
+| Actif, promotion de 20 % chaque mois       | ≈ −90 000 $                   | 10 / 10   |
+
+Lecture : avec plus de concurrents, le marché pardonne moins les écarts de prix (dans les deux sens) et la publicité
+excessive. La qualité, la rétention des employés, l’écoresponsabilité et la fidélisation restent les stratégies
+gagnantes; se battre contre le Géant avec des prix bas et une qualité économique mène à la faillite. Le paysagement
+et l’atelier récompensent particulièrement la gestion de la capacité (embaucher au printemps, mettre à pied à
+l’automne). Ces résultats d’un robot simple ne sont pas un plafond : un joueur attentif fait mieux.
 
 ## Accessibilité
 

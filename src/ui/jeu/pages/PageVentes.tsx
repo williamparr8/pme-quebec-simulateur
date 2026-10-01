@@ -2,7 +2,7 @@ import { lazy, Suspense, useState } from 'react';
 import { personaParId } from '../../../data';
 import { PONCTUALITE, RISQUE_DEFAUT, ageComptesClients } from '../../../engine/b2b';
 import { indicePrixOffre } from '../../../engine/market';
-import { produitActif } from '../../../engine/produits';
+import { produitActif, produitB2B } from '../../../engine/produits';
 import { coutUnitaireLigne, qualiteDe, soumettre } from '../../../engine/simulation';
 import type { AppelOffres, ReponseAvis } from '../../../engine/types';
 import { argent, argentRond, decimal, nombre, pourcentage } from '../../../i18n/format';
@@ -29,6 +29,13 @@ const TYPES_CLIENTS: Record<string, string> = {
   organisme: 'organisme',
   garderie: 'garderie',
   residence: 'résidence pour aînés',
+};
+
+const STATUTS: Record<string, string> = {
+  actif: 'en activité',
+  faillite: 'a fermé (faillite)',
+  rachete: 'racheté',
+  aVenir: 'pas encore ouvert',
 };
 
 /** Veille concurrentielle : sans étude de marché, la part d'un concurrent n'est connue qu'à 5 points près. */
@@ -68,9 +75,13 @@ function VueVentes() {
             <dl className="chiffres grid max-w-xl grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-sm">
               <dt>En magasin (au prix courant)</dt>
               <dd className="text-right">{argentRond(i.ventesMagasin)}</dd>
-              <dt>Livraison par plateforme</dt>
-              <dd className="text-right">{argentRond(i.ventesLivraison)}</dd>
-              <dt>Entreprises (traiteur, à crédit)</dt>
+              {secteur.partLivraison > 0 && (
+                <>
+                  <dt>Livraison par plateforme</dt>
+                  <dd className="text-right">{argentRond(i.ventesLivraison)}</dd>
+                </>
+              )}
+              <dt>Entreprises ({produitB2B(secteur)?.nom.toLowerCase() ?? 'aucune'}, à crédit)</dt>
               <dd className="text-right">{argentRond(i.ventesB2B)}</dd>
               <dt>Moins : rabais, promotions et fidélité</dt>
               <dd className="text-right">({argentRond(i.rabais)})</dd>
@@ -133,13 +144,16 @@ function VueVentes() {
 function CarteAppel({ a }: { a: AppelOffres }) {
   const { etat, ent, secteur } = useJeuCourant();
   const agir = useJeu((s) => s.agir);
-  const [prix, setPrix] = useState(a.soumission ?? 15);
-  const traiteur = secteur.nouveauxProduits.find((p) => p.id === 'traiteur');
-  const fournisseurId =
-    ent.decisions.approvisionnement.traiteur?.fournisseurId ?? secteur.fournisseursDefaut.cuisine;
-  const cout = traiteur
+  const produit = produitB2B(secteur);
+  const [prix, setPrix] = useState(a.soumission ?? produit?.prixReference ?? 15);
+  const fournisseurId = produit
+    ? (ent.decisions.approvisionnement[produit.id]?.fournisseurId ??
+      secteur.fournisseursDefaut[produit.categorieAppro])
+    : '';
+  const unite = produit?.unite ?? 'unité';
+  const cout = produit
     ? coutUnitaireLigne(
-        traiteur,
+        produit,
         fournisseurId,
         qualiteDe(secteur, ent.decisions.qualiteId),
         etat.conjoncture,
@@ -155,7 +169,7 @@ function CarteAppel({ a }: { a: AppelOffres }) {
         </span>
       </p>
       <p className="chiffres">
-        {a.repasParMois} boîtes à lunch par mois pendant {a.dureeMois} mois · paiement à{' '}
+        {a.quantiteParMois} × {unite} par mois pendant {a.dureeMois} mois · paiement à{' '}
         {a.delaiPaiementJours} jours · cote de crédit <strong>{a.cote}</strong> (paie à temps
         environ {pourcentage(PONCTUALITE[a.cote], 0)} du temps, risque de défaut{' '}
         {pourcentage(RISQUE_DEFAUT[a.cote], 1)} par mois) · {a.nbConcurrents} autre
@@ -163,10 +177,10 @@ function CarteAppel({ a }: { a: AppelOffres }) {
       </p>
       <div className="flex flex-wrap items-end gap-2">
         <label className="flex flex-col text-xs">
-          Prix par boîte (avant taxes)
+          Prix par {unite} (avant taxes)
           <input
             type="number"
-            step={0.25}
+            step={prix >= 100 ? 5 : 0.25}
             min={1}
             value={prix}
             onChange={(e) => setPrix(Number(e.target.value))}
@@ -187,8 +201,9 @@ function CarteAppel({ a }: { a: AppelOffres }) {
         )}
       </div>
       <p className="chiffres text-xs text-doux">
-        Coût des ingrédients ≈ {argent(cout)} par boîte → marge brute {pourcentage(marge, 0)} ·
-        revenu potentiel {argentRond(prix * a.repasParMois * a.dureeMois)} sur la durée du contrat.
+        Coût des marchandises ≈ {argent(cout)} par {unite} → marge brute {pourcentage(marge, 0)}
+        (sans le temps de production) · revenu potentiel{' '}
+        {argentRond(prix * a.quantiteParMois * a.dureeMois)} sur la durée du contrat.
         {a.soumission !== null && ` Soumission déposée : ${argent(a.soumission)}.`}
       </p>
     </li>
@@ -196,18 +211,28 @@ function CarteAppel({ a }: { a: AppelOffres }) {
 }
 
 function VueB2B() {
-  const { etat, ent } = useJeuCourant();
+  const { etat, ent, secteur } = useJeuCourant();
   const changerOnglet = useJeu((s) => s.changerOnglet);
-  if (!produitActif(ent, 'traiteur')) {
+  const produit = produitB2B(secteur);
+  if (!produit)
+    return (
+      <Carte titre="Ventes aux entreprises (B2B)">
+        <p className="text-sm">
+          Dans ce secteur, l’entreprise vend surtout aux particuliers : il n’y a pas d’appels
+          d’offres d’entreprises.
+        </p>
+      </Carte>
+    );
+  if (!produitActif(ent, produit.id)) {
     const enDev = ent.marketing.produits.some(
-      (p) => p.ligneId === 'traiteur' && p.statut === 'developpement',
+      (p) => p.ligneId === produit.id && p.statut === 'developpement',
     );
     return (
       <Carte titre="Ventes aux entreprises (B2B)">
         <p className="text-sm">
           {enDev
-            ? 'Ton service de traiteur est en développement : les premiers appels d’offres arriveront après son lancement.'
-            : 'Pour vendre aux entreprises (boîtes à lunch, plateaux pour les réunions), développe le service de traiteur dans le département Marketing.'}
+            ? `« ${produit.nom} » est en développement : les premiers appels d’offres arriveront après son lancement.`
+            : `Pour vendre aux entreprises, développe « ${produit.nom} » dans le département Marketing (nouveaux produits). ${produit.detail}.`}
         </p>
         {!enDev && (
           <Bouton petit className="mt-2" onClick={() => changerOnglet('marketing')}>
@@ -257,7 +282,8 @@ function VueB2B() {
       >
         {ent.b2b.appels.length === 0 ? (
           <p className="text-sm text-doux">
-            Aucun appel d’offres ce mois-ci. Il y en a davantage à la rentrée et avant les Fêtes.
+            Aucun appel d’offres ce mois-ci. Les entreprises en lancent davantage à certaines
+            saisons (rentrée, Fêtes, printemps selon le secteur).
           </p>
         ) : (
           <ul className="grid gap-3 lg:grid-cols-2">
@@ -275,7 +301,7 @@ function VueB2B() {
             <thead>
               <tr className="border-b border-bordure text-left text-doux">
                 <th className="py-1 font-semibold">Client</th>
-                <th className="py-1 text-right font-semibold">Boîtes/mois</th>
+                <th className="py-1 text-right font-semibold">Quantité/mois</th>
                 <th className="py-1 text-right font-semibold">Prix</th>
                 <th className="py-1 text-right font-semibold">Mois restants</th>
                 <th className="py-1 text-right font-semibold">Satisfaction</th>
@@ -287,7 +313,7 @@ function VueB2B() {
                   <td className="py-1">
                     {c.client} (cote {c.cote})
                   </td>
-                  <td className="py-1 text-right">{c.repasParMois}</td>
+                  <td className="py-1 text-right">{c.quantiteParMois}</td>
                   <td className="py-1 text-right">{argent(c.prixUnitaire)}</td>
                   <td className="py-1 text-right">{c.moisRestants}</td>
                   <td className={`py-1 text-right ${c.satisfaction < 0.6 ? 'text-danger' : ''}`}>
@@ -415,6 +441,7 @@ function VueConcurrence() {
   const { etat, ent, secteur, derniere } = useJeuCourant();
   const i = derniere?.indicateurs;
   const analyse = ent.marketing.etudes.find((e) => e.typeId === 'analyseConcurrence');
+  const connus = etat.concurrents.filter((c) => c.statut !== 'aVenir');
   return (
     <div className="space-y-5">
       <Carte
@@ -452,10 +479,13 @@ function VueConcurrence() {
                 <td className="py-1 text-right">{ent.decisions.livraison ? 'oui' : 'non'}</td>
                 <td className="py-1 text-right">{i ? pourcentage(i.partMarche) : '—'}</td>
               </tr>
-              {etat.concurrents.map((c) => {
+              {connus.map((c) => {
                 const etude = analyse?.concurrents?.find((x) => x.id === c.id);
                 return (
-                  <tr key={c.id} className="border-b border-bordure">
+                  <tr
+                    key={c.id}
+                    className={`border-b border-bordure ${c.actif ? '' : 'text-doux'}`}
+                  >
                     <td className="py-1">
                       <span
                         className="mr-2 inline-block h-3 w-3 rounded-sm align-middle"
@@ -463,8 +493,11 @@ function VueConcurrence() {
                         aria-hidden="true"
                       />
                       {c.nom}
+                      {!c.actif && ` (${STATUTS[c.statut]})`}
                     </td>
-                    <td className="py-1">{c.surnom}</td>
+                    <td className="py-1" title={c.description}>
+                      {c.surnom}
+                    </td>
                     <td className="py-1 text-right">
                       {decimal(indicePrixOffre(c.prix, secteur, etat.conjoncture.indicePrix))}
                     </td>
@@ -489,14 +522,30 @@ function VueConcurrence() {
           <GraphiquePartsMarche
             archives={ent.archives}
             nomJoueur={ent.nom}
-            concurrents={etat.concurrents.map((c) => ({ id: c.id, nom: c.nom }))}
+            concurrents={connus.map((c) => ({ id: c.id, nom: c.nom }))}
           />
         </Suspense>
       )}
+      <Carte titre="Profils des concurrents">
+        <ul className="grid gap-2 text-sm md:grid-cols-2">
+          {connus.map((c) => (
+            <li key={c.id} className="rounded-lg bg-surface-2 p-2">
+              <p className="font-semibold">
+                {c.nom} — {c.surnom}
+              </p>
+              <p className="text-doux">{c.description}</p>
+              <p className="text-xs text-doux">Statut : {STATUTS[c.statut]}</p>
+            </li>
+          ))}
+        </ul>
+      </Carte>
       <Astuce>
         Les concurrents réagissent à tes décisions avec un délai, comme dans la vraie vie : il leur
-        faut le temps de remarquer le changement, puis de décider. Une baisse de prix importante
-        peut déclencher une riposte du Géant 1 ou 2 mois plus tard.
+        faut le temps de remarquer le changement, puis de décider. Le Géant riposte aux baisses de
+        prix 1 ou 2 mois plus tard, l’Agressif copie tes bonnes idées (livraison, fidélité,
+        écoresponsabilité), le Prudent réagit lentement et un Nouveau joueur financé par du capital
+        de risque peut arriver en cours de partie. Un concurrent qui perd trop d’argent peut fermer
+        ou être racheté.
       </Astuce>
     </div>
   );

@@ -6,9 +6,9 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { SECTEURS, VILLES, secteurParId, villeParId } from '../../data';
 import { graineDepuisTexte } from '../../engine/rng';
 import {
-  DEMARCHES,
   IDS_DEMARCHES,
   coutDemarche,
+  demarchesSecteur,
   fraisImmatriculation,
 } from '../../engine/conformite';
 import type { FormeJuridique } from '../../engine/types';
@@ -27,7 +27,7 @@ import {
   type DureePartie,
   type ParametresDemarrage,
 } from '../../engine/types';
-import { argentRond, pourcentage } from '../../i18n/format';
+import { argentRond, nombre, pourcentage } from '../../i18n/format';
 import { DIFFICULTES_TEXTE } from '../../i18n/fr-CA';
 import { useJeu } from '../../store/jeu';
 import { Bouton } from '../composants/Bouton';
@@ -77,6 +77,18 @@ const MESSAGES_ERREUR: Record<ErreurDemarrage, string> = {
   associeRequis: 'Une société de personnes exige un associé qui investit dans l’entreprise.',
   sourceInvalide:
     'Une de tes sources de financement ne respecte pas ses conditions (étape 6 : âge, plan d’affaires, mise de fonds ou forme juridique).',
+  emplacementInvalide: 'Choisis un emplacement permis pour ton secteur (étape 2).',
+};
+
+/** Nom proposé selon le secteur (le joueur peut le changer). */
+const NOMS_PROPOSES: Record<string, string> = {
+  cafe: 'Café du Coin',
+  vetements: 'Boutique Le Fil',
+  enLigne: 'Savons du Fleuve',
+  coiffure: 'Salon Mèches et Cie',
+  paysagement: 'Paysagement Vert Horizon',
+  atelier: 'Atelier Bois Franc',
+  epicerie: 'Épicerie du Marché',
 };
 
 export function EcranCreation() {
@@ -86,7 +98,7 @@ export function EcranCreation() {
   const titre = useRef<HTMLHeadingElement>(null);
 
   const [params, setParams] = useState<ParametresDemarrage>({
-    nomEntreprise: 'Café du Coin',
+    nomEntreprise: NOMS_PROPOSES.cafe,
     nomProprietaire: '',
     couleur: COULEURS[0].id,
     emplacementId: 'rue',
@@ -117,6 +129,22 @@ export function EcranCreation() {
   const secteur = secteurParId(secteurId);
   const ville = villeParId(villeId);
   const maj = (c: Partial<ParametresDemarrage>) => setParams((p) => ({ ...p, ...c }));
+  const choisirSecteur = (id: string) => {
+    const nouveau = secteurParId(id);
+    setParams((p) => ({
+      ...p,
+      // Le nom proposé suit le secteur tant que le joueur ne l'a pas modifié.
+      nomEntreprise:
+        p.nomEntreprise === NOMS_PROPOSES[secteurId]
+          ? (NOMS_PROPOSES[id] ?? p.nomEntreprise)
+          : p.nomEntreprise,
+      emplacementId: nouveau.emplacements.includes(p.emplacementId)
+        ? p.emplacementId
+        : nouveau.emplacements[0],
+      demarches: [...new Set([...p.demarches, ...demarchesSecteur(nouveau).map((d) => d.id)])],
+    }));
+    setSecteurId(id);
+  };
   const couts = coutsDemarrage(params, secteur, ville);
   const erreurs = validerDemarrage(params, secteur, ville);
 
@@ -141,12 +169,17 @@ export function EcranCreation() {
     }
   };
 
-  const emplacements = ville.emplacements.map((e) => ({
-    id: e.id,
-    titre: e.nom,
-    description: e.description,
-    detail: `Loyer : ${argentRond(loyerMensuelInitial(secteur, e))}/mois · achalandage ${pourcentage(e.achalandage, 0)}`,
-  }));
+  const emplacements = ville.emplacements
+    .filter((e) => secteur.emplacements.includes(e.id))
+    .map((e) => ({
+      id: e.id,
+      titre: e.nom,
+      description: e.description,
+      detail:
+        secteur.importanceEmplacement > 0.2
+          ? `Loyer : ${argentRond(loyerMensuelInitial(secteur, e))}/mois · achalandage ${pourcentage(e.achalandage, 0)}`
+          : `Loyer : ${argentRond(loyerMensuelInitial(secteur, e))}/mois · les clients viennent surtout de la publicité`,
+    }));
 
   return (
     <main
@@ -267,10 +300,10 @@ export function EcranCreation() {
             <div className="mt-4">
               <Astuce titre="Le nom de ton entreprise">
                 Si ton entreprise porte un autre nom que le tien (ex. «{' '}
-                {params.nomEntreprise || 'Café du Coin'} »), tu dois l’immatriculer au Registraire
-                des entreprises du Québec (REQ) et obtenir un NEQ. Tu choisiras la forme juridique (
-                <Terme id="entrepriseIndividuelle">entreprise individuelle</Terme>, société de
-                personnes ou société par actions) à l’étape 4.
+                {params.nomEntreprise || NOMS_PROPOSES[secteurId]} »), tu dois l’immatriculer au
+                Registraire des entreprises du Québec (REQ) et obtenir un NEQ. Tu choisiras la forme
+                juridique (<Terme id="entrepriseIndividuelle">entreprise individuelle</Terme>,
+                société de personnes ou société par actions) à l’étape 4.
               </Astuce>
             </div>
           </Carte>
@@ -283,22 +316,13 @@ export function EcranCreation() {
                 legende="Secteur d’activité"
                 nom="secteur"
                 valeur={secteurId}
-                onChange={setSecteurId}
-                options={[
-                  ...SECTEURS.map((s) => ({ id: s.id, titre: s.nom, description: s.description })),
-                  {
-                    id: 'bientot-1',
-                    titre: 'Boutique de vêtements',
-                    description: 'Jalon 4',
-                    desactive: true,
-                  },
-                  {
-                    id: 'bientot-2',
-                    titre: 'Commerce en ligne',
-                    description: 'Jalon 4',
-                    desactive: true,
-                  },
-                ]}
+                onChange={choisirSecteur}
+                options={SECTEURS.map((s) => ({
+                  id: s.id,
+                  titre: s.nom,
+                  description: s.description,
+                  detail: `Marge brute ${pourcentage(s.margeBruteCible[0], 0)} à ${pourcentage(s.margeBruteCible[1], 0)} · main-d’œuvre ${pourcentage(s.coutMainOeuvreCible[0], 0)} à ${pourcentage(s.coutMainOeuvreCible[1], 0)} des ventes`,
+                }))}
               />
               <ChoixCartes
                 legende="Ville"
@@ -306,16 +330,31 @@ export function EcranCreation() {
                 valeur={villeId}
                 onChange={setVilleId}
                 colonnes={4}
-                options={[
-                  ...VILLES.map((v) => ({ id: v.id, titre: v.nom })),
-                  ...['Québec', 'Laval', 'Gatineau', 'Sherbrooke'].map((nom) => ({
-                    id: nom,
-                    titre: nom,
-                    description: 'Jalon 4',
-                    desactive: true,
-                  })),
-                ]}
+                options={VILLES.map((v) => ({
+                  id: v.id,
+                  titre: v.nom,
+                  description: v.description,
+                  detail: (
+                    <>
+                      {nombre(v.population)} hab. · revenu médian {argentRond(v.revenuMedian)}
+                      <br />
+                      Chômage {pourcentage(v.chomage, 1)} · concurrence{' '}
+                      {v.concurrence >= 1.05
+                        ? 'forte'
+                        : v.concurrence >= 0.9
+                          ? 'moyenne'
+                          : 'faible'}
+                    </>
+                  ),
+                }))}
               />
+              <Astuce titre="Comment choisir une ville?">
+                Une grande ville offre plus de clients, mais aussi plus de concurrents et des loyers
+                plus élevés. Là où le <Terme id="tauxChomage">chômage</Terme> est bas (Sherbrooke,
+                Saguenay, Québec), il est plus difficile de recruter et de garder ses employés. Un{' '}
+                <Terme id="revenuMedian">revenu médian</Terme> plus bas rend les clients plus
+                sensibles aux prix.
+              </Astuce>
               <ChoixCartes
                 legende={`Emplacement (local de ${secteur.superficiePi2.toLocaleString('fr-CA')} pi²)`}
                 nom="emplacement"
@@ -327,7 +366,9 @@ export function EcranCreation() {
                 Le loyer d’un local commercial s’exprime en dollars par pied carré par année. On
                 ajoute souvent les frais communs (taxes foncières, entretien) : c’est un bail « net
                 ». Un bon emplacement attire plus de clients, mais coûte plus cher chaque mois, que
-                tu vendes ou non.
+                tu vendes ou non. Pour une entreprise de services à domicile ou un commerce en
+                ligne, l’achalandage compte peu : ce sont la publicité et les avis qui amènent les
+                clients.
               </Astuce>
             </div>
           </Carte>
@@ -448,8 +489,8 @@ export function EcranCreation() {
                 Tu pourras t’incorporer plus tard (département Juridique) : c’est souvent avantageux
                 quand les bénéfices dépassent tes besoins personnels. La coopérative (au moins 3
                 membres, un membre = un vote) et l’organisme à but non lucratif (OBNL, bénéfices
-                réinvestis dans la mission) existent aussi, mais ne sont pas jouables pour un café à
-                but lucratif.
+                réinvestis dans la mission) existent aussi, mais ne sont pas jouables dans cette
+                simulation d’entreprise à but lucratif.
               </Astuce>
             </div>
           </Carte>
@@ -473,8 +514,8 @@ export function EcranCreation() {
                       Facultatif sous le seuil du petit fournisseur (30 000 $ de ventes taxables sur
                       4 trimestres), mais obligatoire au-delà. Inscrit : tu ajoutes 14,975 % à tes
                       prix et tu récupères les taxes payées sur tes achats (CTI et RTI). Non inscrit
-                      : tes prix paraissent moins chers, mais tu ne récupères rien… et un café
-                      dépasse le seuil en quelques mois.
+                      : tes prix paraissent moins chers, mais tu ne récupères rien… et la plupart
+                      des commerces dépassent le seuil en quelques mois.
                     </span>
                   </span>
                 </label>
@@ -482,7 +523,7 @@ export function EcranCreation() {
               <fieldset>
                 <legend className="mb-2 font-bold">Démarches avant l’ouverture</legend>
                 <ul className="space-y-2">
-                  {DEMARCHES.map((d) => {
+                  {demarchesSecteur(secteur).map((d) => {
                     const forcee = d.id === 'req' && params.formeJuridique !== 'individuelle';
                     const coche = forcee || params.demarches.includes(d.id);
                     const cout = coutDemarche(d.id, params.formeJuridique);

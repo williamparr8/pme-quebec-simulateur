@@ -317,10 +317,12 @@ function Fin() {
     ['Prélèvements (ta rémunération)', argentRond(b.prelevementsCumules)],
     ['Apports du propriétaire', argentRond(b.apportsTotal)],
     ['Capitaux propres à la fin', argentRond(b.capitauxPropres)],
-    [
-      'Valeur estimée de l’entreprise (3 × BAIIA + encaisse − dettes)',
-      argentRond(b.valeurEntreprise),
-    ],
+    b.vendue
+      ? ['Prix de vente de l’entreprise', argentRond(b.valeurEntreprise)]
+      : [
+          'Valeur estimée de l’entreprise (3 × BAIIA + encaisse − dettes)',
+          argentRond(b.valeurEntreprise),
+        ],
     ...(b.partProprietaire < 1
       ? ([
           ['Ta part de l’entreprise', pourcentage(b.partProprietaire, 1)],
@@ -334,7 +336,13 @@ function Fin() {
   ];
   return (
     <Modale
-      titre={etat.raisonFin === 'faillite' ? 'Fin de la partie : faillite' : 'Fin de la partie'}
+      titre={
+        etat.raisonFin === 'faillite'
+          ? 'Fin de la partie : faillite'
+          : etat.raisonFin === 'vente'
+            ? 'Fin de la partie : entreprise vendue'
+            : 'Fin de la partie'
+      }
       onFermer={fermer}
       taille="lg"
       pied={
@@ -356,7 +364,9 @@ function Fin() {
           <p className="max-w-md text-sm">
             {etat.raisonFin === 'faillite'
               ? 'Ton entreprise n’a pas survécu. En entreprise individuelle, tes biens personnels répondent des dettes. Relis tes rapports : quand la trésorerie a-t-elle commencé à fondre, et pourquoi?'
-              : `${ent.nom} a terminé ses ${etat.config.dureeMois} mois d’activité. La note tient compte de ton rendement financier (50 points), de la satisfaction de tes clients (25), du moral de ton équipe (10) et de ta part de marché (15).`}
+              : etat.raisonFin === 'vente' && ent.vente
+                ? `Tu as vendu ${ent.nom} à ${ent.vente.acheteur} pour ${argentRond(ent.vente.prix)}. Vendre au bon moment fait partie de la stratégie : l’acheteur paie pour les profits futurs (un multiple du BAIIA) et pour les actifs.`
+                : `${ent.nom} a terminé ses ${etat.config.dureeMois} mois d’activité. La note tient compte de ton rendement financier (50 points), de la satisfaction de tes clients (25), du moral de ton équipe (10) et de ta part de marché (15).`}
           </p>
         </div>
         <table className="chiffres w-full text-sm">

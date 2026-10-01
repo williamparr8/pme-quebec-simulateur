@@ -10,6 +10,8 @@ import { Terme } from '../../composants/Terme';
 import { TitrePage } from '../../composants/TitrePage';
 import { useJeuCourant, variation } from '../contexte';
 import { CarteDilemmes } from '../Dilemmes';
+import { CarteNouvelles } from '../Nouvelles';
+import { posteParId } from '../../../data';
 
 const GraphiqueVentesBenefice = lazy(() =>
   import('../../graphiques/Graphiques').then((m) => ({ default: m.GraphiqueVentesBenefice })),
@@ -31,7 +33,12 @@ function Chargement() {
 }
 
 export function PageTableau() {
-  const { etat, ent, derniere, precedente, date } = useJeuCourant();
+  const { etat, ent, secteur, derniere, precedente, date } = useJeuCourant();
+  const equipeDepart = secteur.equipeDepart
+    .map(
+      (eq) => `${eq.nombre} ${posteParId(eq.posteId).nom.toLowerCase()}${eq.nombre > 1 ? 's' : ''}`,
+    )
+    .join(', ');
   const changerOnglet = useJeu((s) => s.changerOnglet);
   const i = derniere?.indicateurs;
   const p = precedente?.indicateurs;
@@ -78,13 +85,17 @@ export function PageTableau() {
         </div>
       )}
 
+      <CarteNouvelles />
+
       <SceneCommerce
         nom={ent.nom}
         couleur={ent.couleur}
         mois={date.mois}
         clientsParJour={i ? i.servies / 30 : 25}
         nbEmployes={ent.employes.length}
-        concurrents={etat.concurrents.map((c) => ({ nom: c.nom, couleur: c.couleur }))}
+        concurrents={etat.concurrents
+          .filter((c) => c.actif)
+          .map((c) => ({ nom: c.nom, couleur: c.couleur }))}
       />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -174,8 +185,7 @@ export function PageTableau() {
                   >
                     Ressources humaines (R)
                   </button>{' '}
-                  : ton équipe de départ (3 baristas, sans cuisinier), les salaires et tes propres
-                  heures.
+                  : ton équipe de départ ({equipeDepart}), les salaires et tes propres heures.
                 </li>
                 <li>
                   <button

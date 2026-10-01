@@ -4,6 +4,7 @@ import {
   FORMATIONS,
   FORMATION_GESTIONNAIRE_HYGIENE,
   PLATEFORMES,
+  formationsSecteur,
   plateformeParId,
   posteParId,
   traitParId,
@@ -68,7 +69,7 @@ function BarreMoral({ moral }: { moral: number }) {
 // ---------------------------------------------------------------------------
 
 function LigneEmploye({ e }: { e: Employe }) {
-  const { etat } = useJeuCourant();
+  const { etat, secteur } = useJeuCourant();
   const agir = useJeu((s) => s.agir);
   const [formation, setFormation] = useState('');
   const poste = posteParId(e.posteId);
@@ -77,7 +78,7 @@ function LigneEmploye({ e }: { e: Employe }) {
   const indemnite = preavis * e.heuresSemaine * e.salaireHoraire;
   const nom = `${e.prenom} ${e.nom}`;
   const marche = salaireMarche(etat, e.posteId);
-  const formations = FORMATIONS.filter(
+  const formations = formationsSecteur(secteur).filter(
     (f) => !e.formations.includes(f.id) && (!f.postes || f.postes.includes(e.posteId)),
   );
   const evaluable = e.derniereEvaluation === null || etat.moisCourant - e.derniereEvaluation >= 6;
@@ -510,7 +511,9 @@ function VueRecrutement() {
         refuser. Le premier mois, un nouvel employé est moins productif (période d’intégration). Les
         postes de gérant, de commis comptable et de responsable marketing ne servent pas les
         clients, mais ils allègent ton travail, réduisent les honoraires du comptable ou rendent ta
-        publicité plus efficace.
+        publicité plus efficace. Les employés de production (
+        {secteur.libelleProduction.toLowerCase()}) déterminent combien de produits ou de services tu
+        peux livrer chaque mois.
       </Astuce>
     </div>
   );

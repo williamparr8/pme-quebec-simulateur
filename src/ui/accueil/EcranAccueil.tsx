@@ -76,11 +76,11 @@ export function EcranAccueil() {
             </li>
           </ul>
           <p className="mt-3 text-sm text-doux">
-            Version Jalon 3 : café-bistro à Montréal avec des départements complets (canaux de
-            publicité et personas, recrutement, fournisseurs et stocks, ventes aux entreprises,
-            financement et investissements), 5 formes juridiques, TPS/TVQ et impôts. Les autres
-            secteurs et villes, les événements et le mode équipes arrivent dans les prochains
-            jalons.
+            Version Jalon 4 : 7 secteurs (café, boutique de vêtements, commerce en ligne, salon de
+            coiffure, paysagement, atelier d’ébénisterie, épicerie fine) dans 8 villes du Québec, 5
+            concurrents aux personnalités différentes, plus de 70 événements avec des choix et une
+            leçon d’affaires, et une conjoncture économique qui évolue (croissance, récession,
+            chômage, taux d’intérêt). Le mode équipes et le tutoriel arrivent au prochain jalon.
           </p>
         </Carte>
       </div>

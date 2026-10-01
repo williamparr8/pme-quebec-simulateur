@@ -3,6 +3,8 @@
  * d'affaires restent affichées.
  */
 import { useState } from 'react';
+import type { DilemmeEnCours } from '../../engine/types';
+import { argentRond } from '../../i18n/format';
 import { dilemmeParId } from '../../data';
 import { texteDilemme } from '../../engine/events';
 import { repondreDilemme } from '../../engine/simulation';
@@ -17,8 +19,25 @@ interface Reponse {
   lecon: string;
 }
 
+const CATEGORIES: Record<string, string> = {
+  rh: 'Ressources humaines',
+  meteo: 'Météo et sinistres',
+  operations: 'Opérations',
+  marketing: 'Marketing et réputation',
+  juridique: 'Juridique et conformité',
+  finance: 'Finance',
+  fiscal: 'Fiscalité',
+  marche: 'Marché et concurrence',
+};
+
 export function CarteDilemmes() {
-  const { ent } = useJeuCourant();
+  const { ent, secteur } = useJeuCourant();
+  const valeurs = (d: DilemmeEnCours) => ({
+    nom: d.nomEmploye,
+    commerce: secteur.commerce,
+    concurrent: d.params?.concurrent,
+    prix: d.params?.prix !== undefined ? argentRond(d.params.prix) : undefined,
+  });
   const agir = useJeu((s) => s.agir);
   const [reponse, setReponse] = useState<Reponse | null>(null);
 
@@ -36,8 +55,13 @@ export function CarteDilemmes() {
         const def = dilemmeParId(d.defId);
         return (
           <div key={d.id} className="space-y-2">
-            <p className="font-semibold">{def.titre}</p>
-            <p className="text-sm">{texteDilemme(def.description, d.nomEmploye)}</p>
+            <p className="font-semibold">
+              {def.titre}{' '}
+              <span className="text-xs font-normal text-doux">
+                ({CATEGORIES[def.categorie] ?? def.categorie})
+              </span>
+            </p>
+            <p className="text-sm">{texteDilemme(def.description, valeurs(d))}</p>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {def.choix.map((c) => (
                 <Bouton
@@ -47,13 +71,13 @@ export function CarteDilemmes() {
                     agir((e, id) => repondreDilemme(e, id, d.id, c.id));
                     setReponse({
                       titre: def.titre,
-                      choix: texteDilemme(c.libelle, d.nomEmploye),
+                      choix: texteDilemme(c.libelle, valeurs(d)),
                       explication: c.explication,
                       lecon: def.lecon,
                     });
                   }}
                 >
-                  {texteDilemme(c.libelle, d.nomEmploye)}
+                  {texteDilemme(c.libelle, valeurs(d))}
                 </Bouton>
               ))}
             </div>

@@ -67,6 +67,28 @@ aussi sa source et sa date de vérification.
   manipulateur 6 h, présence d’une personne formée ou 10 % du personnel) :
   https://www.quebec.ca/sante/alimentation/salubrite-aliments-prevention-risques/etablissements-alimentaires/hygiene-nettoyage/formation-obligatoire-hygiene-salubrite-alimentaires/gestionnaire-etablissement-alimentaire
 
+## Monde vivant (Jalon 4)
+
+- Guichet-Emplois, _Aperçu du marché du travail du Québec, août 2026_ (taux de chômage par région économique) :
+  https://www.guichetemplois.gc.ca/analyse-tendances/rapport-marche-travail/qc/apercu-marche-travail
+- Statistique Canada, _Le revenu des ménages au Canada (Recensement 2021)_ (revenu médian des ménages en 2020 :
+  72 500 $ au Québec, 66 500 $ à Montréal) : https://www150.statcan.gc.ca/n1/pub/11-627-m/11-627-m2022040-fra.pdf
+- Statistique Canada, Recensement de 2021 (population des 8 villes) :
+  https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/prof/index.cfm?Lang=F
+- CBRE, _Statistiques sur l’immobilier_, 1er trimestre 2026 (loyer industriel moyen à Québec : 13,41 $/pi²) :
+  https://mktgdocs.cbre.com/2299/a9d02e8f-78ec-468d-88a8-8268d2d5bc20-26623927/Statistiques_sur_l_immobilier_.pdf
+- Gouvernement du Québec, _La CNESST fixe le taux moyen de cotisation pour 2026_ (1,54 $ par 100 $) :
+  https://www.quebec.ca/nouvelles/actualites/details/financement-du-regime-quebecois-de-sante-et-de-securite-du-travail-pour-2026-la-cnesst-fixe-le-taux-moyen-de-cotisation-pour-2026-62890
+- Régie des alcools, des courses et des jeux, permis d’épicerie (vente de bière, de vin et de cidre) :
+  https://www.racj.gouv.qc.ca/
+- Gouvernement du Québec, _Permis de vente et d’utilisation de pesticides_ :
+  https://www.quebec.ca/entreprises-et-travailleurs-autonomes/permis-certifications/permis-vente-utilisation-pesticides
+- Revenu Québec, _TPS/TVH et TVQ_ (fournitures détaxées : produits alimentaires de base) :
+  https://www.revenuquebec.ca/fr/entreprises/taxes/tpstvh-et-tvq/
+- Office québécois de la langue française (plaintes et affichage) : https://www.oqlf.gouv.qc.ca/
+- Commission d’accès à l’information (Loi 25 : incidents de confidentialité) : https://www.cai.gouv.qc.ca/
+- CNESST, prévention et accidents du travail : https://www.cnesst.gouv.qc.ca/fr/prevention-securite
+
 ## Taux d’intérêt
 
 - Banque du Canada, _La Banque du Canada maintient le taux directeur à 2¼ %_ (2 septembre 2026) :
