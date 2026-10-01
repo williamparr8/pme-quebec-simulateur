@@ -3,7 +3,7 @@
  * paramètres de la partie. Chaque étape explique les notions de gestion en jeu.
  */
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { SECTEURS, VILLES, secteurParId, villeParId } from '../../data';
+import { SECTEURS, VILLES, scenarioParId, secteurParId, villeParId } from '../../data';
 import { graineDepuisTexte } from '../../engine/rng';
 import {
   IDS_DEMARCHES,
@@ -16,6 +16,7 @@ import { EtapeFinancement } from './EtapeFinancement';
 import { FORMES } from './formes';
 import {
   REGLES_FINANCEMENT,
+  configScenario,
   coutsDemarrage,
   loyerMensuelInitial,
   validerDemarrage,
@@ -94,14 +95,27 @@ const NOMS_PROPOSES: Record<string, string> = {
 export function EcranCreation() {
   const allerA = useJeu((s) => s.allerA);
   const demarrer = useJeu((s) => s.demarrer);
+  const mode = useJeu((s) => s.modeCreation);
+  const scenario = mode.type === 'scenario' ? scenarioParId(mode.scenarioId) : null;
+  const nbEquipes = mode.type === 'equipes' ? mode.nombre : 1;
+  /** Entreprises des équipes précédentes (mode équipes). */
+  const [equipesCreees, setEquipesCreees] = useState<ParametresDemarrage[]>([]);
+  const equipeIndex = equipesCreees.length;
+  // Le secteur, la ville et les réglages sont communs : seule la 1re équipe les choisit
+  // (ou le scénario les impose).
+  const verrouille = scenario !== null || equipeIndex > 0;
+  const secteurInitial = scenario?.secteurId ?? 'cafe';
+  const [tutoriel, setTutoriel] = useState(nbEquipes === 1);
   const [etape, setEtape] = useState(0);
   const titre = useRef<HTMLHeadingElement>(null);
 
   const [params, setParams] = useState<ParametresDemarrage>({
-    nomEntreprise: NOMS_PROPOSES.cafe,
+    nomEntreprise: NOMS_PROPOSES[secteurInitial] ?? NOMS_PROPOSES.cafe,
     nomProprietaire: '',
     couleur: COULEURS[0].id,
-    emplacementId: 'rue',
+    emplacementId: secteurParId(secteurInitial).emplacements.includes('rue')
+      ? 'rue'
+      : secteurParId(secteurInitial).emplacements[0],
     equipementId: 'neuf',
     amenagementId: 'chaleureux',
     apportPersonnel: 45_000,
@@ -117,10 +131,10 @@ export function EcranCreation() {
     planAffaires: null,
     methodeInventaire: 'coutMoyen',
   });
-  const [secteurId, setSecteurId] = useState('cafe');
-  const [villeId, setVilleId] = useState('montreal');
-  const [difficulte, setDifficulte] = useState<Difficulte>('realiste');
-  const [duree, setDuree] = useState<DureePartie>(36);
+  const [secteurId, setSecteurId] = useState(secteurInitial);
+  const [villeId, setVilleId] = useState(scenario?.villeId ?? 'montreal');
+  const [difficulte, setDifficulte] = useState<Difficulte>(scenario?.difficulte ?? 'realiste');
+  const [duree, setDuree] = useState<DureePartie>(scenario?.dureeMois ?? 36);
   const [graine, setGraine] = useState(
     () =>
       `${MOTS_GRAINE[Math.floor(Math.random() * MOTS_GRAINE.length)]}-${Math.floor(Math.random() * 900 + 100)}`,
@@ -150,22 +164,45 @@ export function EcranCreation() {
 
   useEffect(() => titre.current?.focus(), [etape]);
 
-  const precedent = () => (etape === 0 ? allerA('accueil') : setEtape(etape - 1));
+  const precedent = () => {
+    if (etape > 0) setEtape(etape - 1);
+    else if (equipeIndex > 0) {
+      // Retour à la dernière étape de l'équipe précédente.
+      setParams(equipesCreees[equipeIndex - 1]);
+      setEquipesCreees(equipesCreees.slice(0, -1));
+      setEtape(ETAPES.length - 1);
+    } else allerA(scenario ? 'scenarios' : 'accueil');
+  };
   const suivant = (e?: FormEvent) => {
     e?.preventDefault();
     if (etape < ETAPES.length - 1) setEtape(etape + 1);
     else if (erreurs.length === 0) {
-      demarrer(
-        {
-          graine: graineDepuisTexte(graine.trim() || 'pme'),
-          difficulte,
-          dureeMois: duree,
-          secteurId,
-          villeId,
-          anneeDepart: 2027,
-        },
-        params,
-      );
+      if (equipeIndex < nbEquipes - 1) {
+        // Équipe suivante : même secteur et même ville, nouvelle entreprise.
+        setEquipesCreees([...equipesCreees, params]);
+        setParams((p) => ({
+          ...p,
+          nomEntreprise: `${NOMS_PROPOSES[secteurId] ?? 'Mon entreprise'} ${equipeIndex + 2}`,
+          nomProprietaire: '',
+          nomEquipe: '',
+          couleur: COULEURS[(equipeIndex + 1) % COULEURS.length].id,
+        }));
+        setEtape(0);
+        return;
+      }
+      const valeurGraine = graineDepuisTexte(graine.trim() || 'pme');
+      const config = scenario
+        ? { ...configScenario(scenario, valeurGraine), tutoriel }
+        : {
+            graine: valeurGraine,
+            difficulte,
+            dureeMois: duree,
+            secteurId,
+            villeId,
+            anneeDepart: 2027,
+            tutoriel,
+          };
+      demarrer(config, nbEquipes > 1 ? [...equipesCreees, params] : params);
     }
   };
 
@@ -195,6 +232,13 @@ export function EcranCreation() {
         }
       }}
     >
+      {(scenario || nbEquipes > 1) && (
+        <p className="mb-3 rounded-lg bg-accent-doux px-3 py-2 font-semibold text-accent">
+          {scenario
+            ? `Scénario : ${scenario.nom} (${scenario.resume})`
+            : `Équipe ${equipeIndex + 1} sur ${nbEquipes} : crée ton entreprise. Les autres équipes ne regardent pas!`}
+        </p>
+      )}
       <nav aria-label="Étapes de création" className="mb-4">
         <ol className="flex flex-wrap gap-2 text-sm">
           {ETAPES.map((nom, i) => (
@@ -245,6 +289,19 @@ export function EcranCreation() {
                   className="w-full rounded-md border border-bordure bg-surface-2 px-3 py-2"
                 />
               </label>
+              {nbEquipes > 1 && (
+                <label className="space-y-1">
+                  <span className="block font-semibold">Nom de l’équipe</span>
+                  <input
+                    type="text"
+                    maxLength={30}
+                    value={params.nomEquipe ?? ''}
+                    placeholder={`Équipe ${equipeIndex + 1}`}
+                    onChange={(e) => maj({ nomEquipe: e.target.value })}
+                    className="w-full rounded-md border border-bordure bg-surface-2 px-3 py-2"
+                  />
+                </label>
+              )}
               <label className="space-y-1">
                 <span className="block font-semibold">Ton nom (propriétaire)</span>
                 <input
@@ -312,49 +369,60 @@ export function EcranCreation() {
         {etape === 1 && (
           <Carte>
             <div className="space-y-5">
-              <ChoixCartes
-                legende="Secteur d’activité"
-                nom="secteur"
-                valeur={secteurId}
-                onChange={choisirSecteur}
-                options={SECTEURS.map((s) => ({
-                  id: s.id,
-                  titre: s.nom,
-                  description: s.description,
-                  detail: `Marge brute ${pourcentage(s.margeBruteCible[0], 0)} à ${pourcentage(s.margeBruteCible[1], 0)} · main-d’œuvre ${pourcentage(s.coutMainOeuvreCible[0], 0)} à ${pourcentage(s.coutMainOeuvreCible[1], 0)} des ventes`,
-                }))}
-              />
-              <ChoixCartes
-                legende="Ville"
-                nom="ville"
-                valeur={villeId}
-                onChange={setVilleId}
-                colonnes={4}
-                options={VILLES.map((v) => ({
-                  id: v.id,
-                  titre: v.nom,
-                  description: v.description,
-                  detail: (
-                    <>
-                      {nombre(v.population)} hab. · revenu médian {argentRond(v.revenuMedian)}
-                      <br />
-                      Chômage {pourcentage(v.chomage, 1)} · concurrence{' '}
-                      {v.concurrence >= 1.05
-                        ? 'forte'
-                        : v.concurrence >= 0.9
-                          ? 'moyenne'
-                          : 'faible'}
-                    </>
-                  ),
-                }))}
-              />
-              <Astuce titre="Comment choisir une ville?">
-                Une grande ville offre plus de clients, mais aussi plus de concurrents et des loyers
-                plus élevés. Là où le <Terme id="tauxChomage">chômage</Terme> est bas (Sherbrooke,
-                Saguenay, Québec), il est plus difficile de recruter et de garder ses employés. Un{' '}
-                <Terme id="revenuMedian">revenu médian</Terme> plus bas rend les clients plus
-                sensibles aux prix.
-              </Astuce>
+              {verrouille ? (
+                <p>
+                  <strong>{secteur.nom}</strong> à <strong>{ville.nom}</strong>{' '}
+                  {scenario
+                    ? '(imposés par le scénario).'
+                    : '(communs à toutes les équipes : vous partagez le même marché).'}
+                </p>
+              ) : (
+                <>
+                  <ChoixCartes
+                    legende="Secteur d’activité"
+                    nom="secteur"
+                    valeur={secteurId}
+                    onChange={choisirSecteur}
+                    options={SECTEURS.map((s) => ({
+                      id: s.id,
+                      titre: s.nom,
+                      description: s.description,
+                      detail: `Marge brute ${pourcentage(s.margeBruteCible[0], 0)} à ${pourcentage(s.margeBruteCible[1], 0)} · main-d’œuvre ${pourcentage(s.coutMainOeuvreCible[0], 0)} à ${pourcentage(s.coutMainOeuvreCible[1], 0)} des ventes`,
+                    }))}
+                  />
+                  <ChoixCartes
+                    legende="Ville"
+                    nom="ville"
+                    valeur={villeId}
+                    onChange={setVilleId}
+                    colonnes={4}
+                    options={VILLES.map((v) => ({
+                      id: v.id,
+                      titre: v.nom,
+                      description: v.description,
+                      detail: (
+                        <>
+                          {nombre(v.population)} hab. · revenu médian {argentRond(v.revenuMedian)}
+                          <br />
+                          Chômage {pourcentage(v.chomage, 1)} · concurrence{' '}
+                          {v.concurrence >= 1.05
+                            ? 'forte'
+                            : v.concurrence >= 0.9
+                              ? 'moyenne'
+                              : 'faible'}
+                        </>
+                      ),
+                    }))}
+                  />
+                  <Astuce titre="Comment choisir une ville?">
+                    Une grande ville offre plus de clients, mais aussi plus de concurrents et des
+                    loyers plus élevés. Là où le <Terme id="tauxChomage">chômage</Terme> est bas
+                    (Sherbrooke, Saguenay, Québec), il est plus difficile de recruter et de garder
+                    ses employés. Un <Terme id="revenuMedian">revenu médian</Terme> plus bas rend
+                    les clients plus sensibles aux prix.
+                  </Astuce>
+                </>
+              )}
               <ChoixCartes
                 legende={`Emplacement (local de ${secteur.superficiePi2.toLocaleString('fr-CA')} pi²)`}
                 nom="emplacement"
@@ -579,43 +647,72 @@ export function EcranCreation() {
         {etape === 6 && (
           <Carte>
             <div className="space-y-5">
-              <ChoixCartes
-                legende="Difficulté"
-                nom="difficulte"
-                valeur={difficulte}
-                onChange={(id) => setDifficulte(id as Difficulte)}
-                options={(Object.keys(DIFFICULTES_TEXTE) as Difficulte[]).map((d) => ({
-                  id: d,
-                  titre: DIFFICULTES_TEXTE[d].nom,
-                  description: DIFFICULTES_TEXTE[d].description,
-                }))}
-              />
-              <ChoixCartes
-                legende="Durée de la partie"
-                nom="duree"
-                valeur={String(duree)}
-                onChange={(id) => setDuree(Number(id) as DureePartie)}
-                colonnes={4}
-                options={DUREES_PARTIE.map((d) => ({
-                  id: String(d),
-                  titre: `${d} mois`,
-                  description: `${d / 12} exercice${d > 12 ? 's' : ''} financier${d > 12 ? 's' : ''}`,
-                }))}
-              />
-              <label className="block max-w-sm space-y-1">
-                <span className="block font-semibold">Graine de la partie</span>
-                <input
-                  type="text"
-                  value={graine}
-                  onChange={(e) => setGraine(e.target.value)}
-                  className="w-full rounded-md border border-bordure bg-surface-2 px-3 py-2 font-mono"
-                />
-                <span className="block text-sm text-doux">
-                  Deux équipes qui utilisent la même graine et prennent les mêmes décisions
-                  obtiennent exactement les mêmes résultats. Pratique pour comparer des stratégies
-                  en classe!
-                </span>
-              </label>
+              {verrouille ? (
+                <p>
+                  Difficulté : <strong>{DIFFICULTES_TEXTE[difficulte].nom}</strong> · durée :{' '}
+                  <strong>{duree} mois</strong>
+                  {equipeIndex > 0 && ' (choisies par la première équipe)'}
+                </p>
+              ) : (
+                <>
+                  <ChoixCartes
+                    legende="Difficulté"
+                    nom="difficulte"
+                    valeur={difficulte}
+                    onChange={(id) => setDifficulte(id as Difficulte)}
+                    options={(Object.keys(DIFFICULTES_TEXTE) as Difficulte[]).map((d) => ({
+                      id: d,
+                      titre: DIFFICULTES_TEXTE[d].nom,
+                      description: DIFFICULTES_TEXTE[d].description,
+                    }))}
+                  />
+                  <ChoixCartes
+                    legende="Durée de la partie"
+                    nom="duree"
+                    valeur={String(duree)}
+                    onChange={(id) => setDuree(Number(id) as DureePartie)}
+                    colonnes={4}
+                    options={DUREES_PARTIE.map((d) => ({
+                      id: String(d),
+                      titre: `${d} mois`,
+                      description: `${d / 12} exercice${d > 12 ? 's' : ''} financier${d > 12 ? 's' : ''}`,
+                    }))}
+                  />
+                </>
+              )}
+              {equipeIndex === 0 && (
+                <>
+                  <label className="block max-w-sm space-y-1">
+                    <span className="block font-semibold">Graine de la partie</span>
+                    <input
+                      type="text"
+                      value={graine}
+                      onChange={(e) => setGraine(e.target.value)}
+                      className="w-full rounded-md border border-bordure bg-surface-2 px-3 py-2 font-mono"
+                    />
+                    <span className="block text-sm text-doux">
+                      Deux équipes qui utilisent la même graine et prennent les mêmes décisions
+                      obtiennent exactement les mêmes résultats. Pratique pour comparer des
+                      stratégies en classe!
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      checked={tutoriel}
+                      onChange={(e) => setTutoriel(e.target.checked)}
+                      className="mt-1"
+                    />
+                    <span>
+                      <span className="block font-semibold">Tutoriel guidé</span>
+                      <span className="block text-sm text-doux">
+                        Un panneau t’accompagne pendant les 3 premiers mois : quoi regarder et
+                        pourquoi.
+                      </span>
+                    </span>
+                  </label>
+                </>
+              )}
               {erreurs.length > 0 && (
                 <div
                   role="alert"
@@ -635,7 +732,11 @@ export function EcranCreation() {
 
         <div className="flex flex-wrap justify-between gap-2">
           <Bouton onClick={precedent} raccourci="Échap">
-            {etape === 0 ? 'Retour à l’accueil' : 'Étape précédente'}
+            {etape > 0
+              ? 'Étape précédente'
+              : equipeIndex > 0
+                ? 'Revenir à l’équipe précédente'
+                : 'Retour à l’accueil'}
           </Bouton>
           <Bouton
             type="submit"
@@ -643,9 +744,13 @@ export function EcranCreation() {
             raccourci="Entrée"
             disabled={etape === ETAPES.length - 1 && erreurs.length > 0}
           >
-            {etape === ETAPES.length - 1
-              ? `Ouvrir ${params.nomEntreprise || 'mon entreprise'}!`
-              : 'Étape suivante'}
+            {etape < ETAPES.length - 1
+              ? 'Étape suivante'
+              : equipeIndex < nbEquipes - 1
+                ? `Enregistrer et passer à l’équipe ${equipeIndex + 2}`
+                : nbEquipes > 1
+                  ? 'Commencer la partie!'
+                  : `Ouvrir ${params.nomEntreprise || 'mon entreprise'}!`}
           </Bouton>
         </div>
       </form>

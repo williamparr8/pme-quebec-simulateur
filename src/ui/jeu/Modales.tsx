@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { indicePrixOffre } from '../../engine/market';
 import { totalPublicite } from '../../engine/marketing';
 import { estimerMois } from '../../engine/previsions';
-import { bilanPartie } from '../../engine/rapports';
 import { qualiteDe } from '../../engine/simulation';
 import { argent, argentRond, decimal, moisAnnee, nombre, pourcentage } from '../../i18n/format';
 import { ONGLETS, useJeu } from '../../store/jeu';
@@ -10,7 +9,10 @@ import { Bouton } from '../composants/Bouton';
 import { GestionSauvegardes } from '../composants/GestionSauvegardes';
 import { ListeMessages } from '../composants/ListeMessages';
 import { Modale } from '../composants/Modale';
+import { ModaleGlossaire } from '../composants/ModaleGlossaire';
 import { useJeuCourant } from './contexte';
+import { ModaleQuiz } from './Quiz';
+import { RapportFin } from './RapportFin';
 
 function ConfirmerMois() {
   const { etat, ent, secteur, date } = useJeuCourant();
@@ -55,7 +57,11 @@ function ConfirmerMois() {
 
   return (
     <Modale
-      titre={`Terminer le mois de ${moisAnnee(date.annee, date.mois)}?`}
+      titre={
+        ent.equipe
+          ? `Terminer le tour de ${ent.equipe}?`
+          : `Terminer le mois de ${moisAnnee(date.annee, date.mois)}?`
+      }
       onFermer={fermer}
       pied={
         <>
@@ -63,7 +69,7 @@ function ConfirmerMois() {
             Revoir mes décisions
           </Bouton>
           <Bouton variante="primaire" onClick={confirmer} data-focus-initial raccourci="Entrée">
-            Terminer le mois
+            {ent.equipe ? 'Terminer notre tour' : 'Terminer le mois'}
           </Bouton>
         </>
       }
@@ -231,6 +237,7 @@ function Aide() {
   const raccourcis: [string, string][] = [
     ...ONGLETS.map((o): [string, string] => [o.touche, o.nom]),
     ['Espace', 'Terminer le mois (quand aucun bouton n’a le focus)'],
+    ['G', 'Glossaire avec recherche'],
     ['?', 'Afficher cette aide'],
     ['I', 'Définition du terme ou de l’indicateur sélectionné'],
     ['Échap', 'Fermer une fenêtre ou revenir au tableau de bord'],
@@ -306,88 +313,6 @@ function Sauvegardes() {
   );
 }
 
-function Fin() {
-  const { etat, ent } = useJeuCourant();
-  const fermer = useJeu((s) => s.fermerModale);
-  const quitter = useJeu((s) => s.quitter);
-  const b = bilanPartie(ent);
-  const lignes: [string, string][] = [
-    ['Ventes cumulées', argentRond(b.ventesCumulees)],
-    ['Bénéfice net cumulé', argentRond(b.beneficeCumule)],
-    ['Prélèvements (ta rémunération)', argentRond(b.prelevementsCumules)],
-    ['Apports du propriétaire', argentRond(b.apportsTotal)],
-    ['Capitaux propres à la fin', argentRond(b.capitauxPropres)],
-    b.vendue
-      ? ['Prix de vente de l’entreprise', argentRond(b.valeurEntreprise)]
-      : [
-          'Valeur estimée de l’entreprise (3 × BAIIA + encaisse − dettes)',
-          argentRond(b.valeurEntreprise),
-        ],
-    ...(b.partProprietaire < 1
-      ? ([
-          ['Ta part de l’entreprise', pourcentage(b.partProprietaire, 1)],
-          ['Valeur de ta part', argentRond(b.valeurPourProprietaire)],
-        ] as [string, string][])
-      : []),
-    ['Part de marché finale', pourcentage(b.partMarcheFinale)],
-    ['Note en ligne finale', `${decimal(b.noteFinale, 1)} ★`],
-    ['Satisfaction moyenne des clients', pourcentage(b.satisfactionMoyenne, 0)],
-    ['Moral moyen de l’équipe', `${nombre(b.moralMoyen)}/100`],
-  ];
-  return (
-    <Modale
-      titre={
-        etat.raisonFin === 'faillite'
-          ? 'Fin de la partie : faillite'
-          : etat.raisonFin === 'vente'
-            ? 'Fin de la partie : entreprise vendue'
-            : 'Fin de la partie'
-      }
-      onFermer={fermer}
-      taille="lg"
-      pied={
-        <>
-          <Bouton onClick={() => window.print()}>Imprimer ou enregistrer en PDF</Bouton>
-          <Bouton onClick={fermer}>Revoir mes états financiers</Bouton>
-          <Bouton variante="primaire" onClick={quitter}>
-            Retour à l’accueil
-          </Bouton>
-        </>
-      }
-    >
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="rounded-2xl bg-accent px-5 py-3 text-center text-accent-texte">
-            <p className="text-sm font-semibold">Note globale</p>
-            <p className="chiffres text-4xl font-extrabold">{b.note}/100</p>
-          </div>
-          <p className="max-w-md text-sm">
-            {etat.raisonFin === 'faillite'
-              ? 'Ton entreprise n’a pas survécu. En entreprise individuelle, tes biens personnels répondent des dettes. Relis tes rapports : quand la trésorerie a-t-elle commencé à fondre, et pourquoi?'
-              : etat.raisonFin === 'vente' && ent.vente
-                ? `Tu as vendu ${ent.nom} à ${ent.vente.acheteur} pour ${argentRond(ent.vente.prix)}. Vendre au bon moment fait partie de la stratégie : l’acheteur paie pour les profits futurs (un multiple du BAIIA) et pour les actifs.`
-                : `${ent.nom} a terminé ses ${etat.config.dureeMois} mois d’activité. La note tient compte de ton rendement financier (50 points), de la satisfaction de tes clients (25), du moral de ton équipe (10) et de ta part de marché (15).`}
-          </p>
-        </div>
-        <table className="chiffres w-full text-sm">
-          <tbody>
-            {lignes.map(([nom, val]) => (
-              <tr key={nom} className="border-b border-bordure/60">
-                <td className="py-1">{nom}</td>
-                <td className="py-1 text-right font-semibold">{val}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="text-xs text-doux">
-          Le rapport détaillé (meilleures et pires décisions, comparaison avec les concurrents,
-          classement) arrive au Jalon 5.
-        </p>
-      </div>
-    </Modale>
-  );
-}
-
 export function Modales() {
   const modale = useJeu((s) => s.modale);
   switch (modale) {
@@ -400,7 +325,11 @@ export function Modales() {
     case 'sauvegardes':
       return <Sauvegardes />;
     case 'fin':
-      return <Fin />;
+      return <RapportFin />;
+    case 'quiz':
+      return <ModaleQuiz />;
+    case 'glossaire':
+      return <ModaleGlossaire onFermer={() => useJeu.getState().fermerModale()} />;
     default:
       return null;
   }

@@ -89,6 +89,19 @@ aussi sa source et sa date de vérification.
 - Commission d’accès à l’information (Loi 25 : incidents de confidentialité) : https://www.cai.gouv.qc.ca/
 - CNESST, prévention et accidents du travail : https://www.cnesst.gouv.qc.ca/fr/prevention-securite
 
+## Multijoueur et pédagogie (Jalon 5)
+
+Les questions du quiz (`src/data/quiz.json`) reprennent les valeurs déjà sourcées ci-dessus (TPS, TVQ, seuil du
+petit fournisseur, salaire minimum, cotisations, impôts) et les notions du glossaire. Sources ajoutées :
+
+- CNESST, _Avis de cessation d’emploi ou de mise à pied_ (préavis de 1 à 8 semaines selon le service continu) :
+  https://www.cnesst.gouv.qc.ca/fr/conditions-travail/fin-lien-emploi
+- CNESST, _Politique de prévention du harcèlement psychologique_ (obligatoire pour tous les employeurs) :
+  https://www.cnesst.gouv.qc.ca/fr/prevention-securite/milieu-travail-sain/harcelement-psychologique-sexuel
+- Revenu Québec, _Relevé 1_ (remise aux employés au plus tard le dernier jour de février) :
+  https://www.revenuquebec.ca/fr/entreprises/retenues-a-la-source-et-cotisations-de-lemployeur/
+- Banque du Canada, _Cible de maîtrise de l’inflation_ (2 %) : https://www.banqueducanada.ca/grandes-fonctions/politique-monetaire/
+
 ## Taux d’intérêt
 
 - Banque du Canada, _La Banque du Canada maintient le taux directeur à 2¼ %_ (2 septembre 2026) :

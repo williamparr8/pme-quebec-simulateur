@@ -3,6 +3,8 @@ import { appliquerTheme, usePreferences } from '../store/preferences';
 import { useJeu } from '../store/jeu';
 import { Infobulle } from './composants/Terme';
 import { EcranAccueil } from './accueil/EcranAccueil';
+import { EcranClassement } from './accueil/EcranClassement';
+import { EcranScenarios } from './accueil/EcranScenarios';
 import { EcranCreation } from './creation/EcranCreation';
 import { EcranJeu } from './jeu/EcranJeu';
 
@@ -29,6 +31,8 @@ export default function App() {
         Aller au contenu principal
       </a>
       {ecran === 'accueil' && <EcranAccueil />}
+      {ecran === 'scenarios' && <EcranScenarios />}
+      {ecran === 'classement' && <EcranClassement />}
       {ecran === 'creation' && <EcranCreation />}
       {ecran === 'jeu' && <EcranJeu />}
       <Infobulle />

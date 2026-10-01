@@ -1,7 +1,7 @@
 /**
  * Raccourcis clavier globaux du jeu :
  *   T M R O V F J : départements    Espace : terminer le mois    ? : aide
- *   I : définition du terme sélectionné    Échap : retour au tableau de bord
+ *   I : définition du terme sélectionné    G : glossaire    Échap : retour au tableau de bord
  * Ils sont ignorés pendant la saisie de texte et quand une fenêtre est ouverte.
  */
 import { useEffect } from 'react';
@@ -28,7 +28,7 @@ export function useRaccourcis(): void {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const s = useJeu.getState();
-      if (s.modale || useInfobulle.getState().id) return;
+      if (s.modale || s.passage || useInfobulle.getState().id) return;
       if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return;
       const cible = e.target instanceof Element ? e.target : null;
       if (cible?.closest(SAISIE)) return;
@@ -36,6 +36,11 @@ export function useRaccourcis(): void {
       if (e.key === '?') {
         e.preventDefault();
         s.ouvrirModale('aide');
+        return;
+      }
+      if (e.key === 'g' || e.key === 'G') {
+        e.preventDefault();
+        s.ouvrirModale('glossaire');
         return;
       }
       if (e.key === 'i' || e.key === 'I') {

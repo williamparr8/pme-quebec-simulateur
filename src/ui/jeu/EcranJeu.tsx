@@ -6,6 +6,8 @@ import { ChoixTheme } from '../composants/ChoixTheme';
 import { FORMES } from '../creation/formes';
 import { useJeuCourant } from './contexte';
 import { Modales } from './Modales';
+import { EcranPassage } from './Passage';
+import { PanneauTutoriel } from './Tutoriel';
 import { PageFinance } from './pages/PageFinance';
 import { PageJuridique } from './pages/PageJuridique';
 import { PageMarketing } from './pages/PageMarketing';
@@ -41,7 +43,14 @@ function EnTete() {
             aria-hidden="true"
           />
           <div>
-            <p className="text-lg font-extrabold leading-tight">{ent.nom}</p>
+            <p className="text-lg font-extrabold leading-tight">
+              {ent.nom}
+              {ent.equipe && (
+                <span className="ml-2 rounded-md bg-surface-2 px-2 py-0.5 text-sm font-semibold">
+                  {ent.equipe}
+                </span>
+              )}
+            </p>
             <p className="text-sm text-doux">
               {secteur.nom} · {ville.nom} · {FORMES.find((x) => x.id === ent.formeJuridique)?.nom}
             </p>
@@ -69,6 +78,9 @@ function EnTete() {
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <Bouton petit onClick={() => ouvrirModale('sauvegardes')}>
             Sauvegardes
+          </Bouton>
+          <Bouton petit onClick={() => ouvrirModale('glossaire')} raccourci="G">
+            Glossaire
           </Bouton>
           <Bouton petit onClick={() => ouvrirModale('aide')} raccourci="?">
             Aide
@@ -157,7 +169,7 @@ function Navigation() {
 }
 
 function BarreFinMois() {
-  const { etat, date } = useJeuCourant();
+  const { etat, ent, date } = useJeuCourant();
   const ouvrirModale = useJeu((s) => s.ouvrirModale);
   return (
     <div className="pas-imprimer sticky bottom-0 z-30 border-t border-bordure bg-surface/95 backdrop-blur">
@@ -165,7 +177,7 @@ function BarreFinMois() {
         <p className="text-sm text-doux">
           {etat.terminee
             ? 'La partie est terminée. Consulte ton bilan de fin de partie.'
-            : `Tes décisions s’appliqueront au mois de ${moisAnnee(date.annee, date.mois)}.`}
+            : `${ent.equipe ? `${ent.equipe} : t` : 'T'}es décisions s’appliqueront au mois de ${moisAnnee(date.annee, date.mois)}.`}
         </p>
         {etat.terminee ? (
           <Bouton variante="primaire" onClick={() => ouvrirModale('fin')}>
@@ -177,7 +189,7 @@ function BarreFinMois() {
             onClick={() => ouvrirModale('confirmerMois')}
             raccourci="Espace"
           >
-            Terminer le mois
+            {ent.equipe ? 'Terminer notre tour' : 'Terminer le mois'}
           </Bouton>
         )}
       </div>
@@ -186,6 +198,12 @@ function BarreFinMois() {
 }
 
 export function EcranJeu() {
+  const passage = useJeu((s) => s.passage);
+  // Mode équipes : l'écran de passation cache tout le jeu de l'équipe précédente.
+  return passage ? <EcranPassage /> : <Jeu />;
+}
+
+function Jeu() {
   const onglet = useJeu((s) => s.onglet);
   const premierRendu = useRef(true);
   useRaccourcis();
@@ -210,6 +228,7 @@ export function EcranJeu() {
         </div>
       </main>
       <BarreFinMois />
+      <PanneauTutoriel />
       <Modales />
     </div>
   );

@@ -10,7 +10,7 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
 
 ---
 
-## Ce que le jeu permet (Jalons 1 à 4)
+## Ce que le jeu permet (Jalons 1 à 5)
 
 - **Créer son entreprise** : nom, emplacement (rue commerciale, centre commercial, quartier résidentiel), équipement,
   aménagement et financement (mise de fonds et prêt bancaire, avec le ratio exigé par la banque).
@@ -86,6 +86,25 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
   directeur et taux de change; les secteurs cycliques souffrent plus d’une récession. Un panneau « Nouvelles du
   mois » résume la situation au tableau de bord.
 
+### Multijoueur et pédagogie (Jalon 5)
+
+- **Mode équipes en alternance (« hot-seat »)** : 2 à 4 équipes créent chacune leur entreprise et jouent à tour de
+  rôle sur le même ordinateur, dans le **même marché** : les prix et la publicité d’une équipe influencent les
+  ventes des autres. Un écran « Passez le clavier à l’équipe suivante » cache les décisions de l’équipe précédente.
+- **Mode Prof / Scénarios** : 5 défis avec une situation de départ et des objectifs notés (relancer un café
+  mal-aimé, traverser une récession, percer en ligne depuis Rimouski, réussir une saison de paysagement, affronter
+  un géant de l’épicerie).
+- **Conseillère virtuelle** (désactivable) : Monique, mentore fictive, commente les décisions risquées et explique
+  les résultats (« Ta marge brute est à 18 %, la moyenne du secteur se situe entre 60 % et 70 %… »).
+- **Tutoriel guidé** pendant les 3 premiers mois.
+- **Quiz** de 3 questions au début de chaque trimestre (45 questions) : chaque bonne réponse donne 10 % de rabais
+  sur la prochaine formation ou étude de marché.
+- **Rapport de fin de partie** imprimable en PDF : note et mention, note par département, **meilleures et pires
+  décisions** avec leur effet estimé et leur explication, choix devant les événements, comparaison avec les
+  autres équipes et les concurrents.
+- **Classement local** des meilleures parties (note, valeur de l’entreprise, profit cumulé, satisfaction des
+  employés et des clients) et **glossaire** consultable avec recherche (touche `G`).
+
 ## Jouer au clavier
 
 Le jeu est entièrement jouable sans souris.
@@ -95,6 +114,7 @@ Le jeu est entièrement jouable sans souris.
 | `T` `M` `R` `O` `V` `F` `J` | Tableau de bord, Marketing, RH, Opérations, Ventes, Finance, Juridique |
 | `Espace`                    | Terminer le mois                                                       |
 | `?`                         | Aide et liste des raccourcis                                           |
+| `G`                         | Glossaire avec recherche                                               |
 | `I`                         | Définition du terme ou de l’indicateur sélectionné                     |
 | `Échap`                     | Fermer une fenêtre, revenir au tableau de bord                         |
 | `Tab` / `Maj+Tab`           | Naviguer                                                               |
@@ -132,10 +152,12 @@ src/
 ├─ engine/   moteur de simulation en TypeScript pur, sans React, déterministe (graine) et testé
 │            accounting, statements, market, marketing, etudes, produits, ai-competitors, payroll,
 │            hr, events, inventory, b2b, loans, financement, immobilisations, tax, annuel,
-│            economy, customers, previsions, analyse, rapports, creation, actions, simulation, rng
+│            economy, customers, previsions, analyse, rapports, creation, actions, simulation, rng,
+│            bilan (rapport de fin), conseiller, quiz, scenarios
 │            (le moteur est générique : les 7 secteurs ne diffèrent que par leurs données)
 ├─ data/     données réalistes sourcées (fiscalite.ts, secteurs, villes, salaires, personas, marketing,
-│            fournisseurs, rh, financement, evenements, concurrents, demarches, glossaire)
+│            fournisseurs, rh, financement, evenements, concurrents, demarches, glossaire, quiz,
+│            scenarios)
 ├─ store/    état de l’interface (Zustand) et sauvegardes (localStorage)
 ├─ ui/       composants React par écran et par département
 ├─ scene/    scène 2D du commerce (SVG en blocs; PixiJS prévu au Jalon 6)
@@ -153,7 +175,7 @@ Stack : Vite, React 18, TypeScript (strict), Zustand, Tailwind CSS, Recharts, Vi
 2. ✅ **Fiscalité et juridique** : formes juridiques, REQ, TPS/TVQ, impôts, paie complète, checklist de démarrage.
 3. ✅ **Départements complets** : marketing détaillé, RH, opérations et stocks, financement.
 4. ✅ **Monde vivant** : 7 secteurs, 8 villes, 5 concurrents, 73 événements, conjoncture économique.
-5. **Multijoueur local et pédagogie** : équipes en alternance, glossaire complet, conseiller, tutoriel, quiz.
+5. ✅ **Multijoueur local et pédagogie** : équipes en alternance, scénarios, conseiller, tutoriel, quiz, rapport de fin, classement.
 6. **Finition** : scène animée, sons, équilibrage sur 1 000 parties, accessibilité et performance.
 
 ## Avertissement

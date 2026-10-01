@@ -568,7 +568,7 @@ function VueClientele() {
 // ---------------------------------------------------------------------------
 
 function ResultatEtude({ etude }: { etude: EtudeMarche }) {
-  const { etat, secteur } = useJeuCourant();
+  const { etat, ent, secteur } = useJeuCourant();
   const type = TYPES_ETUDES.find((t) => t.id === etude.typeId);
   const lignes = [...secteur.lignes, ...secteur.nouveauxProduits];
   const nomLigne = (id: string) => lignes.find((l) => l.id === id)?.nom ?? id;
@@ -614,7 +614,7 @@ function ResultatEtude({ etude }: { etude: EtudeMarche }) {
           {Object.entries(etude.prixAcceptable).map(([k, v]) => (
             <li key={k}>
               Prix jugé acceptable pour {nomLigne(k).toLowerCase()} : {est(v, argent)} (ton prix :{' '}
-              {argent(etat.entreprises[0].decisions.prix[k] ?? 0)})
+              {argent(ent.decisions.prix[k] ?? 0)})
             </li>
           ))}
         </ul>

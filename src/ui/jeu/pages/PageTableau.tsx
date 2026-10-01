@@ -9,6 +9,7 @@ import { ListeMessages } from '../../composants/ListeMessages';
 import { Terme } from '../../composants/Terme';
 import { TitrePage } from '../../composants/TitrePage';
 import { useJeuCourant, variation } from '../contexte';
+import { CarteConseiller, CarteObjectifs, CarteQuiz } from '../Conseiller';
 import { CarteDilemmes } from '../Dilemmes';
 import { CarteNouvelles } from '../Nouvelles';
 import { posteParId } from '../../../data';
@@ -68,7 +69,10 @@ export function PageTableau() {
           : `Bienvenue! Prépare tes décisions pour ton premier mois, ${moisAnnee(date.annee, date.mois)}, puis termine le mois.`}
       </TitrePage>
 
+      <CarteObjectifs />
       <CarteDilemmes />
+      <CarteConseiller />
+      <CarteQuiz />
       {(ent.b2b.appels.some((a) => a.soumission === null) ||
         ent.rh.candidats.some((c) => c.statut === 'disponible')) && (
         <div className="flex flex-wrap gap-2 text-sm">

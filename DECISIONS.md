@@ -61,8 +61,42 @@ confirmer. Il est mis à jour à chaque jalon.
 | Paramètres des 5 personnalités de concurrents                    | `src/data/concurrents.json`  | parts de capacité et de publicité, marge visée      | Paramètres de conception                                                             |
 | Montants et probabilités des 63 nouveaux événements              | `src/data/evenements.json`   | dépenses de 200 $ à 9 000 $                         | Ordres de grandeur pédagogiques                                                      |
 | Phases du cycle économique et probabilités de transition         | `src/engine/economy.ts`      | récession : chômage 7,8 %, confiance 0,89           | Modèle simplifié; une récession dure environ 9 mois en moyenne                       |
+| Taille du marché en mode équipes                                 | `src/engine/creation.ts`     | n^0,18 (2 équipes : ×1,13; 4 équipes : ×1,28)       | Calibré par simulation (voir « Calibration (Jalon 5) »)                              |
+| Cibles des 5 scénarios                                           | `src/data/scenarios.json`    | ex. bénéfice de 70 000 $, part de marché de 18 %    | Calibrées pour exiger une meilleure gestion que le robot de calibration              |
+| Bonus des quiz                                                   | `src/engine/quiz.ts`         | 10 % par bonne réponse, maximum 50 %                | Paramètre de conception                                                              |
+| Seuils du conseiller virtuel                                     | `src/engine/conseiller.ts`   | ex. marge brute 5 points sous le secteur            | Paramètres de conception                                                             |
 
 ## Hypothèses du modèle
+
+### Multijoueur et pédagogie (Jalon 5)
+
+- **Mode équipes en alternance** : 2 à 4 entreprises partagent le même marché et les mêmes 5 concurrents. Le
+  secteur, la ville, la difficulté, la durée et la graine sont choisis par la première équipe. Les équipes jouent
+  dans l’ordre; le mois est simulé quand la dernière équipe termine son tour, donc les décisions sont simultanées.
+  L’écran « Passez le clavier » cache tout le jeu entre deux équipes. Une équipe en faillite voit son dernier
+  rapport une fois, puis ne joue plus.
+- **Taille du marché** : le modèle de marché comprend l’option « ne rien acheter » : un commerce de plus attire
+  donc déjà de nouveaux clients. Multiplier le marché par 1 + 0,6 (n − 1) faisait **monter** le profit par équipe
+  avec le nombre d’équipes; ne pas l’agrandir menait à 11 faillites sur 16 équipes à 4. Le facteur n^0,18 garde
+  une concurrence réelle entre les équipes. Les concurrents sont calibrés avec une offre de référence par équipe.
+- **Scénarios** : situation de départ (notoriété, note et avis, phase économique, notoriété d’un concurrent) et 2 à
+  4 objectifs. Note = 70 points pour les objectifs (objectif raté : la moitié de sa progression) + 30 % de la note
+  de gestion. Les cibles exigent une gestion plus fine que le robot de calibration (qualité, salaires, formation).
+- **Quiz** : 3 questions au début de chaque trimestre (mois 4, 7, 10…), tirées de façon reproductible selon la
+  graine, l’équipe et le mois, sans répéter une question déjà posée tant qu’il en reste. Facultatif : on peut le
+  remettre à plus tard dans le mois.
+- **Conseiller virtuel** : règles simples et transparentes sur les décisions du mois qui commence (prix sous le
+  coût, démarches oubliées, inscription aux taxes) et sur les résultats du mois précédent (trésorerie, marge brute
+  et main-d’œuvre par rapport aux repères du secteur, capacité, ruptures, notoriété, moral). Désactivable.
+- **Meilleures et pires décisions** : chaque mois, un résumé des décisions est archivé. Un changement marquant
+  (prix ±5 %, publicité ±30 %, heures ±10 %, qualité, embauche, programmes, investissement, emprunt, produit) est
+  évalué en comparant le bénéfice moyen des 3 mois suivants à celui des 3 mois précédents, moins l’effet attendu de
+  la saison et de la conjoncture (variation du marché potentiel × chiffre d’affaires × marge brute d’avant). C’est
+  une estimation : le rapport le dit, et les décisions du même mois partagent l’effet.
+- **Notes par département** (sur 100) : marketing (notoriété, part de marché par rapport à une part « juste »,
+  note en ligne), RH (moral moyen, roulement), opérations (clients servis, défauts), finance (marge nette,
+  encaisse finale, recours à la marge de crédit), juridique et fiscalité (démarches faites, amendes).
+- **Classement local** : enregistré dans le navigateur (100 parties au plus), une ligne par équipe.
 
 ### Monde vivant (Jalon 4)
 
@@ -398,6 +432,22 @@ excessive. La qualité, la rétention des employés, l’écoresponsabilité et 
 gagnantes; se battre contre le Géant avec des prix bas et une qualité économique mène à la faillite. Le paysagement
 et l’atelier récompensent particulièrement la gestion de la capacité (embaucher au printemps, mettre à pied à
 l’automne). Ces résultats d’un robot simple ne sont pas un plafond : un joueur attentif fait mieux.
+
+## Calibration (Jalon 5)
+
+Outil : `EQUIPES=1 PARTIES=4 npx vitest run tests/calibration.test.ts --silent=false` (et `SCENARIOS=1`). Chaque
+équipe suit le gestionnaire actif (36 mois, Montréal). Bénéfice net cumulé moyen par équipe :
+
+| Secteur   | 1 équipe | 2 équipes | 3 équipes | 4 équipes | Faillites (4 équipes) |
+| --------- | -------- | --------- | --------- | --------- | --------------------- |
+| Café      | 62 900 $ | 54 800 $  | 28 200 $  | 20 800 $  | 2 sur 16              |
+| Vêtements | 46 600 $ | 76 200 $  | 59 600 $  | 48 900 $  | 1 sur 16              |
+
+Dans les vêtements, l’arrivée des équipes pousse 1 à 2 concurrents à la faillite, ce qui libère des clients.
+
+Scénarios (5 graines, gestionnaire actif) : le robot survit dans presque tous les scénarios, mais atteint rarement
+les objectifs de qualité (note en ligne, satisfaction, moral) : ils demandent d’investir dans la qualité, les
+salaires ou la formation. « David contre Goliath » (expert) reste le plus difficile (2 survies sur 5).
 
 ## Accessibilité
 

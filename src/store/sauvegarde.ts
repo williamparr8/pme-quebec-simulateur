@@ -122,7 +122,11 @@ export function resume(emplacement: IdEmplacement): ResumeSauvegarde | null {
     const derniere = ent.archives.at(-1);
     return {
       emplacement,
-      nomEntreprise: ent.nom,
+      // Mode équipes : on affiche le nombre d'équipes plutôt qu'une seule entreprise.
+      nomEntreprise:
+        f.etat.entreprises.length > 1
+          ? `${f.etat.entreprises.length} équipes (${ent.nom}…)`
+          : ent.nom,
       moisJoues: f.etat.moisCourant,
       dureeMois: f.etat.config.dureeMois,
       encaisse: derniere ? derniere.indicateurs.encaisse : ent.livre.soldes.encaisse / 100,

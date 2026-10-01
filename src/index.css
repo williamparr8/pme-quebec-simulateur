@@ -169,6 +169,33 @@ input[type='range'] {
   .pas-imprimer {
     display: none !important;
   }
+  /* Rapport de fin : seule la fenêtre du rapport s'imprime, sur toute sa longueur. */
+  body:has(.rapport-imprimable) #contenu {
+    display: none !important;
+  }
+  div:has(> [role='dialog'] .rapport-imprimable) {
+    position: static !important;
+    overflow: visible !important;
+    background: none !important;
+    padding: 0 !important;
+  }
+  [role='dialog']:has(.rapport-imprimable) {
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    max-width: none !important;
+  }
+  [role='dialog']:has(.rapport-imprimable) > div {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  [role='dialog']:has(.rapport-imprimable) footer,
+  [role='dialog']:has(.rapport-imprimable) header button {
+    display: none !important;
+  }
+  .break-inside-avoid {
+    break-inside: avoid;
+  }
   body,
   html {
     background: #fff;

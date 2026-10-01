@@ -584,9 +584,10 @@ const NOMS_PRETS: Record<IdSourceFinancement, string> = {
 export const MAX_EQUIPES = 4;
 
 /**
- * Taille du marché selon le nombre d'équipes : chaque équipe ajoute un commerce dans la
- * ville, et le marché grandit un peu pour que chacune ait sa chance (la concurrence entre
- * les équipes reste réelle).
+ * Taille du marché selon le nombre d'équipes. Chaque commerce ajouté attire déjà ses propres
+ * clients (option « ne rien acheter » du modèle de marché) : le marché grandit donc peu
+ * (n^0,18, calibré par simulation) pour que le profit par équipe baisse quand les équipes
+ * sont plus nombreuses, sans faillites en série. Voir DECISIONS.md.
  */
 export function facteurMarcheEquipes(nombre: number): number {
   return Math.pow(Math.max(1, nombre), 0.18);

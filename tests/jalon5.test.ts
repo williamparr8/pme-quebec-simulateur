@@ -22,6 +22,7 @@ import {
   simulerMois,
 } from '../src/engine/simulation';
 import type { EtatPartie, ParametresDemarrage } from '../src/engine/types';
+import { texteMessage } from '../src/i18n/fr-CA';
 import { configTest, demarrageSecteur, jouerMois, nouvellePartie } from './helpers';
 
 function partieEquipes(n: number, graine = 7): EtatPartie {
@@ -188,6 +189,36 @@ describe('conseiller virtuel', () => {
     const codes = conseils(etat, etat.entreprises[0]).map((m) => m.code);
     expect(codes).toContain('conseilDemarche');
     expect(conseils({ ...etat, terminee: true }, etat.entreprises[0])).toEqual([]);
+  });
+
+  it('chaque conseil a un texte', () => {
+    const codes = [
+      'conseilDefaut',
+      'conseilPrixSousCout',
+      'conseilDemarche',
+      'conseilInscriptionTaxes',
+      'conseilSeuilTaxes',
+      'conseilMargeCredit',
+      'conseilTresorerie',
+      'conseilMargeBrute',
+      'conseilMainOeuvre',
+      'conseilCapacite',
+      'conseilRuptures',
+      'conseilPrixEleve',
+      'conseilPrixBas',
+      'conseilNotoriete',
+      'conseilMoral',
+      'conseilHeuresSup',
+      'conseilDilemmes',
+      'conseilQuiz',
+      'conseilBravo',
+      'conseilRien',
+    ];
+    for (const code of codes) {
+      const t = texteMessage({ code, niveau: 'info', params: { demarche: 'req', ligne: 'Café' } });
+      expect(t.titre).not.toBe(code);
+      expect(t.texte.length).toBeGreaterThan(20);
+    }
   });
 
   it('commente les résultats du mois précédent', () => {

@@ -19,8 +19,9 @@ export interface JeuCourant {
 
 export function useJeuCourant(): JeuCourant {
   const etat = useJeu((s) => s.etat);
+  const equipe = useJeu((s) => s.equipeCourante);
   if (!etat) throw new Error('Aucune partie en cours');
-  const ent = etat.entreprises[0];
+  const ent = etat.entreprises[equipe] ?? etat.entreprises[0];
   return {
     etat,
     ent,
