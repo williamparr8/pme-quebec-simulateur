@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "description": "Salaires horaires de référence au Québec (médiane du marché). Le salaire minimum est dans fiscalite.ts.",
+    "sources": [
+      {
+        "url": "https://www.guichetemplois.gc.ca/salaire-heure",
+        "verifie": "2026-09-30",
+        "note": "Guichet-Emplois (gouvernement du Canada). Les médianes ci-dessous sont des estimations pour la région de Montréal, à confirmer."
+      }
+    ]
+  },
+  "postes": [
+    {
+      "id": "barista",
+      "nom": "Barista",
+      "cnp": "65201",
+      "salaireMedian": 17.25,
+      "salaireMin": 16.6,
+      "salaireMax": 21.0,
+      "heuresSemaineDefaut": 28,
+      "note": "À VÉRIFIER : médiane estimée (Toronto 17,60 $, Halifax 16,75 $ selon Guichet-Emplois 2026)."
+    }
+  ]
+}

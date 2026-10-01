@@ -1,0 +1,177 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Couleurs de l'interface (contrastes vérifiés pour WCAG AA) */
+:root {
+  --fond: #eef2f7;
+  --surface: #ffffff;
+  --surface-2: #f5f7fb;
+  --texte: #0f172a;
+  --texte-doux: #475569;
+  --bordure: #c5cfdc;
+  --accent: #0b5cd5;
+  --accent-fort: #0947a8;
+  --accent-texte: #ffffff;
+  --accent-doux: #dbe8fd;
+  --succes: #15803d;
+  --succes-doux: #dcfce7;
+  --alerte: #a14a06;
+  --alerte-doux: #fef3c7;
+  --danger: #b91c1c;
+  --danger-doux: #fee2e2;
+  --info: #0369a1;
+  --info-doux: #e0f2fe;
+  --focus: #c2410c;
+  --ombre: 0 1px 2px rgb(15 23 42 / 0.06), 0 4px 12px rgb(15 23 42 / 0.06);
+  /* Graphiques : palette catégorielle validée (daltonisme) + encre recessive */
+  --serie-1: #2a78d6;
+  --serie-2: #eb6834;
+  --serie-3: #1baf7a;
+  --grille: #e1e0d9;
+  --axe: #898781;
+}
+
+.dark {
+  --fond: #0a101c;
+  --surface: #121b2c;
+  --surface-2: #192436;
+  --texte: #e5ebf3;
+  --texte-doux: #a7b4c7;
+  --bordure: #2e3d55;
+  --accent: #6aa8ff;
+  --accent-fort: #9cc4ff;
+  --accent-texte: #0a101c;
+  --accent-doux: #1b3456;
+  --succes: #4ade80;
+  --succes-doux: #12301e;
+  --alerte: #fbbf24;
+  --alerte-doux: #3a2d0c;
+  --danger: #fb7d7d;
+  --danger-doux: #3d1616;
+  --info: #4cc3f7;
+  --info-doux: #0c2b3e;
+  --focus: #fbbf24;
+  --ombre: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 14px rgb(0 0 0 / 0.35);
+  --serie-1: #3987e5;
+  --serie-2: #d95926;
+  --serie-3: #199e70;
+  --grille: #2c3a52;
+  --axe: #8b97aa;
+}
+
+@theme inline {
+  --color-fond: var(--fond);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-texte: var(--texte);
+  --color-doux: var(--texte-doux);
+  --color-bordure: var(--bordure);
+  --color-accent: var(--accent);
+  --color-accent-fort: var(--accent-fort);
+  --color-accent-texte: var(--accent-texte);
+  --color-accent-doux: var(--accent-doux);
+  --color-succes: var(--succes);
+  --color-succes-doux: var(--succes-doux);
+  --color-alerte: var(--alerte);
+  --color-alerte-doux: var(--alerte-doux);
+  --color-danger: var(--danger);
+  --color-danger-doux: var(--danger-doux);
+  --color-info: var(--info);
+  --color-info-doux: var(--info-doux);
+  --shadow-carte: var(--ombre);
+  --font-sans:
+    'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+}
+
+html,
+body {
+  background: var(--fond);
+  color: var(--texte);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Focus toujours visible, contrasté et distinct de la couleur d'accent */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Les titres de page reçoivent le focus après un raccourci : pas d'anneau inutile */
+[data-titre-page]:focus {
+  outline: none;
+}
+
+.chiffres {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Curseurs (prix, budgets) */
+input[type='range'] {
+  accent-color: var(--accent);
+  height: 1.75rem;
+}
+
+/* Animations sobres de la scène */
+@keyframes marcher {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(var(--distance, 120px));
+  }
+}
+@keyframes sautiller {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+@keyframes tomber {
+  from {
+    transform: translateY(-20px);
+  }
+  to {
+    transform: translateY(280px);
+  }
+}
+.anim-marcher {
+  animation: marcher var(--duree, 9s) linear infinite alternate;
+}
+.anim-sautiller {
+  animation: sautiller 0.6s ease-in-out infinite;
+}
+.anim-tomber {
+  animation: tomber var(--duree, 6s) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Impression (rapport de fin de partie) */
+@media print {
+  .pas-imprimer {
+    display: none !important;
+  }
+  body,
+  html {
+    background: #fff;
+    color: #000;
+  }
+}

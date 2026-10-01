@@ -1,0 +1,58 @@
+# Publie le jeu sur GitHub Pages à chaque push sur main.
+# Le déploiement échoue si le lint, le typage ou les tests échouent.
+name: Tests et déploiement
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construire:
+    name: Lint, tests et construction
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Tests et couverture du moteur (Vitest, minimum 80 %)
+        run: npm run coverage
+
+      - name: Construire le jeu (typage + Vite)
+        run: npm run build
+
+      - name: Préparer l'artefact GitHub Pages
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deployer:
+    name: Déployer sur GitHub Pages
+    needs: construire
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - name: Déployer
+        id: deploiement
+        uses: actions/deploy-pages@v5

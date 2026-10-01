@@ -1,0 +1,380 @@
+/**
+ * Comptabilité en partie double.
+ *
+ * Convention : chaque solde est conservé en cents, « débit positif ».
+ * Un actif ou une charge a donc un solde positif; un passif, un compte de
+ * capitaux propres ou un produit a un solde négatif. La somme de tous les
+ * soldes vaut toujours 0 : c'est ce qui garantit un bilan équilibré.
+ */
+import type { Cents } from './util';
+
+export type ClasseCompte = 'actif' | 'passif' | 'capitaux' | 'produit' | 'charge';
+
+export type GroupeCompte =
+  | 'actifCourt'
+  | 'actifLong'
+  | 'immobilisations'
+  | 'passifCourt'
+  | 'passifLong'
+  | 'capitaux'
+  | 'produits'
+  | 'cmv'
+  | 'exploitation'
+  | 'financieres'
+  | 'amortissement';
+
+interface DefinitionCompte {
+  numero: string;
+  nom: string;
+  classe: ClasseCompte;
+  groupe: GroupeCompte;
+  /** Compte de contrepartie (ex. amortissement cumulé, qui réduit un actif). */
+  contrepartie?: boolean;
+}
+
+export const PLAN_COMPTABLE = {
+  encaisse: { numero: '1000', nom: 'Encaisse', classe: 'actif', groupe: 'actifCourt' },
+  comptesClients: { numero: '1100', nom: 'Comptes clients', classe: 'actif', groupe: 'actifCourt' },
+  stocks: { numero: '1200', nom: 'Stocks de marchandises', classe: 'actif', groupe: 'actifCourt' },
+  depotGarantie: {
+    numero: '1400',
+    nom: 'Dépôt de garantie (bail)',
+    classe: 'actif',
+    groupe: 'actifLong',
+  },
+  equipement: { numero: '1500', nom: 'Équipement', classe: 'actif', groupe: 'immobilisations' },
+  amortCumEquipement: {
+    numero: '1510',
+    nom: 'Amortissement cumulé – équipement',
+    classe: 'actif',
+    groupe: 'immobilisations',
+    contrepartie: true,
+  },
+  ameliorationsLocatives: {
+    numero: '1520',
+    nom: 'Améliorations locatives',
+    classe: 'actif',
+    groupe: 'immobilisations',
+  },
+  amortCumAmeliorations: {
+    numero: '1530',
+    nom: 'Amortissement cumulé – améliorations locatives',
+    classe: 'actif',
+    groupe: 'immobilisations',
+    contrepartie: true,
+  },
+  margeCredit: { numero: '2050', nom: 'Marge de crédit', classe: 'passif', groupe: 'passifCourt' },
+  comptesFournisseurs: {
+    numero: '2100',
+    nom: 'Comptes fournisseurs',
+    classe: 'passif',
+    groupe: 'passifCourt',
+  },
+  cotisationsAPayer: {
+    numero: '2200',
+    nom: 'Cotisations de l’employeur à payer',
+    classe: 'passif',
+    groupe: 'passifCourt',
+  },
+  empruntBancaire: {
+    numero: '2500',
+    nom: 'Emprunt bancaire',
+    classe: 'passif',
+    groupe: 'passifLong',
+  },
+  capital: {
+    numero: '3000',
+    nom: 'Capital – propriétaire',
+    classe: 'capitaux',
+    groupe: 'capitaux',
+  },
+  prelevements: {
+    numero: '3100',
+    nom: 'Prélèvements du propriétaire',
+    classe: 'capitaux',
+    groupe: 'capitaux',
+  },
+  ventes: { numero: '4000', nom: 'Ventes', classe: 'produit', groupe: 'produits' },
+  coutMarchandises: {
+    numero: '5000',
+    nom: 'Coût des marchandises vendues',
+    classe: 'charge',
+    groupe: 'cmv',
+  },
+  pertesStocks: {
+    numero: '5050',
+    nom: 'Pertes sur stocks (péremption)',
+    classe: 'charge',
+    groupe: 'cmv',
+  },
+  salaires: { numero: '5100', nom: 'Salaires', classe: 'charge', groupe: 'exploitation' },
+  vacances: {
+    numero: '5105',
+    nom: 'Indemnités de vacances',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  chargesSociales: {
+    numero: '5110',
+    nom: 'Charges sociales de l’employeur',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  recrutement: {
+    numero: '5120',
+    nom: 'Frais de recrutement',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  loyer: {
+    numero: '5200',
+    nom: 'Loyer et frais communs',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  electricite: {
+    numero: '5210',
+    nom: 'Électricité et chauffage',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  assurances: { numero: '5220', nom: 'Assurances', classe: 'charge', groupe: 'exploitation' },
+  honoraires: {
+    numero: '5230',
+    nom: 'Honoraires professionnels',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  entretien: {
+    numero: '5240',
+    nom: 'Entretien et réparations',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  logiciels: {
+    numero: '5250',
+    nom: 'Logiciels et abonnements',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  telecom: {
+    numero: '5260',
+    nom: 'Téléphone et Internet',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  publicite: { numero: '5300', nom: 'Publicité', classe: 'charge', groupe: 'exploitation' },
+  fraisCartes: {
+    numero: '5400',
+    nom: 'Frais bancaires et de cartes',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  fraisDemarrage: {
+    numero: '5450',
+    nom: 'Frais de démarrage',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  interets: {
+    numero: '5500',
+    nom: 'Intérêts et frais financiers',
+    classe: 'charge',
+    groupe: 'financieres',
+  },
+  amortissement: {
+    numero: '5600',
+    nom: 'Amortissement des immobilisations',
+    classe: 'charge',
+    groupe: 'amortissement',
+  },
+} as const satisfies Record<string, DefinitionCompte>;
+
+export type CompteId = keyof typeof PLAN_COMPTABLE;
+
+export const COMPTES: readonly CompteId[] = Object.keys(PLAN_COMPTABLE) as CompteId[];
+
+export function definitionCompte(id: CompteId): DefinitionCompte {
+  return PLAN_COMPTABLE[id];
+}
+
+/** Catégories de l'état des flux de trésorerie (méthode directe). */
+export type Activite = 'exploitation' | 'investissement' | 'financement';
+
+export const FLUX = {
+  encaissementsClients: { nom: 'Encaissements des clients', activite: 'exploitation' },
+  paiementsFournisseurs: { nom: 'Paiements aux fournisseurs', activite: 'exploitation' },
+  salairesVerses: { nom: 'Salaires versés', activite: 'exploitation' },
+  remisesGouvernementales: {
+    nom: 'Remises aux gouvernements (cotisations)',
+    activite: 'exploitation',
+  },
+  loyerEtFrais: { nom: 'Loyer et frais d’exploitation', activite: 'exploitation' },
+  publicite: { nom: 'Publicité et recrutement', activite: 'exploitation' },
+  fraisBancaires: { nom: 'Frais bancaires et de cartes', activite: 'exploitation' },
+  interetsPayes: { nom: 'Intérêts payés', activite: 'exploitation' },
+  achatStockInitial: { nom: 'Achat du stock initial', activite: 'exploitation' },
+  fraisDemarrage: { nom: 'Frais de démarrage', activite: 'exploitation' },
+  acquisitionImmobilisations: {
+    nom: 'Acquisition d’immobilisations',
+    activite: 'investissement',
+  },
+  depotGarantie: { nom: 'Dépôt de garantie versé', activite: 'investissement' },
+  apportsProprietaire: { nom: 'Apports du propriétaire', activite: 'financement' },
+  prelevementsProprietaire: { nom: 'Prélèvements du propriétaire', activite: 'financement' },
+  empruntsRecus: { nom: 'Emprunts obtenus', activite: 'financement' },
+  remboursementsEmprunts: { nom: 'Remboursement du capital des emprunts', activite: 'financement' },
+  margeCredit: { nom: 'Variation de la marge de crédit', activite: 'financement' },
+} as const satisfies Record<string, { nom: string; activite: Activite }>;
+
+export type FluxId = keyof typeof FLUX;
+
+export interface LigneEcriture {
+  compte: CompteId;
+  /** Montant au débit, en cents (entier positif). */
+  debit?: Cents;
+  /** Montant au crédit, en cents (entier positif). */
+  credit?: Cents;
+}
+
+export interface Ecriture {
+  libelle: string;
+  lignes: LigneEcriture[];
+  /** Obligatoire si l'écriture touche l'encaisse : classe le mouvement dans l'état des flux. */
+  flux?: FluxId;
+}
+
+export type Soldes = Record<CompteId, Cents>;
+export type Mouvements = Partial<Record<CompteId, Cents>>;
+export type MouvementsFlux = Partial<Record<FluxId, Cents>>;
+
+export interface GrandLivre {
+  soldes: Soldes;
+  /** Mouvements nets du mois en cours (débit positif). */
+  mouvementsMois: Mouvements;
+  /** Variation de l'encaisse du mois en cours, par catégorie de flux. */
+  fluxMois: MouvementsFlux;
+  /** Écritures du mois en cours (journal général). */
+  ecrituresMois: Ecriture[];
+}
+
+export function soldesVides(): Soldes {
+  const soldes = {} as Soldes;
+  for (const id of COMPTES) soldes[id] = 0;
+  return soldes;
+}
+
+export function creerGrandLivre(): GrandLivre {
+  return { soldes: soldesVides(), mouvementsMois: {}, fluxMois: {}, ecrituresMois: [] };
+}
+
+export class ErreurComptable extends Error {}
+
+function validerMontant(montant: number | undefined, libelle: string): Cents {
+  const m = montant ?? 0;
+  if (!Number.isInteger(m) || m < 0) {
+    throw new ErreurComptable(`Montant invalide (${m}) dans l'écriture « ${libelle} »`);
+  }
+  return m;
+}
+
+/**
+ * Passe une écriture au grand livre. Lance une erreur si l'écriture n'est pas
+ * équilibrée (débits ≠ crédits) ou si un mouvement d'encaisse n'est pas classé.
+ * Les lignes à zéro sont ignorées; une écriture entièrement nulle n'est pas conservée.
+ */
+export function passerEcriture(livre: GrandLivre, ecriture: Ecriture): void {
+  let debits = 0;
+  let credits = 0;
+  const lignes = ecriture.lignes.filter((l) => (l.debit ?? 0) !== 0 || (l.credit ?? 0) !== 0);
+  for (const ligne of lignes) {
+    const d = validerMontant(ligne.debit, ecriture.libelle);
+    const c = validerMontant(ligne.credit, ecriture.libelle);
+    if (d > 0 && c > 0) {
+      throw new ErreurComptable(
+        `Une ligne ne peut être au débit et au crédit (« ${ecriture.libelle} »)`,
+      );
+    }
+    debits += d;
+    credits += c;
+  }
+  if (debits !== credits) {
+    throw new ErreurComptable(
+      `Écriture déséquilibrée « ${ecriture.libelle} » : débits ${debits} ≠ crédits ${credits}`,
+    );
+  }
+  if (debits === 0) return;
+
+  for (const ligne of lignes) {
+    const net = (ligne.debit ?? 0) - (ligne.credit ?? 0);
+    livre.soldes[ligne.compte] += net;
+    livre.mouvementsMois[ligne.compte] = (livre.mouvementsMois[ligne.compte] ?? 0) + net;
+    if (ligne.compte === 'encaisse') {
+      if (!ecriture.flux) {
+        throw new ErreurComptable(
+          `Mouvement d'encaisse sans catégorie de flux (« ${ecriture.libelle} »)`,
+        );
+      }
+      livre.fluxMois[ecriture.flux] = (livre.fluxMois[ecriture.flux] ?? 0) + net;
+    }
+  }
+  livre.ecrituresMois.push({ ...ecriture, lignes });
+}
+
+/** Raccourci : débite un compte et crédite un autre du même montant. */
+export function ecritureSimple(
+  livre: GrandLivre,
+  libelle: string,
+  debit: CompteId,
+  credit: CompteId,
+  montant: Cents,
+  flux?: FluxId,
+): void {
+  if (montant === 0) return;
+  if (montant < 0) {
+    ecritureSimple(livre, libelle, credit, debit, -montant, flux);
+    return;
+  }
+  passerEcriture(livre, {
+    libelle,
+    flux,
+    lignes: [
+      { compte: debit, debit: montant },
+      { compte: credit, credit: montant },
+    ],
+  });
+}
+
+/** Balance de vérification : la somme des soldes doit être nulle. */
+export function totalBalance(soldes: Soldes): Cents {
+  let total = 0;
+  for (const id of COMPTES) total += soldes[id];
+  return total;
+}
+
+/** Réinitialise les cumuls du mois (après l'archivage). */
+export function ouvrirNouveauMois(livre: GrandLivre): void {
+  livre.mouvementsMois = {};
+  livre.fluxMois = {};
+  livre.ecrituresMois = [];
+}
+
+/**
+ * Clôture de l'exercice d'une entreprise individuelle : les produits, les charges
+ * et les prélèvements sont virés au compte Capital. La somme des soldes reste nulle.
+ */
+export function cloturerExercice(livre: GrandLivre): Cents {
+  let resultat = 0;
+  for (const id of COMPTES) {
+    const def = PLAN_COMPTABLE[id];
+    if (def.classe === 'produit' || def.classe === 'charge') {
+      resultat -= livre.soldes[id];
+      livre.soldes[id] = 0;
+    }
+  }
+  // Bénéfice (résultat > 0) : il augmente le capital, qui a un solde créditeur (négatif).
+  livre.soldes.capital -= resultat;
+  livre.soldes.capital += livre.soldes.prelevements;
+  livre.soldes.prelevements = 0;
+  return resultat;
+}

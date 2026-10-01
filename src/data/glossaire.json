@@ -1,0 +1,373 @@
+{
+  "_meta": {
+    "description": "Glossaire de gestion, de comptabilité, de fiscalité et de marketing. Il sera enrichi jusqu'à 150 termes au Jalon 5."
+  },
+  "termes": [
+    {
+      "id": "actif",
+      "terme": "Actif",
+      "categorie": "Comptabilité",
+      "definition": "Ce que l'entreprise possède et qui lui rapportera un avantage futur : encaisse, stocks, équipement.",
+      "exemple": "La machine espresso de 45 000 $ est un actif."
+    },
+    {
+      "id": "passif",
+      "terme": "Passif",
+      "categorie": "Comptabilité",
+      "definition": "Ce que l'entreprise doit à des tiers : fournisseurs, banque, gouvernements.",
+      "exemple": "Le solde du prêt bancaire est un passif."
+    },
+    {
+      "id": "capitauxPropres",
+      "terme": "Capitaux propres",
+      "categorie": "Comptabilité",
+      "definition": "La part de l'entreprise qui appartient au propriétaire : ses apports plus les bénéfices accumulés, moins ses prélèvements.",
+      "formule": "Capitaux propres = Actif − Passif"
+    },
+    {
+      "id": "bilan",
+      "terme": "Bilan",
+      "categorie": "Comptabilité",
+      "definition": "Photo de la situation financière à une date précise. Il est toujours équilibré.",
+      "formule": "Actif = Passif + Capitaux propres"
+    },
+    {
+      "id": "etatResultats",
+      "terme": "État des résultats",
+      "categorie": "Comptabilité",
+      "definition": "Film de la rentabilité sur une période : les produits moins les charges donnent le bénéfice (ou la perte).",
+      "formule": "Bénéfice net = Produits − Charges"
+    },
+    {
+      "id": "fluxTresorerie",
+      "terme": "État des flux de trésorerie",
+      "categorie": "Comptabilité",
+      "definition": "Explique d'où vient l'argent et où il est allé, selon trois activités : exploitation, investissement et financement.",
+      "exemple": "Un emprunt augmente l'encaisse (financement) sans être un revenu."
+    },
+    {
+      "id": "partieDouble",
+      "terme": "Comptabilité en partie double",
+      "categorie": "Comptabilité",
+      "definition": "Chaque opération touche au moins deux comptes : le total des débits égale toujours le total des crédits.",
+      "exemple": "Vente de 10 $ : débit Encaisse 10 $, crédit Ventes 10 $."
+    },
+    {
+      "id": "debitCredit",
+      "terme": "Débit et crédit",
+      "categorie": "Comptabilité",
+      "definition": "Les deux colonnes d'un compte. Un débit augmente un actif ou une charge; un crédit augmente un passif, le capital ou un produit."
+    },
+    {
+      "id": "encaisse",
+      "terme": "Encaisse",
+      "categorie": "Finance",
+      "definition": "L'argent disponible dans le compte bancaire de l'entreprise."
+    },
+    {
+      "id": "cmv",
+      "terme": "Coût des marchandises vendues (CMV)",
+      "categorie": "Comptabilité",
+      "definition": "Ce qu'ont coûté les produits effectivement vendus pendant la période.",
+      "formule": "CMV = Stock de début + Achats − Stock de fin"
+    },
+    {
+      "id": "margeBrute",
+      "terme": "Marge brute",
+      "categorie": "Finance",
+      "definition": "Ce qui reste des ventes après avoir payé les marchandises vendues. Elle doit couvrir toutes les autres charges.",
+      "formule": "Marge brute = Ventes − CMV; Taux de marge brute = Marge brute ÷ Ventes",
+      "exemple": "Un café vendu 5 $ qui coûte 1,30 $ : marge brute de 3,70 $ (74 %)."
+    },
+    {
+      "id": "margeNette",
+      "terme": "Marge nette",
+      "categorie": "Finance",
+      "definition": "Proportion de chaque dollar de vente qui devient du bénéfice.",
+      "formule": "Marge nette = Bénéfice net ÷ Ventes"
+    },
+    {
+      "id": "baiia",
+      "terme": "BAIIA",
+      "categorie": "Finance",
+      "definition": "Bénéfice avant intérêts, impôts et amortissement. Il mesure la rentabilité des opérations, peu importe le financement. Sert souvent à évaluer une entreprise.",
+      "formule": "BAIIA = Marge brute − Charges d'exploitation"
+    },
+    {
+      "id": "amortissement",
+      "terme": "Amortissement",
+      "categorie": "Comptabilité",
+      "definition": "Répartition du coût d'une immobilisation sur sa durée de vie. C'est une charge qui ne sort pas d'argent.",
+      "exemple": "Équipement de 45 000 $ sur 5 ans : 750 $ d'amortissement par mois.",
+      "formule": "Amortissement linéaire = Coût ÷ Durée de vie"
+    },
+    {
+      "id": "immobilisations",
+      "terme": "Immobilisations",
+      "categorie": "Comptabilité",
+      "definition": "Biens durables utilisés pour exploiter l'entreprise : équipement, améliorations locatives, véhicules."
+    },
+    {
+      "id": "ameliorationsLocatives",
+      "terme": "Améliorations locatives",
+      "categorie": "Comptabilité",
+      "definition": "Travaux faits dans un local loué (comptoir, éclairage, décor). Ils sont amortis sur la durée du bail."
+    },
+    {
+      "id": "fondsRoulement",
+      "terme": "Fonds de roulement",
+      "categorie": "Finance",
+      "definition": "Argent disponible pour les opérations courantes.",
+      "formule": "Fonds de roulement = Actif à court terme − Passif à court terme"
+    },
+    {
+      "id": "liquidite",
+      "terme": "Ratio de liquidité générale",
+      "categorie": "Finance",
+      "definition": "Capacité de payer les dettes à court terme avec les actifs à court terme. Une PME vise entre 1,2 et 2.",
+      "formule": "Actif à court terme ÷ Passif à court terme"
+    },
+    {
+      "id": "endettement",
+      "terme": "Ratio d'endettement",
+      "categorie": "Finance",
+      "definition": "Proportion de l'actif financée par des dettes. Plus il est élevé, plus l'entreprise est risquée pour un prêteur.",
+      "formule": "Passif total ÷ Actif total"
+    },
+    {
+      "id": "couvertureInterets",
+      "terme": "Couverture des intérêts",
+      "categorie": "Finance",
+      "definition": "Nombre de fois que le bénéfice d'exploitation couvre les intérêts. Les banques veulent au moins 2 à 3 fois.",
+      "formule": "BAII ÷ Intérêts"
+    },
+    {
+      "id": "rendementActif",
+      "terme": "Rendement de l'actif (ROA)",
+      "categorie": "Finance",
+      "definition": "Bénéfice généré par chaque dollar d'actif, sur une base annuelle.",
+      "formule": "Bénéfice net annualisé ÷ Actif total"
+    },
+    {
+      "id": "seuilRentabilite",
+      "terme": "Seuil de rentabilité",
+      "categorie": "Finance",
+      "definition": "Niveau de ventes où l'entreprise ne fait ni profit ni perte.",
+      "formule": "Seuil = Charges fixes ÷ Taux de marge sur coûts variables",
+      "exemple": "Charges fixes de 20 000 $ et marge de 65 % : seuil de 30 769 $ de ventes par mois."
+    },
+    {
+      "id": "chargesFixes",
+      "terme": "Charges fixes et variables",
+      "categorie": "Finance",
+      "definition": "Les charges fixes (loyer, assurances) ne changent pas avec les ventes; les charges variables (marchandises, frais de cartes) augmentent avec les ventes."
+    },
+    {
+      "id": "pretTerme",
+      "terme": "Prêt à terme",
+      "categorie": "Finance",
+      "definition": "Emprunt remboursé par versements réguliers qui comprennent des intérêts et du capital."
+    },
+    {
+      "id": "tableauAmortissement",
+      "terme": "Tableau d'amortissement d'un prêt",
+      "categorie": "Finance",
+      "definition": "Liste de chaque versement d'un prêt avec la part d'intérêts, la part de capital et le solde restant. Au début, les intérêts occupent une plus grande part du versement."
+    },
+    {
+      "id": "margeCredit",
+      "terme": "Marge de crédit",
+      "categorie": "Finance",
+      "definition": "Montant que la banque permet d'emprunter au besoin, jusqu'à une limite. On paie des intérêts seulement sur la partie utilisée. Elle sert aux besoins temporaires de trésorerie."
+    },
+    {
+      "id": "tauxDirecteur",
+      "terme": "Taux directeur",
+      "categorie": "Économie",
+      "definition": "Taux fixé par la Banque du Canada 8 fois par année pour contrôler l'inflation. Les banques s'en servent pour fixer leur taux préférentiel."
+    },
+    {
+      "id": "tauxPreferentiel",
+      "terme": "Taux préférentiel",
+      "categorie": "Économie",
+      "definition": "Taux de base des banques pour leurs prêts, généralement le taux directeur plus 2,20 points. Les marges de crédit sont souvent « préférentiel + x % »."
+    },
+    {
+      "id": "inflation",
+      "terme": "Inflation",
+      "categorie": "Économie",
+      "definition": "Hausse générale des prix. La Banque du Canada vise 2 % par année. Elle augmente les coûts des fournisseurs et les prix du marché."
+    },
+    {
+      "id": "prelevements",
+      "terme": "Prélèvements",
+      "categorie": "Comptabilité",
+      "definition": "Argent retiré de l'entreprise par le propriétaire d'une entreprise individuelle pour ses besoins personnels. Ce n'est pas une charge : cela réduit le capital."
+    },
+    {
+      "id": "entrepriseIndividuelle",
+      "terme": "Entreprise individuelle",
+      "categorie": "Juridique",
+      "definition": "Entreprise exploitée par une seule personne, sans société distincte. Le propriétaire est responsable des dettes sur tous ses biens personnels, et le bénéfice est imposé dans sa déclaration de revenus personnelle."
+    },
+    {
+      "id": "comptesFournisseurs",
+      "terme": "Comptes fournisseurs",
+      "categorie": "Comptabilité",
+      "definition": "Sommes dues aux fournisseurs pour des achats faits à crédit (ex. payables en 30 jours, « net 30 »)."
+    },
+    {
+      "id": "stocks",
+      "terme": "Stocks",
+      "categorie": "Opérations",
+      "definition": "Marchandises achetées et pas encore vendues. Un stock coûte de l'argent : il immobilise de l'encaisse et peut se périmer."
+    },
+    {
+      "id": "rupture",
+      "terme": "Rupture de stock",
+      "categorie": "Opérations",
+      "definition": "Situation où un produit manque. Les clients repartent sans acheter et sont déçus."
+    },
+    {
+      "id": "capacite",
+      "terme": "Capacité",
+      "categorie": "Opérations",
+      "definition": "Nombre maximal de clients que l'entreprise peut servir.",
+      "formule": "Capacité = Heures travaillées × Productivité × Transactions par heure"
+    },
+    {
+      "id": "utilisation",
+      "terme": "Taux d'utilisation",
+      "categorie": "Opérations",
+      "definition": "Demande divisée par la capacité. Au-dessus de 85 %, l'attente s'allonge et le personnel s'épuise; au-dessous de 50 %, on paie des heures inutiles."
+    },
+    {
+      "id": "notoriete",
+      "terme": "Notoriété",
+      "categorie": "Marketing",
+      "definition": "Proportion des clients potentiels qui connaissent le commerce. Un client ne peut pas choisir un commerce qu'il ne connaît pas."
+    },
+    {
+      "id": "partMarche",
+      "terme": "Part de marché",
+      "categorie": "Marketing",
+      "definition": "Proportion des ventes (ou des visites) du marché qui va à une entreprise.",
+      "formule": "Part de marché = Ventes de l'entreprise ÷ Ventes totales du marché"
+    },
+    {
+      "id": "elasticitePrix",
+      "terme": "Élasticité-prix",
+      "categorie": "Marketing",
+      "definition": "Sensibilité de la demande au prix. Si une hausse de prix de 10 % fait baisser la demande de 25 %, l'élasticité est de −2,5."
+    },
+    {
+      "id": "indicePrix",
+      "terme": "Indice de prix",
+      "categorie": "Marketing",
+      "definition": "Prix moyen de l'entreprise comparé au prix du marché. 1,00 = prix du marché; 1,10 = 10 % plus cher."
+    },
+    {
+      "id": "ticketMoyen",
+      "terme": "Panier moyen (ticket moyen)",
+      "categorie": "Ventes",
+      "definition": "Montant moyen dépensé par client à chaque visite.",
+      "formule": "Ventes ÷ Nombre de transactions"
+    },
+    {
+      "id": "satisfaction",
+      "terme": "Satisfaction de la clientèle",
+      "categorie": "Marketing",
+      "definition": "Écart entre ce que le client attendait et ce qu'il a reçu : qualité, prix, service, attente. Elle influence les avis et le bouche-à-oreille."
+    },
+    {
+      "id": "avisEnLigne",
+      "terme": "Avis en ligne",
+      "categorie": "Marketing",
+      "definition": "Note moyenne laissée par les clients sur le Web. Les premiers avis font beaucoup bouger la note; avec le temps, elle se stabilise."
+    },
+    {
+      "id": "saisonnalite",
+      "terme": "Saisonnalité",
+      "categorie": "Marketing",
+      "definition": "Variation prévisible des ventes selon les mois de l'année (ex. creux de juillet dans un café de quartier, pointe de décembre)."
+    },
+    {
+      "id": "rendementsDecroissants",
+      "terme": "Rendements décroissants",
+      "categorie": "Marketing",
+      "definition": "Chaque dollar additionnel de publicité rapporte moins que le précédent."
+    },
+    {
+      "id": "salaireMinimum",
+      "terme": "Salaire minimum",
+      "categorie": "Ressources humaines",
+      "definition": "Taux horaire minimal fixé par le gouvernement du Québec, révisé chaque 1er mai. 16,60 $ l'heure depuis le 1er mai 2026 (13,30 $ pour les salariés au pourboire)."
+    },
+    {
+      "id": "chargesSociales",
+      "terme": "Charges sociales de l'employeur",
+      "categorie": "Ressources humaines",
+      "definition": "Cotisations payées par l'employeur en plus du salaire : RRQ, RQAP, assurance-emploi, FSS, CNT et CNESST. Elles ajoutent environ 11 à 13 % au salaire."
+    },
+    {
+      "id": "rrq",
+      "terme": "RRQ",
+      "categorie": "Fiscalité",
+      "definition": "Régime de rentes du Québec. L'employeur et l'employé versent chacun 6,30 % du salaire (après une exemption de 3 500 $ par année), jusqu'au maximum des gains admissibles (74 600 $ en 2026)."
+    },
+    {
+      "id": "rqap",
+      "terme": "RQAP",
+      "categorie": "Fiscalité",
+      "definition": "Régime québécois d'assurance parentale. En 2026 : 0,602 % pour l'employeur et 0,430 % pour l'employé."
+    },
+    {
+      "id": "assuranceEmploi",
+      "terme": "Assurance-emploi (AE)",
+      "categorie": "Fiscalité",
+      "definition": "Régime fédéral. Au Québec en 2026 : 1,30 % pour l'employé et 1,82 % (1,4 fois plus) pour l'employeur."
+    },
+    {
+      "id": "fss",
+      "terme": "FSS",
+      "categorie": "Fiscalité",
+      "definition": "Fonds des services de santé : cotisation de l'employeur seulement, 1,65 % de la masse salariale pour une petite entreprise de services."
+    },
+    {
+      "id": "cnesst",
+      "terme": "CNESST",
+      "categorie": "Fiscalité",
+      "definition": "Commission des normes, de l'équité, de la santé et de la sécurité du travail. L'employeur paie une prime d'assurance contre les accidents du travail selon son secteur."
+    },
+    {
+      "id": "vacances",
+      "terme": "Indemnité de vacances",
+      "categorie": "Ressources humaines",
+      "definition": "Selon la Loi sur les normes du travail, l'employé reçoit 4 % de son salaire brut en indemnité de vacances (6 % après 3 ans de service continu)."
+    },
+    {
+      "id": "preavis",
+      "terme": "Préavis de fin d'emploi",
+      "categorie": "Ressources humaines",
+      "definition": "Avis écrit obligatoire avant de mettre fin à l'emploi d'un salarié qui a 3 mois de service ou plus. Sinon, l'employeur verse une indemnité équivalente."
+    },
+    {
+      "id": "moral",
+      "terme": "Moral des employés",
+      "categorie": "Ressources humaines",
+      "definition": "Motivation et engagement de l'équipe. Il dépend du salaire, de la charge de travail et des conditions. Un moral bas fait baisser la productivité et augmente les démissions."
+    },
+    {
+      "id": "roulement",
+      "terme": "Roulement de personnel",
+      "categorie": "Ressources humaines",
+      "definition": "Départs et remplacements d'employés. Chaque départ coûte du recrutement, de la formation et de la productivité."
+    },
+    {
+      "id": "vraiCoutEmploye",
+      "terme": "Vrai coût d'un employé",
+      "categorie": "Ressources humaines",
+      "definition": "Salaire brut + indemnité de vacances + charges sociales de l'employeur. Un employé payé 17,25 $ l'heure coûte environ 20 $ l'heure à l'employeur."
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "_meta": {
+    "description": "Paramètres des villes et des emplacements. Loyers en $/pi²/an.",
+    "sources": [
+      {
+        "url": "https://2727coworking.com/articles/fr/hausse-loyer-commercial-quebec-2026",
+        "verifie": "2026-09-30",
+        "note": "Loyers bruts de détail de 40 à 60 $/pi² dans les rues prisées de Montréal en 2026."
+      },
+      {
+        "url": "https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/prof/index.cfm?Lang=F",
+        "verifie": "2026-09-30",
+        "note": "Population du Recensement 2021 (Statistique Canada)."
+      }
+    ]
+  },
+  "villes": [
+    {
+      "id": "montreal",
+      "nom": "Montréal",
+      "population": 1762949,
+      "indiceSalaires": 1.0,
+      "penurieMainOeuvre": 0.5,
+      "marchePotentielMensuel": {
+        "cafe": 21000
+      },
+      "marchePotentielNote": "Visites potentielles par mois dans la zone de chalandise d'un café (estimation de conception).",
+      "emplacements": [
+        {
+          "id": "rue",
+          "nom": "Rue commerciale",
+          "description": "Artère animée, beaucoup de passants, loyer élevé.",
+          "loyerNetPi2": 36,
+          "fraisCommunsPi2": 12,
+          "achalandage": 1.0,
+          "visibilite": 0.06
+        },
+        {
+          "id": "centre",
+          "nom": "Centre commercial",
+          "description": "Achalandage stable toute l'année, mais loyer et frais communs très élevés.",
+          "loyerNetPi2": 46,
+          "fraisCommunsPi2": 20,
+          "achalandage": 1.12,
+          "visibilite": 0.04
+        },
+        {
+          "id": "residentiel",
+          "nom": "Quartier résidentiel",
+          "description": "Clientèle fidèle du voisinage, peu de passants, loyer abordable.",
+          "loyerNetPi2": 24,
+          "fraisCommunsPi2": 9,
+          "achalandage": 0.72,
+          "visibilite": 0.0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "_meta": {
+    "description": "Paramètres des secteurs d'activité. Les prix et coûts sont en dollars canadiens de 2026, avant taxes.",
+    "sources": [
+      {
+        "url": "https://www.touchbistro.com/wp-content/uploads/2026/01/TouchBistro-2026-Canadian-State-of-Restaurants-Report.pdf",
+        "verifie": "2026-09-30",
+        "note": "Marge bénéficiaire moyenne des cafés et bistros d'environ 11 % en 2025; main-d'œuvre autour de 30 % des ventes en restauration."
+      },
+      {
+        "url": "https://www.restaurantscanada.org/",
+        "verifie": "2026-09-30",
+        "note": "Repères généraux de l'industrie (coût des aliments, main-d'œuvre)."
+      }
+    ],
+    "avertissement": "Les paramètres de demande (sensibilités, taux d'achat, saisonnalité) sont des estimations de conception calibrées pour donner des résultats plausibles. Voir DECISIONS.md."
+  },
+  "secteurs": [
+    {
+      "id": "cafe",
+      "nom": "Café-bistro",
+      "description": "Un café de quartier qui sert des boissons chaudes et froides, des viennoiseries et des repas légers le midi.",
+      "tauxCnesst": 0.0175,
+      "tauxCnesstNote": "À VÉRIFIER : taux 2026 de l'unité « restaurants » de la CNESST (estimation légèrement au-dessus du taux moyen de 1,54 $ par 100 $).",
+      "margeBruteCible": [0.62, 0.72],
+      "margeNetteCible": [0.05, 0.12],
+      "coutMainOeuvreCible": [0.28, 0.35],
+      "lignes": [
+        {
+          "id": "boissons",
+          "nom": "Boissons",
+          "detail": "Cafés, thés, chocolats chauds, boissons froides",
+          "prixReference": 5.0,
+          "coutUnitaire": 1.3,
+          "tauxAchat": 0.92,
+          "elasticite": 0.6,
+          "perissable": false
+        },
+        {
+          "id": "viennoiseries",
+          "nom": "Viennoiseries",
+          "detail": "Croissants, muffins, biscuits, pâtisseries",
+          "prixReference": 3.75,
+          "coutUnitaire": 1.45,
+          "tauxAchat": 0.38,
+          "elasticite": 1.0,
+          "perissable": true
+        },
+        {
+          "id": "repas",
+          "nom": "Repas légers",
+          "detail": "Sandwichs, salades, soupes du midi",
+          "prixReference": 12.5,
+          "coutUnitaire": 4.4,
+          "tauxAchat": 0.22,
+          "elasticite": 1.2,
+          "perissable": true
+        }
+      ],
+      "qualites": [
+        {
+          "id": "economique",
+          "nom": "Économique",
+          "description": "Café d'entrée de gamme, produits surgelés industriels.",
+          "multiplicateurCout": 0.8,
+          "score": 0.35
+        },
+        {
+          "id": "standard",
+          "nom": "Standard",
+          "description": "Café de torréfacteur régional, viennoiseries d'une boulangerie locale.",
+          "multiplicateurCout": 1.0,
+          "score": 0.55
+        },
+        {
+          "id": "superieure",
+          "nom": "Supérieure",
+          "description": "Café de spécialité, produits frais faits sur place.",
+          "multiplicateurCout": 1.2,
+          "score": 0.72
+        },
+        {
+          "id": "artisanale",
+          "nom": "Artisanale et biologique",
+          "description": "Café équitable et biologique, ingrédients locaux haut de gamme.",
+          "multiplicateurCout": 1.45,
+          "score": 0.88
+        }
+      ],
+      "saisonnalite": [1.0, 0.97, 1.0, 0.98, 0.99, 0.95, 0.86, 0.9, 1.04, 1.06, 1.06, 1.08],
+      "saisonnaliteNote": "Index de janvier à décembre. Creux en juillet (vacances de la construction, étudiants absents), sommet à l'automne et à Noël.",
+      "transactionsParHeureEmploye": 6.5,
+      "heuresOuvertureReference": 84,
+      "sensibilites": {
+        "prix": 2.5,
+        "qualite": 1.6,
+        "service": 1.0,
+        "note": 0.5,
+        "ambiance": 0.6,
+        "heures": 0.6
+      },
+      "utiliteAlternative": 0.45,
+      "superficiePi2": 1200,
+      "equipements": [
+        {
+          "id": "usage",
+          "nom": "Équipement usagé",
+          "description": "Machine espresso reconditionnée, moulins et réfrigérateurs usagés.",
+          "cout": 24000,
+          "dureeVieMois": 48,
+          "bonusQualite": -0.04
+        },
+        {
+          "id": "neuf",
+          "nom": "Équipement neuf standard",
+          "description": "Machine espresso 2 groupes neuve, moulins, four, réfrigérateurs, caisse.",
+          "cout": 45000,
+          "dureeVieMois": 60,
+          "bonusQualite": 0
+        },
+        {
+          "id": "hautdegamme",
+          "nom": "Équipement haut de gamme",
+          "description": "Machine espresso 3 groupes de marque italienne, moulins à dose, four combiné.",
+          "cout": 72000,
+          "dureeVieMois": 84,
+          "bonusQualite": 0.05
+        }
+      ],
+      "amenagements": [
+        {
+          "id": "minimal",
+          "nom": "Aménagement minimal",
+          "description": "Peinture, comptoir de base, mobilier d'occasion.",
+          "cout": 15000,
+          "ambiance": 0.3
+        },
+        {
+          "id": "chaleureux",
+          "nom": "Aménagement chaleureux",
+          "description": "Comptoir sur mesure, banquettes, éclairage d'ambiance.",
+          "cout": 38000,
+          "ambiance": 0.6
+        },
+        {
+          "id": "design",
+          "nom": "Aménagement signé par un designer",
+          "description": "Concept complet, matériaux nobles, terrasse aménagée.",
+          "cout": 65000,
+          "ambiance": 0.85
+        }
+      ],
+      "stockCibleJoursDefaut": 7,
+      "stockInitial": 2400,
+      "fraisDemarrage": 2500,
+      "fraisDemarrageNote": "Permis, immatriculation, enseigne, inauguration, frais juridiques de base.",
+      "fraisFixesMensuels": {
+        "electricite": 950,
+        "assurances": 240,
+        "comptable": 275,
+        "entretien": 300,
+        "logiciels": 95,
+        "telecom": 110
+      },
+      "fraisFixesNote": "Estimations pour un local de 1 200 pi² à Montréal. Électricité et gaz : Hydro-Québec tarif G; assurances responsabilité et biens.",
+      "postes": ["barista"]
+    }
+  ]
+}

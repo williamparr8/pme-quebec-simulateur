@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "description": "Personnalités stratégiques des concurrents gérés par l'IA. Les noms sont fictifs : aucune vraie marque.",
+    "note": "capaciteMensuelle = visites maximales servies par mois; fraisFixesMensuels inclut le personnel, le loyer et les redevances."
+  },
+  "personnalites": [
+    {
+      "id": "geant",
+      "nom": "Café Mégapolis",
+      "surnom": "Le Géant",
+      "description": "Grande chaîne : prix bas, gros budget publicitaire, ouvert de 6 h à 22 h, service rapide mais impersonnel.",
+      "couleur": "#d94841",
+      "indicePrix": 0.86,
+      "qualite": 0.45,
+      "service": 0.5,
+      "ambiance": 0.35,
+      "notorieteInitiale": 0.85,
+      "noteInitiale": 3.7,
+      "budgetMarketing": 4500,
+      "tauxCoutMarchandises": 0.27,
+      "fraisFixesMensuels": 20000,
+      "capaciteMensuelle": 9000,
+      "heuresOuverture": 112,
+      "reagitAuxPrix": true,
+      "reactivite": 0.35,
+      "delaiReactionMois": 2,
+      "tresorerieInitiale": 400000
+    },
+    {
+      "id": "local",
+      "nom": "Le Torréfacteur du Coin",
+      "surnom": "Le Local branché",
+      "description": "Café de spécialité indépendant : qualité élevée, image forte, prix élevés. Il répond à la concurrence par la qualité et la publicité, pas par les prix.",
+      "couleur": "#2f9e78",
+      "indicePrix": 1.15,
+      "qualite": 0.82,
+      "service": 0.75,
+      "ambiance": 0.8,
+      "notorieteInitiale": 0.42,
+      "noteInitiale": 4.5,
+      "budgetMarketing": 1200,
+      "tauxCoutMarchandises": 0.33,
+      "fraisFixesMensuels": 24000,
+      "capaciteMensuelle": 5500,
+      "heuresOuverture": 77,
+      "reagitAuxPrix": false,
+      "reactivite": 0.5,
+      "delaiReactionMois": 1,
+      "tresorerieInitiale": 45000
+    }
+  ]
+}
