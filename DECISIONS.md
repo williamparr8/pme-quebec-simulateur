@@ -15,7 +15,48 @@ confirmer. Il est mis à jour à chaque jalon.
 | Loyers commerciaux à Montréal                               | `src/data/villes.json`   | 24 $ à 46 $/pi² + frais communs | Estimations cohérentes avec les loyers bruts de 40 à 60 $/pi² rapportés pour les rues prisées                 |
 | Frais fixes d’un café (électricité, assurances, comptable…) | `src/data/secteurs.json` | ≈ 1 970 $/mois                  | Estimations pour un local de 1 200 pi²                                                                        |
 
+### Valeurs ajoutées au Jalon 2
+
+| Valeur                                        | Fichier                   | Valeur utilisée | Pourquoi elle est incertaine                                                       |
+| --------------------------------------------- | ------------------------- | --------------- | ---------------------------------------------------------------------------------- |
+| Montant personnel de base du Québec 2026      | `src/data/fiscalite.ts`   | 18 952 $        | 18 571 $ (2025) indexé de 2,05 %; une source secondaire indiquait un autre montant |
+| Taux RQAP des travailleurs autonomes 2026     | `src/data/fiscalite.ts`   | 0,764 %         | Estimé à partir du taux 2025 et de la baisse des taux salariés de 2026             |
+| Constitution fédérale (Corporations Canada)   | `src/data/fiscalite.ts`   | 200 $           | Frais de dépôt en ligne habituels, non revérifiés                                  |
+| Immatriculation au REQ d’une société fédérale | `src/data/fiscalite.ts`   | 397 $           | Assimilée au tarif de constitution d’une société du Québec                         |
+| Taux d’intérêt sur les soldes fiscaux dus     | `src/data/fiscalite.ts`   | 7 % par an      | Taux prescrits de Revenu Québec et de l’ARC non revérifiés                         |
+| Coûts des permis et montants des amendes      | `src/data/demarches.json` | 380 $ à 3 000 $ | Varient selon la municipalité et la gravité; ordres de grandeur pédagogiques       |
+| Part taxable des achats d’un café             | `src/data/secteurs.json`  | 25 %            | Aliments de base détaxés; emballages et fournitures taxables                       |
+
 ## Hypothèses du modèle
+
+### Fiscalité et juridique (Jalon 2)
+
+- **Exercice financier = année civile** pour toutes les formes juridiques (une société pourrait choisir une autre date).
+- **Impôt des particuliers simplifié** : paliers 2026, montants personnels de base, abattement du Québec de 16,5 %,
+  majoration et crédits pour dividendes; les autres crédits et déductions (RRQ, REER, etc.) sont ignorés.
+- **Retenues à la source** estimées par annualisation du salaire du mois (comme les tables de retenues).
+- **Société par actions** : SPCC admissible à la DPE (9 % au fédéral, 2,2 % au Québec pour les années commençant après
+  le 29 avril 2026). La DPE du Québec dépend des heures rémunérées (employés + dirigeant salarié, 40 h par semaine
+  au plus) : complète à 5 500 h, nulle sous 5 000 h. Les dividendes versés sont non déterminés.
+- **DPA** : catégorie 8 (20 % dégressif) pour l’équipement et catégorie 13 (linéaire sur la durée du bail) pour les
+  améliorations locatives; pas de règle de la demi-année pour les biens acquis avant 2028 (incitatif à
+  l’investissement accéléré). Les amendes ne sont pas déductibles. Les pertes fiscales d’une société sont reportées.
+- **Acomptes provisionnels** mensuels si l’impôt de l’année précédente dépasse 3 000 $; solde payé en mars.
+- **Société de personnes** : un seul associé, part des bénéfices proportionnelle à sa mise de fonds, prélèvements
+  proportionnels à ceux du joueur; chaque associé est imposé personnellement sur sa part.
+- **Incorporation en cours de partie** : seulement pour une entreprise individuelle, effective le 1er janvier; le
+  capital du propriétaire est converti en capital-actions (roulement simplifié).
+- **TPS/TVQ** : les clients comparent les prix taxes comprises; un petit fournisseur non inscrit paraît donc environ
+  13 % moins cher. Les taxes payées sur les achats de démarrage sont remboursées avec la première déclaration.
+  Si l’inscription devient obligatoire et n’est pas faite, Revenu Québec peut le découvrir (15 % par mois) :
+  taxes non perçues + pénalité de 15 % + intérêts.
+- **Démarches oubliées** : chaque mois, une probabilité de détection propre à chaque démarche; amende, parfois
+  fermeture temporaire (moins de capacité), puis régularisation forcée. Sans assurance : 2 % de risque mensuel de
+  sinistre non couvert. Sans compte bancaire distinct : frais comptables plus élevés.
+- **Déclaration de mise à jour annuelle du REQ** : exigée dès la 2e année, à produire avant la fin de juin; en retard,
+  elle est produite d’office en juillet avec une pénalité de 50 % des droits.
+- Les **impôts personnels** du propriétaire d’une entreprise individuelle sont calculés et affichés (T1 et TP-1), mais
+  payés hors de l’entreprise : ils n’apparaissent pas aux états financiers de l’entreprise.
 
 ### Calendrier et taux
 

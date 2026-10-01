@@ -10,7 +10,7 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
 
 ---
 
-## Ce que le jeu permet (Jalon 1)
+## Ce que le jeu permet (Jalons 1 et 2)
 
 - **Créer son entreprise** : nom, emplacement (rue commerciale, centre commercial, quartier résidentiel), équipement,
   aménagement et financement (mise de fonds et prêt bancaire, avec le ratio exigé par la banque).
@@ -29,6 +29,19 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
 - **Rapport mensuel pédagogique** : ce qui a fonctionné, ce qui n’a pas fonctionné, et **pourquoi**.
 - **Glossaire** et infobulles (touche `I`), thème clair ou sombre, sauvegarde automatique et 3 emplacements,
   export/import de la partie en fichier `.json` (pratique pour la remettre à l’enseignant).
+
+### Fiscalité et juridique (Jalon 2)
+
+- **Formes juridiques** avec comparatif : entreprise individuelle, SENC, SEC, société par actions du Québec ou
+  fédérale; incorporation possible en cours de partie (effective le 1er janvier).
+- **Démarches de démarrage** : REQ (NEQ), retenues à la source, CNESST, permis municipal, MAPAQ, assurances,
+  compte bancaire, Charte de la langue française. Une démarche oubliée peut mener à une amende ou à une fermeture.
+- **TPS et TVQ** : perception, CTI et RTI, remises mensuelles, trimestrielles ou annuelles, seuil du petit
+  fournisseur de 30 000 $ et avis de cotisation si l’inscription obligatoire est oubliée.
+- **Paie complète** : retenues à la source (impôts, RRQ, RQAP, AE), salaire net, remises mensuelles, relevés T4 et RL-1.
+- **Impôts 2026** : particuliers (fédéral avec abattement de 16,5 % et Québec), sociétés (DPE, taux du Québec de
+  2,2 %, critère des 5 500 heures rémunérées), DPA, report des pertes, acomptes provisionnels, T2/CO-17 et T1/TP-1.
+- **Outil salaire ou dividendes** pour le propriétaire d’une société, et déclaration annuelle au REQ.
 
 ## Jouer au clavier
 
@@ -89,7 +102,7 @@ Stack : Vite, React 18, TypeScript (strict), Zustand, Tailwind CSS, Recharts, Vi
 ## Feuille de route
 
 1. ✅ **Fondations** : moteur, café à Montréal, 2 concurrents, états financiers, sauvegarde, clavier, mise en ligne.
-2. **Fiscalité et juridique** : formes juridiques, REQ, TPS/TVQ, impôts, paie complète, checklist de démarrage.
+2. ✅ **Fiscalité et juridique** : formes juridiques, REQ, TPS/TVQ, impôts, paie complète, checklist de démarrage.
 3. **Départements complets** : marketing détaillé, RH, opérations et stocks, financement.
 4. **Monde vivant** : 7 secteurs, 8 villes, 5 concurrents, 60+ événements, conjoncture économique.
 5. **Multijoueur local et pédagogie** : équipes en alternance, glossaire complet, conseiller, tutoriel, quiz.

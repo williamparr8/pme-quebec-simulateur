@@ -76,9 +76,9 @@ export function EcranAccueil() {
             </li>
           </ul>
           <p className="mt-3 text-sm text-doux">
-            Version Jalon 1 : secteur café-bistro à Montréal, entreprise individuelle. Les taxes,
-            les autres formes juridiques, les autres secteurs et villes arrivent dans les prochains
-            jalons.
+            Version Jalon 2 : café-bistro à Montréal, 5 formes juridiques, TPS/TVQ, paie complète,
+            impôts et démarches de démarrage. Les autres secteurs et villes, les événements et le
+            mode équipes arrivent dans les prochains jalons.
           </p>
         </Carte>
       </div>

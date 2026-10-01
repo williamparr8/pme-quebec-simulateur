@@ -26,6 +26,24 @@ aussi sa source et sa date de vérification.
 - Gouvernement du Québec, _La CNESST fixe le taux moyen de cotisation pour 2026_ :
   https://www.quebec.ca/nouvelles/actualites/details/financement-du-regime-quebecois-de-sante-et-de-securite-du-travail-pour-2026-la-cnesst-fixe-le-taux-moyen-de-cotisation-pour-2026-62890
 
+## Fiscalité et juridique (Jalon 2)
+
+- Narcity, _Les nouvelles tranches de revenu pour tes impôts au fédéral pour 2026_ (taux de 14 %, montant personnel de
+  base de 16 452 $) : https://www.narcity.com/fr/tranches-impot-arc-canada-2026
+- Narcity, _Nouvelles tranches de revenu au Québec pour 2026_ : https://www.narcity.com/fr/nouvelles-tranches-revenu-quebec-impots-2026
+- Crowe BGK, _Le Québec réduit le taux d’imposition des petites entreprises_ (2,2 %) :
+  https://www.crowe.com/ca/crowebgk/fr-ca/publications/tax-update-quebec-cuts-small-business-corporate-tax-rate
+- KPMG, _Quebec drops small business tax rate_ (avril 2026) :
+  https://assets.kpmg.com/content/dam/kpmgsites/ca/pdf/tnf/2026/04/ca-quebec-drops-small-business-tax-rate.pdf
+- Wellington-Altus, _Personal Tax Cards QC 2026_ (majorations et crédits pour dividendes) :
+  https://wellington-altus.ca/wp-content/uploads/2026/09/AWPG_Personal_Tax_Cards_QC_08_2026_Final_EN.pdf
+- Revenu Québec, _TPS/TVH et TVQ_ : https://www.revenuquebec.ca/fr/entreprises/taxes/tpstvh-et-tvq/
+- Gouvernement du Québec, _Tarifs du Registraire des entreprises_ (société par actions, personne physique, société
+  de personnes, en vigueur le 1er janvier 2026) :
+  https://www.quebec.ca/entreprises-et-travailleurs-autonomes/tarifs-registraire-entreprises/societe-par-actions
+- ARC, _Catégories de biens amortissables_ (DPA) :
+  https://www.canada.ca/fr/agence-revenu/services/impot/entreprises/sujets/entreprise-individuelle-societe-personnes/declarer-revenus-depenses-entreprise/reclamer-deduction-amortissement/categories-biens-amortissables.html
+
 ## Taux d’intérêt
 
 - Banque du Canada, _La Banque du Canada maintient le taux directeur à 2¼ %_ (2 septembre 2026) :

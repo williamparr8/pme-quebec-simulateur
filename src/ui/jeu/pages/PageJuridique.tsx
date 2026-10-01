@@ -173,8 +173,8 @@ function CarteTaxes() {
           <dl className="grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
             <Montant libelle="TPS perçue à remettre" valeur={tps} />
             <Montant libelle="TVQ perçue à remettre" valeur={tvq} />
-            <Montant libelle="Moins : CTI (TPS payée sur les achats)" valeur={-cti} />
-            <Montant libelle="Moins : RTI (TVQ payée sur les achats)" valeur={-rti} />
+            <Montant libelle="Moins : CTI (TPS payée sur les achats)" valeur={cti} />
+            <Montant libelle="Moins : RTI (TVQ payée sur les achats)" valeur={rti} />
             <Montant
               libelle={tps + tvq - cti - rti >= 0 ? 'Prochaine remise' : 'Prochain remboursement'}
               valeur={Math.abs(tps + tvq - cti - rti)}
@@ -262,11 +262,11 @@ function Declaration({ d }: { d: DeclarationAnnuelle }) {
           libelle="Plus : amendes et pénalités (non déductibles)"
           valeur={d.nonDeductibles}
         />
-        <Montant libelle="Moins : déduction pour amortissement (DPA)" valeur={-d.dpa} />
+        <Montant libelle="Moins : déduction pour amortissement (DPA)" valeur={d.dpa} />
         <Montant libelle="Revenu fiscal" valeur={d.revenuFiscal} gras />
         {societe ? (
           <>
-            <Montant libelle="Pertes reportées utilisées" valeur={-d.pertesUtilisees} />
+            <Montant libelle="Pertes reportées utilisées" valeur={d.pertesUtilisees} />
             <Montant libelle="Revenu imposable" valeur={societe.revenuImposable} />
             <dt className="text-doux">Heures rémunérées (DPE du Québec)</dt>
             <dd className="text-right">
@@ -274,7 +274,7 @@ function Declaration({ d }: { d: DeclarationAnnuelle }) {
             </dd>
             <Montant libelle="Impôt fédéral" valeur={societe.impotFederal} />
             <Montant libelle="Impôt du Québec" valeur={societe.impotQuebec} />
-            <Montant libelle="Moins : acomptes versés" valeur={-societe.acomptesVerses} />
+            <Montant libelle="Moins : acomptes versés" valeur={societe.acomptesVerses} />
             <Montant
               libelle={societe.solde >= 0 ? 'Solde à payer (mars)' : 'Remboursement (mars)'}
               valeur={Math.abs(societe.solde)}
