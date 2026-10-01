@@ -270,12 +270,8 @@ export function scenarioRemuneration(
   // dont le coût total (salaire + charges) égale la part choisie du bénéfice.
   const coutVise = benefice * Math.min(1, Math.max(0, partSalaire));
   let salaire = coutVise / 1.12;
-  let charges = 0;
-  for (let i = 0; i < 6; i++) {
-    charges = annuel(salaire);
-    salaire = Math.max(0, coutVise - charges);
-  }
-  charges = annuel(salaire);
+  for (let i = 0; i < 6; i++) salaire = Math.max(0, coutVise - annuel(salaire));
+  const charges = annuel(salaire);
   const coutSociete = arrondi(salaire + charges);
   const heures = heuresRemunereesAutres + (salaire > 0 ? 2080 : 0);
   const impotSoc = impotSociete(benefice - coutSociete, heures);
