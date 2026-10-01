@@ -4,7 +4,7 @@ Un jeu de simulation d’affaires réaliste, jouable dans le navigateur, pour ap
 Québec**. Conçu pour les étudiants de cégep en **Gestion de commerce** : marketing, ressources humaines, opérations,
 finance, comptabilité et fiscalité québécoise et canadienne.
 
-**▶ Jouer en ligne : https://UTILISATEUR.github.io/pme-quebec-simulateur/**
+**▶ Jouer en ligne : https://williamparr8.github.io/pme-quebec-simulateur/**
 
 Aucune installation, aucun compte : le jeu est 100 % statique et les parties sont sauvegardées dans le navigateur.
 
