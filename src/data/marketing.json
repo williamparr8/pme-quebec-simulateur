@@ -16,7 +16,12 @@
       "delaiMois": 0,
       "dureeEffetMois": 1,
       "budgetMinimum": 50,
-      "affinites": { "etudiants": 0.9, "familles": 1.25, "professionnels": 1.0, "retraites": 0.7 }
+      "affinites": {
+        "etudiants": 0.9,
+        "familles": 1.25,
+        "professionnels": 1,
+        "retraites": 0.7
+      }
     },
     {
       "id": "tiktok",
@@ -30,12 +35,17 @@
       "delaiMois": 0,
       "dureeEffetMois": 1,
       "budgetMinimum": 50,
-      "affinites": { "etudiants": 1.7, "familles": 0.6, "professionnels": 0.8, "retraites": 0.2 }
+      "affinites": {
+        "etudiants": 1.7,
+        "familles": 0.6,
+        "professionnels": 0.8,
+        "retraites": 0.2
+      }
     },
     {
       "id": "google",
       "nom": "Google Ads (recherche et cartes)",
-      "description": "Annonces vues par les gens qui cherchent « café près de moi ». Coûteux par impression, mais ces gens veulent acheter.",
+      "description": "Annonces vues par les gens qui cherchent un commerce comme le tien « près de moi ». Coûteux par impression, mais ces gens veulent acheter.",
       "cpm": 45,
       "audience": 6000,
       "frequenceEfficace": 1.5,
@@ -44,7 +54,12 @@
       "delaiMois": 0,
       "dureeEffetMois": 1,
       "budgetMinimum": 50,
-      "affinites": { "etudiants": 1.0, "familles": 1.0, "professionnels": 1.3, "retraites": 0.6 }
+      "affinites": {
+        "etudiants": 1,
+        "familles": 1,
+        "professionnels": 1.3,
+        "retraites": 0.6
+      }
     },
     {
       "id": "influenceurs",
@@ -58,7 +73,12 @@
       "delaiMois": 0,
       "dureeEffetMois": 2,
       "budgetMinimum": 250,
-      "affinites": { "etudiants": 1.5, "familles": 1.0, "professionnels": 1.0, "retraites": 0.3 }
+      "affinites": {
+        "etudiants": 1.5,
+        "familles": 1,
+        "professionnels": 1,
+        "retraites": 0.3
+      }
     },
     {
       "id": "radio",
@@ -72,7 +92,12 @@
       "delaiMois": 1,
       "dureeEffetMois": 2,
       "budgetMinimum": 1500,
-      "affinites": { "etudiants": 0.5, "familles": 1.0, "professionnels": 1.3, "retraites": 1.3 }
+      "affinites": {
+        "etudiants": 0.5,
+        "familles": 1,
+        "professionnels": 1.3,
+        "retraites": 1.3
+      }
     },
     {
       "id": "journal",
@@ -86,7 +111,12 @@
       "delaiMois": 0,
       "dureeEffetMois": 1,
       "budgetMinimum": 300,
-      "affinites": { "etudiants": 0.3, "familles": 0.9, "professionnels": 0.6, "retraites": 1.8 }
+      "affinites": {
+        "etudiants": 0.3,
+        "familles": 0.9,
+        "professionnels": 0.6,
+        "retraites": 1.8
+      }
     },
     {
       "id": "affichage",
@@ -100,7 +130,12 @@
       "delaiMois": 0,
       "dureeEffetMois": 2,
       "budgetMinimum": 1200,
-      "affinites": { "etudiants": 1.0, "familles": 1.0, "professionnels": 1.2, "retraites": 0.9 }
+      "affinites": {
+        "etudiants": 1,
+        "familles": 1,
+        "professionnels": 1.2,
+        "retraites": 0.9
+      }
     },
     {
       "id": "flyers",
@@ -114,7 +149,12 @@
       "delaiMois": 0,
       "dureeEffetMois": 1,
       "budgetMinimum": 200,
-      "affinites": { "etudiants": 0.4, "familles": 1.4, "professionnels": 0.7, "retraites": 1.5 }
+      "affinites": {
+        "etudiants": 0.4,
+        "familles": 1.4,
+        "professionnels": 0.7,
+        "retraites": 1.5
+      }
     },
     {
       "id": "evenements",
@@ -128,7 +168,12 @@
       "delaiMois": 0,
       "dureeEffetMois": 2,
       "budgetMinimum": 300,
-      "affinites": { "etudiants": 1.3, "familles": 1.1, "professionnels": 0.8, "retraites": 0.9 }
+      "affinites": {
+        "etudiants": 1.3,
+        "familles": 1.1,
+        "professionnels": 0.8,
+        "retraites": 0.9
+      }
     },
     {
       "id": "commandites",
@@ -142,7 +187,12 @@
       "delaiMois": 1,
       "dureeEffetMois": 4,
       "budgetMinimum": 500,
-      "affinites": { "etudiants": 0.8, "familles": 1.4, "professionnels": 0.8, "retraites": 1.1 }
+      "affinites": {
+        "etudiants": 0.8,
+        "familles": 1.4,
+        "professionnels": 0.8,
+        "retraites": 1.1
+      }
     }
   ],
   "etudes": [
@@ -203,7 +253,7 @@
     {
       "id": "emballages",
       "nom": "Emballages compostables",
-      "description": "Gobelets, couvercles et contenants compostables : environ 0,08 $ de plus par client.",
+      "description": "Emballages et contenants compostables : environ 0,08 $ de plus par client.",
       "score": 0.18,
       "coutMensuel": 0,
       "coutParVisite": 0.08,
@@ -216,12 +266,13 @@
       "score": 0.1,
       "coutMensuel": 0,
       "coutParVisite": 0.035,
-      "coutInitial": 0
+      "coutInitial": 0,
+      "rabaisClient": true
     },
     {
       "id": "compost",
       "nom": "Collecte du compost et du recyclage",
-      "description": "Collecte des matières organiques et récupération des contenants consignés : environ 85 $ par mois.",
+      "description": "Collecte des matières organiques, du recyclage et des retailles : environ 85 $ par mois.",
       "score": 0.1,
       "coutMensuel": 85,
       "coutParVisite": 0,
@@ -235,6 +286,60 @@
       "coutMensuel": 40,
       "coutParVisite": 0,
       "coutInitial": 1200
+    },
+    {
+      "id": "sacsReutilisables",
+      "nom": "Sacs réutilisables et emballages recyclés",
+      "description": "Sacs en tissu et boîtes en carton recyclé : environ 0,15 $ de plus par client.",
+      "score": 0.12,
+      "coutMensuel": 0,
+      "coutParVisite": 0.15,
+      "coutInitial": 0
+    },
+    {
+      "id": "recuperationTextile",
+      "nom": "Collecte de vêtements usagés",
+      "description": "Un bac de récupération remis à un organisme de réemploi : environ 60 $ par mois.",
+      "score": 0.12,
+      "coutMensuel": 60,
+      "coutParVisite": 0,
+      "coutInitial": 0
+    },
+    {
+      "id": "compensationCarbone",
+      "nom": "Compensation carbone des livraisons et des déplacements",
+      "description": "Achat de crédits carbone québécois : environ 0,25 $ par client.",
+      "score": 0.1,
+      "coutMensuel": 0,
+      "coutParVisite": 0.25,
+      "coutInitial": 0
+    },
+    {
+      "id": "produitsNaturels",
+      "nom": "Produits sans sulfates et écologiques",
+      "description": "Shampoings et colorations à faible impact : environ 0,80 $ de plus par client.",
+      "score": 0.15,
+      "coutMensuel": 0,
+      "coutParVisite": 0.8,
+      "coutInitial": 0
+    },
+    {
+      "id": "sansPesticides",
+      "nom": "Entretien sans pesticides de synthèse",
+      "description": "Engrais naturels et désherbage manuel : environ 3 $ de plus par client.",
+      "score": 0.18,
+      "coutMensuel": 0,
+      "coutParVisite": 3,
+      "coutInitial": 0
+    },
+    {
+      "id": "boisCertifie",
+      "nom": "Bois certifié FSC",
+      "description": "Bois provenant de forêts gérées durablement : environ 2,50 $ de plus par client.",
+      "score": 0.18,
+      "coutMensuel": 0,
+      "coutParVisite": 2.5,
+      "coutInitial": 0
     }
   ]
 }

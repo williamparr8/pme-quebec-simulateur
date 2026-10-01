@@ -4,8 +4,10 @@
  */
 import { SALAIRE_MINIMUM } from '../data/fiscalite';
 import {
+  PARAMETRES_MARKETING,
   PERSONNALITES,
   fournisseurParId,
+  personnaliteParId,
   posteParId,
   secteurParId,
   sourceFinancementParId,
@@ -13,11 +15,12 @@ import {
 } from '../data';
 import { ajouterAcquisition } from './annuel';
 import { creerGrandLivre, ecritureSimple, type TypeCapitaux } from './accounting';
-import { creerConcurrent } from './ai-competitors';
+import { calibrerConcurrents, creerConcurrent } from './ai-competitors';
 import {
   IDS_DEMARCHES,
   coutDemarche,
   demarche,
+  estApplicable,
   estSocieteActions,
   estSocietePersonnes,
   immatriculationObligatoire,
@@ -33,6 +36,8 @@ import type {
   Ville,
 } from './data-types';
 import { conjonctureInitiale, type Conjoncture } from './economy';
+import { COMPTES_IMMOBILISATIONS } from './immobilisations';
+import { saisonLigne, type Offre } from './market';
 import { payer } from './ecritures';
 import {
   IDS_SOURCES,
@@ -49,7 +54,7 @@ import {
 import { genererEmploye, salaireMarchePoste } from './hr';
 import { coutChezFournisseur, politiqueRecommandee, stockInitial } from './inventory';
 import { creerPret } from './loans';
-import { etatMarketingInitial, publiciteParDefaut } from './marketing';
+import { etatMarketingInitial, publiciteParDefaut, segmentsMarche } from './marketing';
 import { Rng } from './rng';
 import { taxesSur } from './tax';
 import type {
@@ -79,30 +84,45 @@ export const DIFFICULTES: Record<
     notorieteDepart: number;
     agressivite: number;
     limiteMarge: number;
-    /** Probabilité mensuelle d'un dilemme. */
-    dilemmes: number;
+    /** Probabilité mensuelle d'un événement (ou dilemme). */
+    evenements: number;
+    /** Poids des événements selon leur nature (moins d'événements négatifs en mode Facile). */
+    poidsNature: { negatif: number; positif: number; neutre: number };
+    /** Poids des vérifications fiscales (plus fréquentes en mode Expert). */
+    poidsFiscal: number;
+    /** Multiplicateur du risque de ralentissement et de récession. */
+    risqueRecession: number;
   }
 > = {
   facile: {
     marche: 1.1,
-    notorieteDepart: 0.12,
+    notorieteDepart: 0.2,
     agressivite: 0.6,
     limiteMarge: 25_000,
-    dilemmes: 0.15,
+    evenements: 0.35,
+    poidsNature: { negatif: 0.5, positif: 1.4, neutre: 1 },
+    poidsFiscal: 0.5,
+    risqueRecession: 0.6,
   },
   realiste: {
     marche: 1.0,
-    notorieteDepart: 0.08,
+    notorieteDepart: 0.15,
     agressivite: 1.0,
     limiteMarge: 20_000,
-    dilemmes: 0.25,
+    evenements: 0.45,
+    poidsNature: { negatif: 1, positif: 1, neutre: 1 },
+    poidsFiscal: 1,
+    risqueRecession: 1,
   },
   expert: {
     marche: 0.9,
-    notorieteDepart: 0.05,
+    notorieteDepart: 0.1,
     agressivite: 1.4,
     limiteMarge: 15_000,
-    dilemmes: 0.35,
+    evenements: 0.55,
+    poidsNature: { negatif: 1.4, positif: 0.8, neutre: 1 },
+    poidsFiscal: 2.5,
+    risqueRecession: 1.5,
   },
 };
 
@@ -139,8 +159,19 @@ export const BORNES_DECISIONS = {
 /** Bail commercial de 5 ans, indexé de 2,5 % par année. */
 export const DUREE_BAIL_MOIS = 60;
 const INDEXATION_BAIL = 0.025;
+/** Part du potentiel du marché qu'un nouveau commerce sert le premier mois (premières commandes). */
+const PART_VISITES_ESTIMEES = 0.07;
+
 /** Visites estimées pendant le premier mois (pour les premières commandes). */
-const VISITES_ESTIMEES = 1500;
+export function visitesEstimees(secteur: Secteur, ville?: Ville): number {
+  const potentiel = ville?.marchePotentielMensuel[secteur.id];
+  return potentiel ? Math.round(potentiel * PART_VISITES_ESTIMEES) : 1500;
+}
+
+/** L'emplacement est-il permis pour ce secteur (ex. un commerce en ligne n'a pas de vitrine)? */
+export function emplacementPermis(secteur: Secteur, emplacementId: string): boolean {
+  return secteur.emplacements.includes(emplacementId);
+}
 
 // ---------------------------------------------------------------------------
 // Outils
@@ -203,7 +234,7 @@ export function coutsDemarrage(
   ville: Ville,
 ): CoutsDemarrage {
   const forme = params.formeJuridique ?? 'individuelle';
-  const demarches = new Set(params.demarches ?? []);
+  const demarches = new Set((params.demarches ?? []).filter((id) => estApplicable(id, secteur)));
   if (immatriculationObligatoire(forme)) demarches.add('req');
   const equipement = equipementDe(secteur, params.equipementId).cout;
   const amenagement = amenagementDe(secteur, params.amenagementId).cout;
@@ -256,8 +287,10 @@ export function apportTotal(
 export function chargesFixesEstimees(params: ParamsCouts, secteur: Secteur, ville: Ville): number {
   const loyer = loyerMensuelInitial(secteur, emplacementDe(ville, params.emplacementId));
   const frais = Object.values(secteur.fraisFixesMensuels).reduce((a, x) => a + x, 0);
-  const poste = posteParId(secteur.postes[0]);
-  const salaires = 3 * poste.heuresSemaineDefaut * poste.salaireMedian * (52 / 12) * 1.15;
+  const salaires = secteur.equipeDepart.reduce((a, eq) => {
+    const poste = posteParId(eq.posteId);
+    return a + eq.nombre * poste.heuresSemaineDefaut * poste.salaireMedian * (52 / 12) * 1.15;
+  }, 0);
   return Math.round(loyer + frais + salaires + 2500);
 }
 
@@ -298,7 +331,8 @@ export type ErreurDemarrage =
   | 'pretTropEleve'
   | 'financementInsuffisant'
   | 'associeRequis'
-  | 'sourceInvalide';
+  | 'sourceInvalide'
+  | 'emplacementInvalide';
 
 export function erreursSources(
   params: ParametresDemarrage,
@@ -321,6 +355,10 @@ export function validerDemarrage(
 ): ErreurDemarrage[] {
   const erreurs: ErreurDemarrage[] = [];
   if (params.nomEntreprise.trim().length === 0) erreurs.push('nomVide');
+  if (!emplacementPermis(secteur, params.emplacementId)) {
+    erreurs.push('emplacementInvalide');
+    return erreurs;
+  }
   if (params.apportPersonnel < REGLES_FINANCEMENT.apportMin) erreurs.push('apportInsuffisant');
   if (estSocietePersonnes(params.formeJuridique) && params.apportAssocie <= 0)
     erreurs.push('associeRequis');
@@ -371,7 +409,9 @@ export function decisionsParDefaut(
   _salaireMinimum = 0,
   forme: FormeJuridique = 'individuelle',
   methode: MethodeInventaire = 'coutMoyen',
+  ville?: Ville,
 ): Decisions {
+  const visites = visitesEstimees(secteur, ville);
   const prix: Record<string, number> = {};
   for (const ligne of secteur.lignes) prix[ligne.id] = ligne.prixReference;
   const societe = estSocieteActions(forme);
@@ -381,14 +421,14 @@ export function decisionsParDefaut(
     approvisionnement[ligne.id] = politiqueParDefaut(
       ligne,
       secteur.fournisseursDefaut[ligne.categorieAppro],
-      VISITES_ESTIMEES * ligne.tauxAchat,
+      visites * ligne.tauxAchat * saisonLigne(ligne, 1),
       conj,
     );
   }
   return {
     prix,
     qualiteId: 'standard',
-    publicite: publiciteParDefaut(),
+    publicite: publiciteParDefaut(secteur),
     promotion: 0,
     programmeFidelite: false,
     initiativesEco: [],
@@ -467,9 +507,11 @@ export function validerDecisions(
     promotion:
       Math.round(borner(fini(d.promotion, 0), b.promotion.min, b.promotion.max) * 100) / 100,
     programmeFidelite: Boolean(d.programmeFidelite),
-    initiativesEco: [...new Set(d.initiativesEco ?? [])],
+    initiativesEco: [...new Set(d.initiativesEco ?? [])].filter((id) =>
+      secteur.initiativesEco.includes(id),
+    ),
     panierBleu: Boolean(d.panierBleu),
-    livraison: Boolean(d.livraison),
+    livraison: Boolean(d.livraison) && secteur.partLivraison > 0,
     reponseAvis: ['ignorer', 'repondre', 'compenser'].includes(d.reponseAvis)
       ? d.reponseAvis
       : 'ignorer',
@@ -558,17 +600,29 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
   const nouvelId = (prefixe: string) => `${prefixe}-${prochainId++}`;
 
   const demarches = {} as Record<IdDemarche, boolean>;
-  for (const id of IDS_DEMARCHES) demarches[id] = params.demarches.includes(id);
+  for (const id of IDS_DEMARCHES)
+    demarches[id] = estApplicable(id, secteur) && params.demarches.includes(id);
   if (immatriculationObligatoire(forme)) demarches.req = true;
 
-  const poste = posteParId(secteur.postes[0]);
-  const salaire = Math.max(salaireMinimum, salaireMarchePoste(poste, ville.indiceSalaires, 1));
-  const employes = [1, 2, 3].map(() =>
-    genererEmploye(nouvelId('emp'), poste, poste.heuresSemaineDefaut, salaire, rng),
-  );
+  const employes = secteur.equipeDepart.flatMap((eq) => {
+    const poste = posteParId(eq.posteId);
+    const salaire = Math.max(salaireMinimum, salaireMarchePoste(poste, ville.indiceSalaires, 1));
+    return Array.from({ length: eq.nombre }, () =>
+      genererEmploye(nouvelId('emp'), poste, poste.heuresSemaineDefaut, salaire, rng),
+    );
+  });
   const qualite = qualiteDe(secteur, 'standard');
   const livre = creerGrandLivre();
-  const decisions = decisionsParDefaut(secteur, salaireMinimum, forme, params.methodeInventaire);
+  const decisions = decisionsParDefaut(
+    secteur,
+    salaireMinimum,
+    forme,
+    params.methodeInventaire,
+    ville,
+  );
+  const visites = visitesEstimees(secteur, ville);
+  const typeEquipement = equipement.type ?? 'equipement';
+  const typeAmenagement = amenagement.type ?? 'ameliorations';
 
   // Stock initial : quelques jours de ventes des produits périssables; le reste du budget
   // va aux marchandises qui se conservent le plus longtemps (grains de café, lait UHT…).
@@ -577,11 +631,16 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
     const f = fournisseurParId(decisions.approvisionnement[ligne.id].fournisseurId);
     const cout = coutLigne(ligne, f.id, conjoncture);
     const conservation = f.conservationJours ?? ligne.conservationJours;
-    const demande = VISITES_ESTIMEES * ligne.tauxAchat;
+    const demande = visites * ligne.tauxAchat * saisonLigne(ligne, 1);
     const jours = Math.max(1, Math.min(conservation - 1, 5));
     return { ligne, cout, conservation, demande, valeur: (demande / 30) * jours * cout };
   });
-  const durable = besoins.reduce((a, b) => (b.conservation > a.conservation ? b : a), besoins[0]);
+  const vendues = besoins.filter((b) => b.demande > 0);
+  const candidats = vendues.length > 0 ? vendues : besoins;
+  const durable = candidats.reduce(
+    (a, b) => (b.conservation > a.conservation ? b : a),
+    candidats[0],
+  );
   let reste = secteur.stockInitial;
   for (const b of besoins) {
     if (b === durable) continue;
@@ -639,8 +698,8 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
       {
         id: nouvelId('immo'),
         nom: equipement.nom,
-        type: 'equipement',
-        classeDpa: '8',
+        type: typeEquipement,
+        classeDpa: equipement.classeDpa ?? '8',
         cout: equipement.cout,
         dureeVieMois: equipement.dureeVieMois,
         acquisition: -1,
@@ -649,10 +708,10 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
       {
         id: nouvelId('immo'),
         nom: amenagement.nom,
-        type: 'ameliorations',
-        classeDpa: '13',
+        type: typeAmenagement,
+        classeDpa: amenagement.classeDpa ?? '13',
         cout: amenagement.cout,
-        dureeVieMois: DUREE_BAIL_MOIS,
+        dureeVieMois: amenagement.dureeVieMois ?? DUREE_BAIL_MOIS,
         acquisition: -1,
         amortCumule: 0,
       },
@@ -667,7 +726,14 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
     dilemmes: [],
     historiqueDilemmes: {},
     risques: [],
-    effetsMois: { capacite: 1, heuresProprietaire: 0, primes: 0, pertesRecurrentes: [] },
+    effetsMois: {
+      capacite: 1,
+      heuresProprietaire: 0,
+      primes: 0,
+      joursFermeture: 0,
+      pertesRecurrentes: [],
+      revenusRecurrents: [],
+    },
     livre,
     prets: [],
     margeCredit: {
@@ -685,6 +751,8 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
     enFaillite: false,
     prochainId: 0,
     joursFermeture: 0,
+    modificateurs: [],
+    vente: null,
   };
 
   // Financement : mise de fonds (capital, parts d'associés ou actions).
@@ -794,24 +862,32 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
   }
 
   // Investissements de démarrage (taxes récupérables seulement si l'entreprise est inscrite).
+  const compteEquipement = COMPTES_IMMOBILISATIONS[typeEquipement].actif;
+  const compteAmenagement = COMPTES_IMMOBILISATIONS[typeAmenagement].actif;
+  const avantEquipement = livre.soldes[compteEquipement];
   payer(
     livre,
     entreprise,
     `Achat : ${equipement.nom}`,
-    'equipement',
+    compteEquipement,
     couts.equipement,
     true,
     'acquisitionImmobilisations',
   );
+  const coutEquipement = livre.soldes[compteEquipement] - avantEquipement;
+  const avantAmenagement = livre.soldes[compteAmenagement];
   payer(
     livre,
     entreprise,
-    `Travaux : ${amenagement.nom}`,
-    'ameliorationsLocatives',
+    typeAmenagement === 'informatique'
+      ? `Conception : ${amenagement.nom}`
+      : `Travaux : ${amenagement.nom}`,
+    compteAmenagement,
     couts.amenagement,
     true,
     'acquisitionImmobilisations',
   );
+  const coutAmenagement = livre.soldes[compteAmenagement] - avantAmenagement;
   ecritureSimple(
     livre,
     'Dépôt de garantie du bail',
@@ -862,15 +938,40 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
   }
 
   // Le coût des immobilisations inscrit aux livres (taxes non récupérables incluses au besoin).
-  entreprise.immobilisations[0].cout = versDollars(livre.soldes.equipement);
-  entreprise.immobilisations[1].cout = versDollars(livre.soldes.ameliorationsLocatives);
+  entreprise.immobilisations[0].cout = versDollars(coutEquipement);
+  entreprise.immobilisations[1].cout = versDollars(coutAmenagement);
   // Valeurs fiscales de départ des biens amortissables (FNACC).
-  ajouterAcquisition(entreprise.fiscal, '8', versDollars(livre.soldes.equipement));
-  ajouterAcquisition(entreprise.fiscal, '13', versDollars(livre.soldes.ameliorationsLocatives));
+  for (const immo of entreprise.immobilisations)
+    ajouterAcquisition(entreprise.fiscal, immo.classeDpa, immo.cout);
 
-  // Jalon 1 : deux concurrents (le Géant et le Local branché).
-  const concurrents = PERSONNALITES.slice(0, 2).map((p) =>
-    creerConcurrent(p, secteur, diff.agressivite),
+  // Cinq concurrents (le Nouveau joueur arrive en cours de partie).
+  const saisonMoyenne = secteur.saisonnalite.reduce((a, x) => a + x, 0) / 12;
+  const potentielMoyen =
+    (ville.marchePotentielMensuel[secteur.id] ?? 0) * saisonMoyenne * diff.marche;
+  const concurrents = PERSONNALITES.map((p) =>
+    creerConcurrent(p, {
+      secteur,
+      ville,
+      potentiel: potentielMoyen,
+      agressivite: diff.agressivite,
+      rng,
+      dureeMois: config.dureeMois,
+    }),
+  );
+  calibrerConcurrents(
+    concurrents,
+    personnaliteParId,
+    secteur,
+    potentielMoyen,
+    offreReference(secteur, potentielMoyen),
+    {
+      segments: segmentsMarche(secteur),
+      livraison: {
+        part: secteur.partLivraison,
+        majoration: PARAMETRES_MARKETING.livraison.majorationClient,
+        panier: secteur.panierLivraison,
+      },
+    },
   );
 
   entreprise.prochainId = prochainId;
@@ -884,6 +985,26 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
     entreprises: [entreprise],
     concurrents,
     terminee: false,
+  };
+}
+
+/**
+ * Offre d'un commerce indépendant typique déjà établi : sert à estimer les ventes, donc
+ * les frais fixes, des concurrents au départ.
+ */
+function offreReference(secteur: Secteur, potentiel: number): Offre {
+  const prix: Record<string, number> = {};
+  for (const l of secteur.lignes) prix[l.id] = l.prixReference;
+  return {
+    id: 'reference',
+    prix,
+    qualite: 0.55,
+    service: 0.6,
+    ambiance: 0.6,
+    notoriete: 0.3,
+    note: 4,
+    heuresOuverture: secteur.heuresOuvertureReference,
+    capaciteVisites: potentiel,
   };
 }
 

@@ -37,7 +37,7 @@ export const SECTEURS: readonly Secteur[] = secteursJson.secteurs as unknown as 
 export const VILLES: readonly Ville[] = villesJson.villes as Ville[];
 export const POSTES: readonly Poste[] = salairesJson.postes as Poste[];
 export const PERSONNALITES: readonly PersonnaliteConcurrent[] =
-  concurrentsJson.personnalites as PersonnaliteConcurrent[];
+  concurrentsJson.personnalites as unknown as PersonnaliteConcurrent[];
 export const PRENOMS: readonly string[] = nomsJson.prenoms;
 export const NOMS_FAMILLE: readonly string[] = nomsJson.noms;
 export const CLIENTS_AFFAIRES: readonly { nom: string; type: string }[] = nomsJson.clientsAffaires;
@@ -64,8 +64,9 @@ export const TYPES_PLACEMENTS: readonly {
   ecart: number;
   dureeMois: number;
 }[] = financementJson.placements;
+/** Événements et dilemmes (au moins 60), tous départements confondus. */
 export const DILEMMES: readonly DefinitionDilemme[] =
-  evenementsJson.dilemmes as unknown as DefinitionDilemme[];
+  evenementsJson.evenements as unknown as DefinitionDilemme[];
 
 function trouver<T extends { id: string }>(liste: readonly T[], id: string, type: string): T {
   const element = liste.find((e) => e.id === id);
@@ -91,6 +92,25 @@ export const typeEtudeParId = (id: string): TypeEtude => trouver(TYPES_ETUDES, i
 export const sourceFinancementParId = (id: string): SourceFinancement =>
   trouver(SOURCES_FINANCEMENT, id, 'Source de financement');
 export const dilemmeParId = (id: string): DefinitionDilemme => trouver(DILEMMES, id, 'Dilemme');
+
+/** Postes offerts dans un secteur. */
+export function postesSecteur(secteur: Secteur): Poste[] {
+  return secteur.postes.map(posteParId);
+}
+
+/** Formations offertes dans un secteur (postes du secteur; hygiène seulement en alimentation). */
+export function formationsSecteur(secteur: Secteur): Formation[] {
+  return FORMATIONS.filter(
+    (f) =>
+      (!f.hygiene || secteur.alimentation) &&
+      (f.postes === null || f.postes.some((p) => secteur.postes.includes(p))),
+  );
+}
+
+/** Initiatives écoresponsables offertes dans un secteur. */
+export function initiativesSecteur(secteur: Secteur): InitiativeEco[] {
+  return INITIATIVES_ECO.filter((i) => secteur.initiativesEco.includes(i.id));
+}
 
 /** Fournisseurs possibles pour une catégorie d'approvisionnement. */
 export function fournisseursCategorie(categorie: string): Fournisseur[] {

@@ -204,6 +204,12 @@ export const PLAN_COMPTABLE = {
     classe: 'produit',
     groupe: 'autresProduits',
   },
+  autresRevenus: {
+    numero: '4700',
+    nom: 'Autres revenus (indemnités d’assurance, cachets, locations)',
+    classe: 'produit',
+    groupe: 'autresProduits',
+  },
   coutMarchandises: {
     numero: '5000',
     nom: 'Coût des marchandises vendues',
@@ -315,6 +321,18 @@ export const PLAN_COMPTABLE = {
     classe: 'charge',
     groupe: 'exploitation',
   },
+  fraisExpedition: {
+    numero: '5335',
+    nom: 'Frais d’expédition et de déplacement',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  fraisDivers: {
+    numero: '5490',
+    nom: 'Frais divers',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
   ecoresponsabilite: {
     numero: '5340',
     nom: 'Initiatives écoresponsables',
@@ -410,6 +428,10 @@ export const FLUX = {
   interetsPayes: { nom: 'Intérêts payés', activite: 'exploitation' },
   interetsRecus: { nom: 'Intérêts reçus', activite: 'exploitation' },
   subventionsRecues: { nom: 'Subventions reçues', activite: 'exploitation' },
+  autresEncaissements: {
+    nom: 'Autres encaissements (assurances, cachets, locations)',
+    activite: 'exploitation',
+  },
   achatStockInitial: { nom: 'Achat du stock initial', activite: 'exploitation' },
   fraisDemarrage: { nom: 'Frais de démarrage', activite: 'exploitation' },
   acquisitionImmobilisations: {

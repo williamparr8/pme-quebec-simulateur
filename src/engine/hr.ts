@@ -5,7 +5,7 @@
 import { AVANTAGES, NOMS_FAMILLE, PRENOMS, TRAITS, plateformeParId, traitParId } from '../data';
 import type { PlateformeRecrutement, Poste, TraitPersonnalite } from './data-types';
 import type { Rng } from './rng';
-import type { Candidat, Employe } from './types';
+import type { Candidat, Employe, Entreprise } from './types';
 import { borner, lisser } from './util';
 
 /** Ancien coût fixe d'un affichage (référence pour l'embauche rapide des tests). */
@@ -294,9 +294,20 @@ export function semainesPreavis(moisService: number): number {
   return 8;
 }
 
-/** Pénurie de main-d'œuvre du moment : plus forte en période d'expansion, plus faible l'été (étudiants). */
-export function penurieDuMois(base: number, phase: string, mois: number): number {
-  const conj = phase === 'expansion' ? 1.2 : phase === 'ralentissement' ? 0.8 : 1;
+/**
+ * Pénurie de main-d'œuvre du moment (0 à 1) : forte quand le chômage de la région est
+ * bas (ex. 3 % → 0,74; 8,8 % → 0,33), plus faible l'été (étudiants disponibles).
+ * @param ajout pénurie supplémentaire causée par un événement
+ */
+export function penurieDuMois(chomage: number, mois: number, ajout = 0): number {
+  const base = borner(0.95 - 7 * chomage, 0.1, 0.9);
   const saison = mois >= 5 && mois <= 8 ? 0.75 : 1;
-  return borner(base * conj * saison, 0, 1);
+  return borner(base * saison + ajout, 0, 1);
+}
+
+/** Conformité en hygiène et salubrité : gestionnaire formé ou au moins 10 % du personnel formé. */
+export function conformeHygiene(ent: Entreprise): boolean {
+  if (ent.rh.gestionnaireHygiene) return true;
+  const formes = ent.employes.filter((e) => e.formations.includes('manipulateur')).length;
+  return formes >= Math.max(1, Math.ceil(ent.employes.length * 0.1));
 }

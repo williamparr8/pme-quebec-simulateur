@@ -3,6 +3,7 @@
  * 30, 45 ou 60 jours, comptes clients, retards de paiement et mauvaises créances.
  */
 import { CLIENTS_AFFAIRES } from '../data';
+import type { NouveauProduit } from './data-types';
 import type { Rng } from './rng';
 import type { AppelOffres, Contrat, Entreprise, Facture } from './types';
 import { borner } from './util';
@@ -19,23 +20,28 @@ export function moisEcheance(delaiJours: 30 | 45 | 60): number {
   return delaiJours === 30 ? 1 : 2;
 }
 
-/** Saisonnalité des appels d'offres (rentrée et Fêtes plus occupées). */
+/** Saisonnalité des appels d'offres par défaut (rentrée et Fêtes plus occupées). */
 const SAISON_B2B = [0.8, 0.9, 1, 1, 1, 0.9, 0.5, 0.6, 1.3, 1.2, 1.2, 1.4];
 
-/** Génère les appels d'offres du mois (0 à 2). */
+/** Génère les appels d'offres du mois (0 à 2) pour le produit vendu aux entreprises. */
 export function genererAppels(
   ent: Entreprise,
+  produit: NouveauProduit,
   prixReference: number,
   index: number,
   mois: number,
   nouvelId: () => string,
   rng: Rng,
 ): AppelOffres[] {
-  const attendus = 0.75 * SAISON_B2B[mois - 1];
+  const info = produit.b2b ?? { quantiteMin: 40, quantiteMax: 320, coursier: true };
+  const saison = info.saisonnalite ?? SAISON_B2B;
+  const clients = info.clients && info.clients.length > 0 ? info.clients : CLIENTS_AFFAIRES;
+  const pas = info.quantiteMax >= 100 ? 10 : 1;
+  const attendus = Math.min(0.95, 0.75 * (saison[mois - 1] ?? 1));
   const n = Math.min(2, (rng.chance(attendus) ? 1 : 0) + (rng.chance(attendus * 0.3) ? 1 : 0));
   const appels: AppelOffres[] = [];
   for (let i = 0; i < n; i++) {
-    const client = rng.pick(CLIENTS_AFFAIRES);
+    const client = rng.pick(clients);
     if (ent.b2b.contrats.some((c) => c.client === client.nom)) continue;
     const coteTirage = rng.next();
     const cote: 'A' | 'B' | 'C' = coteTirage < 0.5 ? 'A' : coteTirage < 0.85 ? 'B' : 'C';
@@ -44,7 +50,10 @@ export function genererAppels(
       id: nouvelId(),
       client: client.nom,
       typeClient: client.type,
-      repasParMois: Math.round(rng.range(40, 320) / 10) * 10,
+      quantiteParMois: Math.max(
+        info.quantiteMin,
+        Math.round(rng.range(info.quantiteMin, info.quantiteMax) / pas) * pas,
+      ),
       dureeMois: rng.pick([3, 6, 6, 12]),
       delaiPaiementJours: delai,
       cote,
@@ -84,7 +93,7 @@ export function resoudreSoumissions(ent: Entreprise, nouvelId: () => string, rng
         id: nouvelId(),
         client: a.client,
         cote: a.cote,
-        repasParMois: a.repasParMois,
+        quantiteParMois: a.quantiteParMois,
         prixUnitaire: a.soumission,
         moisRestants: a.dureeMois,
         delaiPaiementJours: a.delaiPaiementJours,

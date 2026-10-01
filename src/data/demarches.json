@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "description": "Démarches de démarrage d'une PME au Québec. Une démarche obligatoire oubliée peut être découverte chaque mois (probabilité), ce qui entraîne une amende, parfois une fermeture temporaire, puis la régularisation forcée.",
+    "description": "Démarches de démarrage d'une PME au Québec. Une démarche obligatoire oubliée peut être découverte chaque mois (probabilité), ce qui entraîne une amende, parfois une fermeture temporaire, puis la régularisation forcée. Les démarches « secteur » ne s'appliquent qu'aux secteurs qui les exigent (champ « permis » de secteurs.json).",
     "avertissement": "Les coûts des permis et les montants des amendes sont des estimations pédagogiques (À VÉRIFIER) : ils varient selon la municipalité et la gravité de l'infraction."
   },
   "demarches": [
@@ -47,12 +47,12 @@
       "probabiliteDetection": 0.1,
       "amende": 1000,
       "joursFermeture": 3,
-      "organisme": "Ville de Montréal"
+      "organisme": "Municipalité"
     },
     {
       "id": "mapaq",
-      "nom": "Permis de restauration du MAPAQ",
-      "description": "Obligatoire pour préparer et servir des aliments. L'inspecteur vérifie l'hygiène et la salubrité.",
+      "nom": "Permis alimentaire du MAPAQ",
+      "description": "Obligatoire pour préparer, servir ou vendre des aliments. L'inspecteur vérifie l'hygiène et la salubrité.",
       "cout": 380,
       "obligation": "alimentation",
       "probabiliteDetection": 0.15,
@@ -87,13 +87,46 @@
     {
       "id": "francisation",
       "nom": "Respect de la Charte de la langue française",
-      "description": "Affichage, menu, emballages et site Web en français (le français doit être nettement prédominant sur l'affichage). Coût : traduction et enseigne conforme.",
+      "description": "Affichage, menus, emballages et site Web en français (le français doit être nettement prédominant sur l'affichage). Coût : traduction et enseigne conforme.",
       "cout": 300,
       "obligation": "toujours",
       "probabiliteDetection": 0.05,
       "amende": 3000,
       "joursFermeture": 0,
       "organisme": "Office québécois de la langue française (OQLF)"
+    },
+    {
+      "id": "racj",
+      "nom": "Permis d'épicerie de la RACJ (bière, vin et cidre)",
+      "description": "Obligatoire pour vendre de la bière, du vin ou du cidre dans une épicerie. Vente interdite aux mineurs, heures de vente encadrées.",
+      "cout": 450,
+      "obligation": "secteur",
+      "probabiliteDetection": 0.12,
+      "amende": 2500,
+      "joursFermeture": 0,
+      "organisme": "Régie des alcools, des courses et des jeux (RACJ)"
+    },
+    {
+      "id": "pesticides",
+      "nom": "Permis d'application de pesticides (Environnement)",
+      "description": "Obligatoire pour appliquer des pesticides ou certains engrais commerciaux chez les clients, avec des employés certifiés. Plusieurs villes exigent aussi un enregistrement annuel.",
+      "cout": 400,
+      "obligation": "secteur",
+      "probabiliteDetection": 0.1,
+      "amende": 2000,
+      "joursFermeture": 0,
+      "organisme": "Ministère de l'Environnement (MELCCFP)"
+    },
+    {
+      "id": "confidentialite",
+      "nom": "Politique de confidentialité et conditions de vente en ligne",
+      "description": "La Loi 25 exige une politique de confidentialité et un responsable des renseignements personnels; la Loi sur la protection du consommateur encadre les contrats conclus à distance (prix total, frais de livraison, annulation).",
+      "cout": 600,
+      "obligation": "secteur",
+      "probabiliteDetection": 0.08,
+      "amende": 3000,
+      "joursFermeture": 0,
+      "organisme": "Commission d'accès à l'information et Office de la protection du consommateur"
     }
   ]
 }

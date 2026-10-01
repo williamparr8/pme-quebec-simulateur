@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "description": "Paramètres des secteurs d'activité. Les prix et coûts sont en dollars canadiens de 2026, avant taxes.",
+    "description": "Paramètres des secteurs d'activité. Les prix et coûts sont en dollars canadiens de 2026, avant taxes. Une « visite » est un client servi (café, boutique, salon, épicerie), une commande (commerce en ligne) ou un compte client actif ce mois-ci (paysagement).",
     "sources": [
       {
         "url": "https://www.touchbistro.com/wp-content/uploads/2026/01/TouchBistro-2026-Canadian-State-of-Restaurants-Report.pdf",
@@ -16,14 +16,25 @@
         "url": "https://www.canada.ca/fr/agence-revenu/services/impot/entreprises/sujets/entreprise-individuelle-societe-personnes/declarer-revenus-depenses-entreprise/reclamer-deduction-amortissement/categories-biens-amortissables.html",
         "verifie": "2026-10-01",
         "note": "Catégories de DPA des investissements : 8 (équipement, 20 %), 10 (véhicules, 30 %), 12 (logiciels, 100 %), 13 (améliorations locatives), 50 (matériel informatique, 55 %)."
+      },
+      {
+        "url": "https://www.quebec.ca/nouvelles/actualites/details/financement-du-regime-quebecois-de-sante-et-de-securite-du-travail-pour-2026-la-cnesst-fixe-le-taux-moyen-de-cotisation-pour-2026-62890",
+        "verifie": "2026-10-01",
+        "note": "Taux moyen de cotisation de la CNESST pour 2026 : 1,54 $ par 100 $ de masse salariale. Les taux par secteur sont des estimations autour de ce taux moyen (À VÉRIFIER selon l'unité de classification)."
+      },
+      {
+        "url": "https://www.revenuquebec.ca/fr/entreprises/taxes/tpstvh-et-tvq/",
+        "verifie": "2026-10-01",
+        "note": "Produits alimentaires de base détaxés (fromages, produits d'épicerie); aliments préparés, boissons alcoolisées, vêtements et services taxables."
       }
     ],
-    "avertissement": "Les paramètres de demande (sensibilités, taux d'achat, saisonnalité, personas) et les effets des investissements sont des estimations de conception calibrées pour donner des résultats plausibles. Voir DECISIONS.md."
+    "avertissement": "Les paramètres de demande (sensibilités, taux d'achat, saisonnalité, personas, temps de production) et les effets des investissements sont des estimations de conception calibrées pour donner des résultats plausibles. Voir DECISIONS.md."
   },
   "secteurs": [
     {
       "id": "cafe",
       "nom": "Café-bistro",
+      "commerce": "le café",
       "description": "Un café de quartier qui sert des boissons chaudes et froides, des viennoiseries et des repas légers le midi.",
       "tauxCnesst": 0.0175,
       "tauxCnesstNote": "À VÉRIFIER : taux 2026 de l'unité « restaurants » de la CNESST (estimation légèrement au-dessus du taux moyen de 1,54 $ par 100 $).",
@@ -35,14 +46,14 @@
           "id": "boissons",
           "nom": "Boissons",
           "detail": "Cafés, thés, chocolats chauds, boissons froides",
-          "prixReference": 5.0,
+          "prixReference": 5,
           "coutUnitaire": 1.3,
           "tauxAchat": 0.92,
           "elasticite": 0.6,
           "perissable": false,
           "conservationJours": 60,
           "conservationNote": "Mélange de produits : grains de café et sirops (plusieurs mois), lait UHT; le lait frais est racheté au besoin.",
-          "cuisine": false,
+          "production": false,
           "unite": "boisson",
           "categorieAppro": "boissons"
         },
@@ -53,10 +64,10 @@
           "prixReference": 3.75,
           "coutUnitaire": 1.45,
           "tauxAchat": 0.38,
-          "elasticite": 1.0,
+          "elasticite": 1,
           "perissable": true,
           "conservationJours": 2,
-          "cuisine": false,
+          "production": false,
           "unite": "viennoiserie",
           "categorieAppro": "boulangerie"
         },
@@ -70,7 +81,8 @@
           "elasticite": 1.2,
           "perissable": true,
           "conservationJours": 4,
-          "cuisine": true,
+          "production": true,
+          "minutesProduction": 5,
           "unite": "repas",
           "categorieAppro": "cuisine"
         }
@@ -87,7 +99,7 @@
           "id": "standard",
           "nom": "Standard",
           "description": "Café de torréfacteur, recettes maison simples.",
-          "multiplicateurCout": 1.0,
+          "multiplicateurCout": 1,
           "score": 0.55
         },
         {
@@ -105,15 +117,21 @@
           "score": 0.88
         }
       ],
-      "saisonnalite": [1.0, 0.97, 1.0, 0.98, 0.99, 0.95, 0.86, 0.9, 1.04, 1.06, 1.06, 1.08],
+      "saisonnalite": [1, 0.97, 1, 0.98, 0.99, 0.95, 0.86, 0.9, 1.04, 1.06, 1.06, 1.08],
       "saisonnaliteNote": "Index de janvier à décembre. Creux en juillet (vacances de la construction, étudiants absents), sommet à l'automne et à Noël.",
+      "croissanceAnnuelle": 0.01,
+      "cyclicite": 0.8,
       "transactionsParHeureEmploye": 6.5,
-      "unitesCuisineParHeure": 12,
+      "libelleProduction": "Cuisine",
+      "minutesProductionDefaut": 5,
+      "productionProprietaire": 0,
+      "productionSansPersonnel": 0.12,
+      "libellePertes": "produits périmés",
       "heuresOuvertureReference": 84,
       "sensibilites": {
         "prix": 2.5,
         "qualite": 1.6,
-        "service": 1.0,
+        "service": 1,
         "note": 0.5,
         "ambiance": 0.6,
         "heures": 0.6,
@@ -136,24 +154,42 @@
         {
           "personaId": "etudiants",
           "part": 0.24,
-          "panier": { "boissons": 1.0, "viennoiseries": 0.9, "repas": 0.6 }
+          "panier": {
+            "boissons": 1,
+            "viennoiseries": 0.9,
+            "repas": 0.6
+          }
         },
         {
           "personaId": "familles",
           "part": 0.2,
-          "panier": { "boissons": 0.85, "viennoiseries": 1.45, "repas": 1.0 }
+          "panier": {
+            "boissons": 0.85,
+            "viennoiseries": 1.45,
+            "repas": 1
+          }
         },
         {
           "personaId": "professionnels",
           "part": 0.36,
-          "panier": { "boissons": 1.1, "viennoiseries": 0.8, "repas": 1.4 }
+          "panier": {
+            "boissons": 1.1,
+            "viennoiseries": 0.8,
+            "repas": 1.4
+          }
         },
         {
           "personaId": "retraites",
           "part": 0.2,
-          "panier": { "boissons": 0.95, "viennoiseries": 1.15, "repas": 0.85 }
+          "panier": {
+            "boissons": 0.95,
+            "viennoiseries": 1.15,
+            "repas": 0.85
+          }
         }
       ],
+      "emplacements": ["rue", "centre", "residentiel"],
+      "importanceEmplacement": 1,
       "superficiePi2": 1200,
       "equipements": [
         {
@@ -208,6 +244,7 @@
       "partAchatsTaxables": 0.25,
       "partAchatsTaxablesNote": "Les aliments de base (grains de café, lait, farine) sont détaxés; les emballages, gobelets et produits d'entretien sont taxables.",
       "alimentation": true,
+      "permis": [],
       "fraisDemarrage": 2500,
       "fraisDemarrageNote": "Enseigne, inauguration, frais juridiques de base.",
       "fraisFixesMensuels": {
@@ -220,10 +257,45 @@
       },
       "fraisFixesNote": "Estimations pour un local de 1 200 pi² à Montréal. Électricité et gaz : Hydro-Québec tarif G; assurances responsabilité et biens.",
       "postes": ["barista", "cuisinier", "aideCuisine", "gerant", "commisComptable", "marketeur"],
+      "equipeDepart": [
+        {
+          "posteId": "barista",
+          "nombre": 3
+        }
+      ],
       "fournisseursDefaut": {
         "boissons": "torrefacteurLocal",
         "boulangerie": "boulangerieIndustrielle",
         "cuisine": "distributeurAlimentaire"
+      },
+      "initiativesEco": ["emballages", "tasse", "compost", "certification"],
+      "canaux": {},
+      "publiciteDefaut": {
+        "meta": 800,
+        "google": 500,
+        "flyers": 200
+      },
+      "concurrents": {
+        "geant": {
+          "nom": "Café Mégapolis",
+          "description": "Grande chaîne : prix bas, gros budget publicitaire, ouvert de 6 h à 22 h, service rapide mais impersonnel."
+        },
+        "local": {
+          "nom": "Le Torréfacteur du Coin",
+          "description": "Café de spécialité indépendant : qualité élevée, image forte, prix élevés. Il répond à la concurrence par la qualité et la publicité, pas par les prix."
+        },
+        "agressif": {
+          "nom": "Café Rabais Express",
+          "description": "Petite chaîne qui déclenche des guerres de prix et copie rapidement les bonnes idées des autres."
+        },
+        "prudent": {
+          "nom": "Café-déli Chez Marcel",
+          "description": "Institution du quartier depuis 1987 : clientèle fidèle, réagit lentement et change rarement quoi que ce soit."
+        },
+        "nouveau": {
+          "nom": "Kafé Labo",
+          "description": "Jeune chaîne branchée financée par du capital de risque : elle accepte de perdre de l'argent pour gagner des parts de marché."
+        }
       },
       "nouveauxProduits": [
         {
@@ -237,32 +309,43 @@
           "elasticite": 0.9,
           "perissable": false,
           "conservationJours": 20,
-          "cuisine": false,
+          "production": false,
           "unite": "boisson",
           "categorieAppro": "boissons",
           "coutDeveloppement": 2500,
           "delaiMois": 1,
           "probabiliteSucces": 0.7,
-          "segments": { "etudiants": 1.7, "familles": 0.9, "professionnels": 1.0, "retraites": 0.4 }
+          "segments": {
+            "etudiants": 1.7,
+            "familles": 0.9,
+            "professionnels": 1,
+            "retraites": 0.4
+          }
         },
         {
           "id": "brunch",
           "nom": "Brunch de fin de semaine",
           "detail": "Œufs, crêpes et cafés le samedi et le dimanche",
           "description": "Attire les familles et les retraités la fin de semaine. Exige du temps en cuisine.",
-          "prixReference": 18.0,
+          "prixReference": 18,
           "coutUnitaire": 6.2,
           "tauxAchat": 0.05,
           "elasticite": 1.1,
           "perissable": true,
           "conservationJours": 4,
-          "cuisine": true,
+          "production": true,
+          "minutesProduction": 6,
           "unite": "brunch",
           "categorieAppro": "cuisine",
           "coutDeveloppement": 4500,
           "delaiMois": 1,
           "probabiliteSucces": 0.65,
-          "segments": { "etudiants": 0.9, "familles": 1.8, "professionnels": 0.7, "retraites": 1.2 }
+          "segments": {
+            "etudiants": 0.9,
+            "familles": 1.8,
+            "professionnels": 0.7,
+            "retraites": 1.2
+          }
         },
         {
           "id": "bolsSante",
@@ -275,52 +358,70 @@
           "elasticite": 1.2,
           "perissable": true,
           "conservationJours": 3,
-          "cuisine": true,
+          "production": true,
+          "minutesProduction": 6,
           "unite": "bol",
           "categorieAppro": "cuisine",
           "coutDeveloppement": 3500,
           "delaiMois": 1,
           "probabiliteSucces": 0.55,
-          "segments": { "etudiants": 1.4, "familles": 0.8, "professionnels": 1.4, "retraites": 0.5 }
+          "segments": {
+            "etudiants": 1.4,
+            "familles": 0.8,
+            "professionnels": 1.4,
+            "retraites": 0.5
+          }
         },
         {
           "id": "grainsVrac",
           "nom": "Café en grains à emporter",
           "detail": "Sacs de 340 g de café torréfié",
           "description": "Augmente le panier moyen. Il faut concevoir des emballages et un étiquetage conformes (français obligatoire, valeur nutritive au besoin).",
-          "prixReference": 17.0,
-          "coutUnitaire": 8.0,
+          "prixReference": 17,
+          "coutUnitaire": 8,
           "tauxAchat": 0.03,
           "elasticite": 0.8,
           "perissable": false,
           "conservationJours": 90,
-          "cuisine": false,
+          "production": false,
+          "taxable": false,
           "unite": "sac",
           "categorieAppro": "boissons",
           "coutDeveloppement": 3000,
           "delaiMois": 2,
           "probabiliteSucces": 0.6,
-          "segments": { "etudiants": 0.5, "familles": 0.9, "professionnels": 1.4, "retraites": 1.3 }
+          "segments": {
+            "etudiants": 0.5,
+            "familles": 0.9,
+            "professionnels": 1.4,
+            "retraites": 1.3
+          }
         },
         {
           "id": "traiteur",
           "nom": "Traiteur pour entreprises",
           "detail": "Boîtes à lunch et plateaux livrés aux bureaux",
           "description": "Ouvre les ventes aux entreprises (B2B) : tu réponds à des appels d'offres et tu factures à 30, 45 ou 60 jours. Attention aux comptes clients et aux mauvaises créances.",
-          "prixReference": 15.0,
+          "prixReference": 15,
           "coutUnitaire": 5.2,
           "tauxAchat": 0,
-          "elasticite": 1.0,
+          "elasticite": 1,
           "perissable": true,
           "conservationJours": 3,
-          "cuisine": true,
+          "production": true,
+          "minutesProduction": 5,
           "unite": "boîte à lunch",
           "categorieAppro": "cuisine",
           "coutDeveloppement": 5000,
           "delaiMois": 1,
           "probabiliteSucces": 1,
           "segments": {},
-          "b2b": true
+          "b2b": {
+            "quantiteMin": 40,
+            "quantiteMax": 320,
+            "coursier": true,
+            "saisonnalite": [0.8, 0.9, 1, 1, 1, 0.9, 0.5, 0.6, 1.3, 1.2, 1.2, 1.4]
+          }
         }
       ],
       "investissements": [
@@ -333,7 +434,12 @@
           "dureeVieMois": 84,
           "classeDpa": "8",
           "unique": true,
-          "effets": { "capaciteService": 0.1, "qualiteLignes": { "boissons": 0.02 } }
+          "effets": {
+            "capaciteService": 0.1,
+            "qualiteLignes": {
+              "boissons": 0.02
+            }
+          }
         },
         {
           "id": "four",
@@ -345,8 +451,12 @@
           "classeDpa": "8",
           "unique": true,
           "effets": {
-            "qualiteLignes": { "viennoiseries": 0.07 },
-            "coutLignes": { "viennoiseries": 0.85 }
+            "qualiteLignes": {
+              "viennoiseries": 0.07
+            },
+            "coutLignes": {
+              "viennoiseries": 0.85
+            }
           }
         },
         {
@@ -358,7 +468,9 @@
           "dureeVieMois": 60,
           "classeDpa": "13",
           "unique": true,
-          "effets": { "ambiance": 0.15 }
+          "effets": {
+            "ambiance": 0.15
+          }
         },
         {
           "id": "terrasse",
@@ -369,7 +481,9 @@
           "dureeVieMois": 60,
           "classeDpa": "13",
           "unique": true,
-          "effets": { "demandeEte": 0.12 },
+          "effets": {
+            "demandeEte": 0.12
+          },
           "fraisMensuels": 130,
           "moisActifs": [5, 6, 7, 8, 9]
         },
@@ -382,7 +496,9 @@
           "dureeVieMois": 72,
           "classeDpa": "10",
           "unique": true,
-          "effets": { "livraisonPropre": true },
+          "effets": {
+            "livraisonPropre": true
+          },
           "fraisMensuels": 450
         },
         {
@@ -394,7 +510,9 @@
           "dureeVieMois": 36,
           "classeDpa": "12",
           "unique": true,
-          "effets": { "pertesStocks": 0.7 },
+          "effets": {
+            "pertesStocks": 0.7
+          },
           "fraisMensuels": 60
         },
         {
@@ -406,7 +524,9 @@
           "dureeVieMois": 36,
           "classeDpa": "12",
           "unique": true,
-          "effets": { "commandeEnLigne": 0.15 },
+          "effets": {
+            "commandeEnLigne": 0.15
+          },
           "fraisMensuels": 40
         },
         {
@@ -418,7 +538,2936 @@
           "dureeVieMois": 36,
           "classeDpa": "50",
           "unique": true,
-          "effets": { "capaciteService": 0.04 }
+          "effets": {
+            "capaciteService": 0.04
+          }
+        }
+      ]
+    },
+    {
+      "id": "vetements",
+      "nom": "Boutique de vêtements",
+      "commerce": "la boutique",
+      "description": "Une boutique de mode qui vend des vêtements et des accessoires pour femmes et pour hommes. Beaucoup de stock à financer et des collections qui se démodent.",
+      "tauxCnesst": 0.0124,
+      "tauxCnesstNote": "À VÉRIFIER : estimation pour le commerce de détail (environ 1,24 $ par 100 $ de salaires en 2026).",
+      "margeBruteCible": [0.48, 0.58],
+      "margeNetteCible": [0.03, 0.09],
+      "coutMainOeuvreCible": [0.14, 0.22],
+      "lignes": [
+        {
+          "id": "hauts",
+          "nom": "Hauts et chandails",
+          "detail": "T-shirts, chemises, blouses, chandails",
+          "prixReference": 42,
+          "coutUnitaire": 18,
+          "tauxAchat": 0.42,
+          "elasticite": 1.1,
+          "perissable": false,
+          "conservationJours": 150,
+          "production": false,
+          "unite": "article",
+          "categorieAppro": "vetements"
+        },
+        {
+          "id": "basRobes",
+          "nom": "Pantalons, jeans et robes",
+          "detail": "Jeans, pantalons, jupes et robes",
+          "prixReference": 68,
+          "coutUnitaire": 30,
+          "tauxAchat": 0.24,
+          "elasticite": 1.1,
+          "perissable": false,
+          "conservationJours": 180,
+          "production": false,
+          "unite": "article",
+          "categorieAppro": "vetements"
+        },
+        {
+          "id": "manteaux",
+          "nom": "Manteaux et vestes",
+          "detail": "Manteaux d'hiver, imperméables et vestes",
+          "prixReference": 165,
+          "coutUnitaire": 72,
+          "tauxAchat": 0.07,
+          "elasticite": 1.3,
+          "perissable": false,
+          "conservationJours": 240,
+          "production": false,
+          "saisonnalite": [1.2, 0.9, 0.8, 0.9, 0.6, 0.3, 0.3, 0.6, 1.2, 1.6, 1.7, 1.4],
+          "unite": "manteau",
+          "categorieAppro": "vetements"
+        },
+        {
+          "id": "accessoires",
+          "nom": "Accessoires",
+          "detail": "Foulards, sacs, ceintures, bijoux",
+          "prixReference": 28,
+          "coutUnitaire": 10,
+          "tauxAchat": 0.3,
+          "elasticite": 0.9,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": false,
+          "unite": "accessoire",
+          "categorieAppro": "accessoires"
+        }
+      ],
+      "qualites": [
+        {
+          "id": "economique",
+          "nom": "Mode à petit prix",
+          "description": "Vêtements bon marché fabriqués en grande série.",
+          "multiplicateurCout": 0.8,
+          "score": 0.35
+        },
+        {
+          "id": "standard",
+          "nom": "Marques reconnues",
+          "description": "Marques canadiennes connues, qualité courante.",
+          "multiplicateurCout": 1,
+          "score": 0.55
+        },
+        {
+          "id": "superieure",
+          "nom": "Marques de créateurs",
+          "description": "Coupes soignées, tissus de meilleure qualité.",
+          "multiplicateurCout": 1.22,
+          "score": 0.72
+        },
+        {
+          "id": "artisanale",
+          "nom": "Créateurs québécois et matières durables",
+          "description": "Vêtements conçus au Québec, coton biologique et fibres recyclées.",
+          "multiplicateurCout": 1.45,
+          "score": 0.88
+        }
+      ],
+      "saisonnalite": [0.7, 0.72, 0.88, 0.95, 1, 0.95, 0.9, 1.1, 1.05, 1, 1.18, 1.57],
+      "saisonnaliteNote": "Creux après les Fêtes (janvier et février), rentrée scolaire en août, sommet du Vendredi fou et de Noël.",
+      "croissanceAnnuelle": -0.005,
+      "cyclicite": 1.3,
+      "transactionsParHeureEmploye": 1.6,
+      "libelleProduction": "Atelier de retouches",
+      "minutesProductionDefaut": 30,
+      "productionProprietaire": 0,
+      "productionSansPersonnel": 0,
+      "libellePertes": "invendus démodés (liquidés à perte)",
+      "heuresOuvertureReference": 60,
+      "sensibilites": {
+        "prix": 2,
+        "qualite": 1.6,
+        "service": 1.2,
+        "note": 0.4,
+        "ambiance": 0.9,
+        "heures": 0.5,
+        "eco": 0.35,
+        "local": 0.3
+      },
+      "utiliteAlternative": 0.5,
+      "visitesParClientMois": 0.6,
+      "partLivraison": 0,
+      "panierLivraison": {},
+      "segments": [
+        {
+          "personaId": "etudiants",
+          "part": 0.25,
+          "panier": {
+            "hauts": 1.2,
+            "basRobes": 1,
+            "manteaux": 0.6,
+            "accessoires": 1.3
+          }
+        },
+        {
+          "personaId": "familles",
+          "part": 0.25,
+          "panier": {
+            "hauts": 1,
+            "basRobes": 1.1,
+            "manteaux": 1.2,
+            "accessoires": 0.8
+          }
+        },
+        {
+          "personaId": "professionnels",
+          "part": 0.32,
+          "panier": {
+            "hauts": 1,
+            "basRobes": 1.1,
+            "manteaux": 1.2,
+            "accessoires": 1
+          }
+        },
+        {
+          "personaId": "retraites",
+          "part": 0.18,
+          "panier": {
+            "hauts": 0.8,
+            "basRobes": 0.9,
+            "manteaux": 1.1,
+            "accessoires": 0.9
+          }
+        }
+      ],
+      "emplacements": ["rue", "centre", "residentiel"],
+      "importanceEmplacement": 1.2,
+      "superficiePi2": 1500,
+      "equipements": [
+        {
+          "id": "usage",
+          "nom": "Présentoirs et caisse usagés",
+          "description": "Supports à vêtements, mannequins et comptoir d'occasion.",
+          "cout": 9000,
+          "dureeVieMois": 60,
+          "bonusQualite": -0.03
+        },
+        {
+          "id": "neuf",
+          "nom": "Présentoirs neufs",
+          "description": "Mobilier de présentation modulaire, mannequins, caisse et miroirs.",
+          "cout": 18000,
+          "dureeVieMois": 84,
+          "bonusQualite": 0
+        },
+        {
+          "id": "hautdegamme",
+          "nom": "Mobilier de boutique haut de gamme",
+          "description": "Présentoirs sur mesure en bois et métal, éclairage de mise en valeur.",
+          "cout": 32000,
+          "dureeVieMois": 96,
+          "bonusQualite": 0.04
+        }
+      ],
+      "amenagements": [
+        {
+          "id": "minimal",
+          "nom": "Aménagement minimal",
+          "description": "Peinture, cabines d'essayage simples, enseigne de base.",
+          "cout": 12000,
+          "ambiance": 0.3
+        },
+        {
+          "id": "chaleureux",
+          "nom": "Aménagement soigné",
+          "description": "Vitrine travaillée, cabines confortables, éclairage d'ambiance.",
+          "cout": 32000,
+          "ambiance": 0.6
+        },
+        {
+          "id": "design",
+          "nom": "Concept de boutique signé par un designer",
+          "description": "Matériaux nobles, vitrine spectaculaire, expérience de marque.",
+          "cout": 60000,
+          "ambiance": 0.85
+        }
+      ],
+      "stockInitial": 28000,
+      "partAchatsTaxables": 1,
+      "partAchatsTaxablesNote": "Les vêtements et les accessoires sont taxables : la boutique récupère les taxes payées sur ses achats (CTI et RTI).",
+      "alimentation": false,
+      "permis": [],
+      "fraisDemarrage": 3000,
+      "fraisFixesMensuels": {
+        "electricite": 450,
+        "assurances": 220,
+        "comptable": 275,
+        "entretien": 150,
+        "logiciels": 120,
+        "telecom": 110
+      },
+      "postes": ["vendeur", "couturier", "gerant", "commisComptable", "marketeur"],
+      "equipeDepart": [
+        {
+          "posteId": "vendeur",
+          "nombre": 2
+        }
+      ],
+      "fournisseursDefaut": {
+        "vetements": "grossisteMode",
+        "accessoires": "grossisteAccessoires"
+      },
+      "initiativesEco": ["sacsReutilisables", "recuperationTextile", "certification"],
+      "canaux": {
+        "meta": 1.2,
+        "tiktok": 1.3,
+        "google": 0.8,
+        "influenceurs": 1.4,
+        "radio": 0.7,
+        "journal": 0.8,
+        "flyers": 0.9,
+        "affichage": 1,
+        "evenements": 1.1,
+        "commandites": 0.8
+      },
+      "publiciteDefaut": {
+        "meta": 900,
+        "influenceurs": 300,
+        "google": 300
+      },
+      "concurrents": {
+        "geant": {
+          "nom": "Mode Express Mégastore",
+          "description": "Chaîne internationale de mode rapide : prix très bas, nouvelles collections chaque semaine, service minimal."
+        },
+        "local": {
+          "nom": "Atelier Boréal",
+          "description": "Boutique de créateurs québécois : style unique, image forte, prix élevés."
+        },
+        "agressif": {
+          "nom": "Liquidation Tendance",
+          "description": "Soldes permanents et guerres de prix; copie vite ce qui fonctionne ailleurs."
+        },
+        "prudent": {
+          "nom": "Boutique Chez Lise",
+          "description": "Boutique familiale établie depuis 30 ans : clientèle fidèle, change peu."
+        },
+        "nouveau": {
+          "nom": "Fil & Co",
+          "description": "Marque née en ligne, financée par du capital de risque, qui ouvre sa première boutique physique."
+        }
+      },
+      "nouveauxProduits": [
+        {
+          "id": "retouches",
+          "nom": "Service de retouches",
+          "detail": "Ourlets, ajustements et réparations",
+          "description": "Un service apprécié qui fidélise. Il faut une couturière : sans elle, les retouches s'accumulent.",
+          "prixReference": 22,
+          "coutUnitaire": 2,
+          "tauxAchat": 0.08,
+          "elasticite": 0.9,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": true,
+          "minutesProduction": 30,
+          "unite": "retouche",
+          "categorieAppro": "accessoires",
+          "coutDeveloppement": 2500,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.8,
+          "segments": {
+            "etudiants": 0.6,
+            "familles": 1,
+            "professionnels": 1.4,
+            "retraites": 1.3
+          }
+        },
+        {
+          "id": "marquePrivee",
+          "nom": "Collection à ta marque",
+          "detail": "Vêtements conçus pour la boutique et fabriqués au Québec",
+          "description": "Une marge plus élevée et une image distinctive, mais il faut payer la conception, les échantillons et l'étiquetage bilingue obligatoire.",
+          "prixReference": 75,
+          "coutUnitaire": 28,
+          "tauxAchat": 0.06,
+          "elasticite": 1.1,
+          "perissable": false,
+          "conservationJours": 180,
+          "production": false,
+          "unite": "article",
+          "categorieAppro": "vetements",
+          "coutDeveloppement": 9000,
+          "delaiMois": 2,
+          "probabiliteSucces": 0.5,
+          "segments": {
+            "etudiants": 1,
+            "familles": 0.8,
+            "professionnels": 1.3,
+            "retraites": 0.8
+          }
+        },
+        {
+          "id": "friperie",
+          "nom": "Section seconde main",
+          "detail": "Vêtements usagés de qualité, triés et remis en état",
+          "description": "Attire les étudiants et les clients écoresponsables. Petits prix, mais bonne marge.",
+          "prixReference": 18,
+          "coutUnitaire": 6,
+          "tauxAchat": 0.1,
+          "elasticite": 1.2,
+          "perissable": false,
+          "conservationJours": 240,
+          "production": false,
+          "unite": "article",
+          "categorieAppro": "vetements",
+          "coutDeveloppement": 2000,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.65,
+          "segments": {
+            "etudiants": 1.8,
+            "familles": 1,
+            "professionnels": 0.6,
+            "retraites": 0.8
+          }
+        },
+        {
+          "id": "uniformes",
+          "nom": "Uniformes brodés pour entreprises",
+          "detail": "Polos, vestes et tabliers brodés au logo des clients",
+          "description": "Ventes aux entreprises (B2B) : appels d'offres, contrats et factures à 30, 45 ou 60 jours.",
+          "prixReference": 38,
+          "coutUnitaire": 17,
+          "tauxAchat": 0,
+          "elasticite": 1,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": false,
+          "unite": "uniforme",
+          "categorieAppro": "vetements",
+          "coutDeveloppement": 4000,
+          "delaiMois": 1,
+          "probabiliteSucces": 1,
+          "segments": {},
+          "b2b": {
+            "quantiteMin": 20,
+            "quantiteMax": 150,
+            "coursier": true
+          }
+        }
+      ],
+      "investissements": [
+        {
+          "id": "cabines",
+          "nom": "Cabines d'essayage et éclairage de mise en valeur",
+          "description": "Plus de cabines, moins d'attente et des vêtements mieux mis en valeur.",
+          "cout": 14000,
+          "type": "equipement",
+          "dureeVieMois": 84,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": {
+            "capaciteService": 0.06,
+            "ambiance": 0.05
+          }
+        },
+        {
+          "id": "renovation",
+          "nom": "Rénovation de la boutique et de la vitrine",
+          "description": "Nouvelle vitrine, plancher et éclairage : une boutique plus attirante.",
+          "cout": 35000,
+          "type": "ameliorations",
+          "dureeVieMois": 60,
+          "classeDpa": "13",
+          "unique": true,
+          "effets": {
+            "ambiance": 0.15
+          }
+        },
+        {
+          "id": "siteWeb",
+          "nom": "Boutique en ligne avec cueillette en magasin",
+          "description": "Les clients réservent en ligne et viennent essayer. Exige une politique de confidentialité (Loi 25). Environ 60 $ par mois.",
+          "cout": 6500,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": {
+            "commandeEnLigne": 0.18
+          },
+          "fraisMensuels": 60
+        },
+        {
+          "id": "logicielCaisse",
+          "nom": "Logiciel de caisse et de gestion des stocks",
+          "description": "Achats mieux ajustés aux ventes : moins d'invendus démodés. Environ 70 $ par mois.",
+          "cout": 4000,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": {
+            "pertesStocks": 0.7
+          },
+          "fraisMensuels": 70
+        },
+        {
+          "id": "antivol",
+          "nom": "Système antivol (étiquettes et portiques)",
+          "description": "Réduit le vol à l'étalage, qui fait disparaître une partie du stock.",
+          "cout": 6000,
+          "type": "equipement",
+          "dureeVieMois": 84,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": {
+            "pertesStocks": 0.85
+          }
+        },
+        {
+          "id": "tablettes",
+          "nom": "Terminaux de paiement mobiles",
+          "description": "Encaisser partout dans la boutique : moins de file à la caisse.",
+          "cout": 2200,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "50",
+          "unique": true,
+          "effets": {
+            "capaciteService": 0.04
+          }
+        }
+      ]
+    },
+    {
+      "id": "enLigne",
+      "nom": "Boutique en ligne",
+      "commerce": "la boutique en ligne",
+      "description": "Un commerce 100 % en ligne de produits québécois (soins corporels, bougies, coffrets-cadeaux) expédiés partout au Québec. Pas de vitrine : tout passe par la publicité numérique et les avis.",
+      "tauxCnesst": 0.0145,
+      "tauxCnesstNote": "À VÉRIFIER : estimation pour la vente au détail par correspondance avec entrepôt.",
+      "margeBruteCible": [0.45, 0.6],
+      "margeNetteCible": [0.03, 0.1],
+      "coutMainOeuvreCible": [0.1, 0.18],
+      "lignes": [
+        {
+          "id": "soins",
+          "nom": "Savons et soins corporels",
+          "detail": "Savons artisanaux, crèmes, baumes",
+          "prixReference": 24,
+          "coutUnitaire": 11,
+          "tauxAchat": 0.85,
+          "elasticite": 1.2,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": false,
+          "unite": "produit",
+          "categorieAppro": "produitsQuebec"
+        },
+        {
+          "id": "bougies",
+          "nom": "Bougies et décoration",
+          "detail": "Bougies de soya, diffuseurs, objets déco",
+          "prixReference": 32,
+          "coutUnitaire": 14,
+          "tauxAchat": 0.45,
+          "elasticite": 1.2,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": false,
+          "unite": "produit",
+          "categorieAppro": "produitsQuebec"
+        },
+        {
+          "id": "coffrets",
+          "nom": "Coffrets-cadeaux",
+          "detail": "Coffrets thématiques prêts à offrir",
+          "prixReference": 65,
+          "coutUnitaire": 31,
+          "tauxAchat": 0.18,
+          "elasticite": 1,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": false,
+          "saisonnalite": [0.6, 1.5, 0.8, 0.9, 1.3, 0.8, 0.6, 0.6, 0.8, 0.9, 1.4, 2.2],
+          "unite": "coffret",
+          "categorieAppro": "produitsQuebec"
+        }
+      ],
+      "qualites": [
+        {
+          "id": "economique",
+          "nom": "Produits génériques",
+          "description": "Produits importés sans marque, emballage simple.",
+          "multiplicateurCout": 0.8,
+          "score": 0.35
+        },
+        {
+          "id": "standard",
+          "nom": "Produits de qualité courante",
+          "description": "Fabricants québécois et canadiens reconnus.",
+          "multiplicateurCout": 1,
+          "score": 0.55
+        },
+        {
+          "id": "superieure",
+          "nom": "Produits haut de gamme",
+          "description": "Ingrédients sélectionnés, emballages soignés.",
+          "multiplicateurCout": 1.2,
+          "score": 0.72
+        },
+        {
+          "id": "artisanale",
+          "nom": "Artisanal et naturel certifié",
+          "description": "Petits artisans québécois, ingrédients biologiques certifiés.",
+          "multiplicateurCout": 1.45,
+          "score": 0.88
+        }
+      ],
+      "saisonnalite": [0.8, 0.95, 0.85, 0.9, 1, 0.85, 0.8, 0.8, 0.9, 1, 1.35, 1.8],
+      "saisonnaliteNote": "Saint-Valentin, fête des Mères, puis très forte saison du Vendredi fou et des Fêtes.",
+      "croissanceAnnuelle": 0.06,
+      "cyclicite": 1,
+      "transactionsParHeureEmploye": 3.5,
+      "libelleProduction": "Préparation",
+      "minutesProductionDefaut": 10,
+      "productionProprietaire": 0,
+      "productionSansPersonnel": 0,
+      "libellePertes": "produits invendables (abîmés ou expirés)",
+      "heuresOuvertureReference": 40,
+      "sensibilites": {
+        "prix": 2.6,
+        "qualite": 1.3,
+        "service": 1.2,
+        "note": 0.9,
+        "ambiance": 0.6,
+        "heures": 0.15,
+        "eco": 0.4,
+        "local": 0.45
+      },
+      "utiliteAlternative": 0.6,
+      "visitesParClientMois": 0.35,
+      "partLivraison": 0,
+      "panierLivraison": {},
+      "segments": [
+        {
+          "personaId": "etudiants",
+          "part": 0.22,
+          "panier": {
+            "soins": 1.1,
+            "bougies": 1,
+            "coffrets": 0.6
+          }
+        },
+        {
+          "personaId": "familles",
+          "part": 0.28,
+          "panier": {
+            "soins": 1,
+            "bougies": 1.1,
+            "coffrets": 1.1
+          }
+        },
+        {
+          "personaId": "professionnels",
+          "part": 0.36,
+          "panier": {
+            "soins": 1,
+            "bougies": 1,
+            "coffrets": 1.2
+          }
+        },
+        {
+          "personaId": "retraites",
+          "part": 0.14,
+          "panier": {
+            "soins": 0.9,
+            "bougies": 0.9,
+            "coffrets": 1
+          }
+        }
+      ],
+      "emplacements": ["enLigne"],
+      "importanceEmplacement": 0,
+      "superficiePi2": 900,
+      "equipements": [
+        {
+          "id": "usage",
+          "nom": "Étagères usagées et imprimante d'étiquettes",
+          "description": "Le minimum pour entreposer et expédier.",
+          "cout": 5000,
+          "dureeVieMois": 60,
+          "bonusQualite": -0.02
+        },
+        {
+          "id": "neuf",
+          "nom": "Équipement d'entrepôt neuf",
+          "description": "Étagères, tables d'emballage, balances et lecteurs de codes-barres.",
+          "cout": 12000,
+          "dureeVieMois": 84,
+          "bonusQualite": 0
+        },
+        {
+          "id": "hautdegamme",
+          "nom": "Entrepôt organisé et automatisé",
+          "description": "Système de rangement, convoyeur léger, impression automatique des étiquettes.",
+          "cout": 25000,
+          "dureeVieMois": 96,
+          "bonusQualite": 0.03
+        }
+      ],
+      "amenagements": [
+        {
+          "id": "minimal",
+          "nom": "Site Web à partir d'un thème gratuit",
+          "description": "Une plateforme de commerce en ligne et un thème de base. L'attrait du site remplace l'ambiance d'une boutique.",
+          "cout": 3000,
+          "ambiance": 0.3,
+          "type": "informatique",
+          "classeDpa": "12",
+          "dureeVieMois": 36
+        },
+        {
+          "id": "chaleureux",
+          "nom": "Site personnalisé par une agence",
+          "description": "Design sur mesure, photos des produits et parcours d'achat simple.",
+          "cout": 12000,
+          "ambiance": 0.6,
+          "type": "informatique",
+          "classeDpa": "12",
+          "dureeVieMois": 36
+        },
+        {
+          "id": "design",
+          "nom": "Expérience en ligne haut de gamme",
+          "description": "Site sur mesure, vidéos, recommandations personnalisées et rapidité exemplaire.",
+          "cout": 25000,
+          "ambiance": 0.85,
+          "type": "informatique",
+          "classeDpa": "12",
+          "dureeVieMois": 36
+        }
+      ],
+      "stockInitial": 9000,
+      "partAchatsTaxables": 1,
+      "alimentation": false,
+      "permis": ["confidentialite"],
+      "fraisDemarrage": 2000,
+      "fraisDemarrageNote": "Logo, photos de départ, frais juridiques (conditions de vente et politique de confidentialité).",
+      "fraisFixesMensuels": {
+        "electricite": 180,
+        "assurances": 150,
+        "comptable": 250,
+        "entretien": 60,
+        "logiciels": 420,
+        "telecom": 90
+      },
+      "fraisFixesNote": "Logiciels : abonnement à la plateforme de commerce en ligne, applications, courriel et hébergement.",
+      "fraisParVisite": {
+        "montant": 6.5,
+        "libelle": "Expédition des commandes (Postes Canada et emballages, net des frais facturés aux clients)"
+      },
+      "paiements": {
+        "partCartes": 1,
+        "taux": 0.029
+      },
+      "postes": ["preparateur", "agentService", "gerant", "commisComptable", "marketeur"],
+      "equipeDepart": [
+        {
+          "posteId": "preparateur",
+          "nombre": 1
+        }
+      ],
+      "fournisseursDefaut": {
+        "produitsQuebec": "grossisteCadeaux"
+      },
+      "initiativesEco": ["sacsReutilisables", "compensationCarbone", "certification"],
+      "canaux": {
+        "meta": 1.4,
+        "tiktok": 1.4,
+        "google": 1.5,
+        "influenceurs": 1.5,
+        "radio": 0.4,
+        "journal": 0.4,
+        "flyers": 0.3,
+        "affichage": 0.5,
+        "evenements": 0.6,
+        "commandites": 0.5
+      },
+      "publiciteDefaut": {
+        "meta": 1200,
+        "google": 900,
+        "influenceurs": 400
+      },
+      "concurrents": {
+        "geant": {
+          "nom": "MégaMarché.ca",
+          "description": "Immense place de marché en ligne : livraison en 2 jours, prix bas, service impersonnel."
+        },
+        "local": {
+          "nom": "Les Savonneries Boréales",
+          "description": "Marque québécoise branchée avec une forte communauté sur les réseaux sociaux."
+        },
+        "agressif": {
+          "nom": "Aubaines Éclair",
+          "description": "Ventes éclair et codes promo à répétition; imite rapidement les produits populaires."
+        },
+        "prudent": {
+          "nom": "Cadeaux Laurentides",
+          "description": "Catalogue de cadeaux depuis 1985, passé au Web sans grands changements."
+        },
+        "nouveau": {
+          "nom": "Vrac & Moi",
+          "description": "Jeune pousse financée par du capital de risque : publicité massive et livraison gratuite pour gagner des clients."
+        }
+      },
+      "nouveauxProduits": [
+        {
+          "id": "abonnement",
+          "nom": "Boîte d'abonnement mensuelle",
+          "detail": "Une boîte surprise de produits québécois chaque mois",
+          "description": "Des revenus récurrents et des clients fidèles, si la boîte plaît.",
+          "prixReference": 39,
+          "coutUnitaire": 17,
+          "tauxAchat": 0.1,
+          "elasticite": 1.1,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": false,
+          "unite": "boîte",
+          "categorieAppro": "produitsQuebec",
+          "coutDeveloppement": 5000,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.55,
+          "segments": {
+            "etudiants": 0.8,
+            "familles": 1.1,
+            "professionnels": 1.3,
+            "retraites": 0.6
+          }
+        },
+        {
+          "id": "gammeHomme",
+          "nom": "Gamme de soins pour hommes",
+          "detail": "Savons à barbe, baumes et déodorants naturels",
+          "description": "Un nouveau public, mais il faut le convaincre.",
+          "prixReference": 26,
+          "coutUnitaire": 10,
+          "tauxAchat": 0.12,
+          "elasticite": 1.2,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": false,
+          "unite": "produit",
+          "categorieAppro": "produitsQuebec",
+          "coutDeveloppement": 3500,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.6,
+          "segments": {
+            "etudiants": 1.2,
+            "familles": 0.9,
+            "professionnels": 1.3,
+            "retraites": 0.6
+          }
+        },
+        {
+          "id": "emballageCadeau",
+          "nom": "Emballage-cadeau et carte personnalisée",
+          "detail": "Option ajoutée au panier",
+          "description": "Augmente le panier moyen à faible coût. Très populaire à Noël.",
+          "prixReference": 6,
+          "coutUnitaire": 1.5,
+          "tauxAchat": 0.15,
+          "elasticite": 0.8,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": false,
+          "saisonnalite": [0.6, 1.4, 0.7, 0.8, 1.2, 0.7, 0.6, 0.6, 0.7, 0.9, 1.5, 2.4],
+          "unite": "emballage",
+          "categorieAppro": "produitsQuebec",
+          "coutDeveloppement": 1200,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.85,
+          "segments": {
+            "etudiants": 0.8,
+            "familles": 1.1,
+            "professionnels": 1.2,
+            "retraites": 1
+          }
+        },
+        {
+          "id": "cadeauxCorporatifs",
+          "nom": "Cadeaux d'entreprise",
+          "detail": "Coffrets personnalisés pour les employés et les clients d'entreprises",
+          "description": "Ventes aux entreprises (B2B) surtout avant les Fêtes : soumissions, contrats et factures à 30, 45 ou 60 jours.",
+          "prixReference": 55,
+          "coutUnitaire": 24,
+          "tauxAchat": 0,
+          "elasticite": 1,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": false,
+          "unite": "coffret",
+          "categorieAppro": "produitsQuebec",
+          "coutDeveloppement": 4000,
+          "delaiMois": 1,
+          "probabiliteSucces": 1,
+          "segments": {},
+          "b2b": {
+            "quantiteMin": 20,
+            "quantiteMax": 200,
+            "coursier": true,
+            "saisonnalite": [0.4, 0.6, 0.6, 0.7, 0.8, 0.6, 0.4, 0.5, 0.9, 1.3, 2.2, 2]
+          }
+        }
+      ],
+      "investissements": [
+        {
+          "id": "photosPro",
+          "nom": "Photos et vidéos professionnelles des produits",
+          "description": "Des produits mieux présentés : le site convertit plus de visiteurs en acheteurs.",
+          "cout": 5000,
+          "type": "informatique",
+          "dureeVieMois": 24,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": {
+            "ambiance": 0.12
+          }
+        },
+        {
+          "id": "applicationMobile",
+          "nom": "Application mobile",
+          "description": "Commandes en deux clics et notifications : apprécié des jeunes et des professionnels. Environ 150 $ par mois.",
+          "cout": 18000,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": {
+            "commandeEnLigne": 0.15
+          },
+          "fraisMensuels": 150
+        },
+        {
+          "id": "logicielStocks",
+          "nom": "Logiciel de gestion des stocks et des commandes",
+          "description": "Moins de produits abîmés ou périmés et une préparation plus rapide. Environ 80 $ par mois.",
+          "cout": 4500,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": {
+            "pertesStocks": 0.7,
+            "capaciteService": 0.05
+          },
+          "fraisMensuels": 80
+        },
+        {
+          "id": "convoyeur",
+          "nom": "Postes d'emballage et convoyeur",
+          "description": "Chaque préparateur expédie plus de commandes à l'heure.",
+          "cout": 15000,
+          "type": "equipement",
+          "dureeVieMois": 84,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": {
+            "capaciteService": 0.15
+          }
+        },
+        {
+          "id": "vehicule",
+          "nom": "Fourgonnette pour livrer la région soi-même",
+          "description": "Livrer toi-même les commandes de ta région coûte moins cher que la poste. Assurance et essence : environ 450 $ par mois.",
+          "cout": 42000,
+          "type": "vehicule",
+          "dureeVieMois": 72,
+          "classeDpa": "10",
+          "unique": true,
+          "effets": {
+            "fraisParVisite": 0.75,
+            "livraisonPropre": true
+          },
+          "fraisMensuels": 450
+        },
+        {
+          "id": "ordinateurs",
+          "nom": "Ordinateurs et imprimantes d'étiquettes",
+          "description": "Postes de travail plus rapides pour le service à la clientèle et l'expédition.",
+          "cout": 3500,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "50",
+          "unique": true,
+          "effets": {
+            "capaciteService": 0.06
+          }
+        }
+      ]
+    },
+    {
+      "id": "coiffure",
+      "nom": "Salon de coiffure et d'esthétique",
+      "commerce": "le salon",
+      "description": "Un salon qui offre coupes, colorations et soins esthétiques, et qui revend des produits. Peu de marchandises, mais beaucoup de main-d'œuvre qualifiée.",
+      "tauxCnesst": 0.0105,
+      "tauxCnesstNote": "À VÉRIFIER : estimation pour les services personnels (coiffure et esthétique).",
+      "margeBruteCible": [0.8, 0.9],
+      "margeNetteCible": [0.05, 0.12],
+      "coutMainOeuvreCible": [0.4, 0.52],
+      "lignes": [
+        {
+          "id": "coupes",
+          "nom": "Coupes et coiffures",
+          "detail": "Coupes, mises en plis, coiffures",
+          "prixReference": 48,
+          "coutUnitaire": 3.5,
+          "tauxAchat": 0.78,
+          "elasticite": 0.9,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": true,
+          "minutesProduction": 60,
+          "unite": "coupe",
+          "categorieAppro": "produitsCoiffure"
+        },
+        {
+          "id": "couleurs",
+          "nom": "Colorations et mèches",
+          "detail": "Colorations, balayages, mèches",
+          "prixReference": 115,
+          "coutUnitaire": 16,
+          "tauxAchat": 0.26,
+          "elasticite": 1,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": true,
+          "minutesProduction": 160,
+          "unite": "coloration",
+          "categorieAppro": "produitsCoiffure"
+        },
+        {
+          "id": "soins",
+          "nom": "Soins esthétiques",
+          "detail": "Manucures, soins du visage, épilation",
+          "prixReference": 62,
+          "coutUnitaire": 7,
+          "tauxAchat": 0.16,
+          "elasticite": 1.1,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": true,
+          "minutesProduction": 75,
+          "unite": "soin",
+          "categorieAppro": "produitsEsthetique"
+        },
+        {
+          "id": "revente",
+          "nom": "Produits de revente",
+          "detail": "Shampoings, revitalisants et soins professionnels",
+          "prixReference": 32,
+          "coutUnitaire": 15,
+          "tauxAchat": 0.22,
+          "elasticite": 1,
+          "perissable": false,
+          "conservationJours": 540,
+          "production": false,
+          "unite": "produit",
+          "categorieAppro": "produitsCoiffure"
+        }
+      ],
+      "qualites": [
+        {
+          "id": "economique",
+          "nom": "Produits d'entrée de gamme",
+          "description": "Produits génériques, techniques simples.",
+          "multiplicateurCout": 0.8,
+          "score": 0.35
+        },
+        {
+          "id": "standard",
+          "nom": "Produits professionnels",
+          "description": "Marques professionnelles reconnues.",
+          "multiplicateurCout": 1,
+          "score": 0.55
+        },
+        {
+          "id": "superieure",
+          "nom": "Produits professionnels haut de gamme",
+          "description": "Gammes de prestige, résultats plus durables.",
+          "multiplicateurCout": 1.25,
+          "score": 0.72
+        },
+        {
+          "id": "artisanale",
+          "nom": "Produits naturels et biologiques",
+          "description": "Colorations végétales, produits sans sulfates fabriqués au Québec.",
+          "multiplicateurCout": 1.5,
+          "score": 0.88
+        }
+      ],
+      "saisonnalite": [0.85, 0.9, 1, 1, 1.05, 1.1, 0.95, 0.95, 1, 0.95, 1, 1.25],
+      "saisonnaliteNote": "Creux de janvier, sommets avant les bals et mariages (juin) et avant les Fêtes.",
+      "croissanceAnnuelle": 0.01,
+      "cyclicite": 0.6,
+      "transactionsParHeureEmploye": 6,
+      "libelleProduction": "Coiffure et soins",
+      "minutesProductionDefaut": 40,
+      "productionProprietaire": 0.6,
+      "productionSansPersonnel": 0,
+      "libellePertes": "produits expirés",
+      "heuresOuvertureReference": 50,
+      "sensibilites": {
+        "prix": 1.6,
+        "qualite": 2,
+        "service": 1.4,
+        "note": 0.7,
+        "ambiance": 0.8,
+        "heures": 0.6,
+        "eco": 0.35,
+        "local": 0.3
+      },
+      "utiliteAlternative": 0.4,
+      "visitesParClientMois": 0.45,
+      "partLivraison": 0,
+      "panierLivraison": {},
+      "segments": [
+        {
+          "personaId": "etudiants",
+          "part": 0.2,
+          "panier": {
+            "coupes": 1,
+            "couleurs": 0.8,
+            "soins": 0.7,
+            "revente": 0.7
+          }
+        },
+        {
+          "personaId": "familles",
+          "part": 0.25,
+          "panier": {
+            "coupes": 1.2,
+            "couleurs": 0.8,
+            "soins": 0.8,
+            "revente": 0.9
+          }
+        },
+        {
+          "personaId": "professionnels",
+          "part": 0.33,
+          "panier": {
+            "coupes": 1,
+            "couleurs": 1.2,
+            "soins": 1.3,
+            "revente": 1.2
+          }
+        },
+        {
+          "personaId": "retraites",
+          "part": 0.22,
+          "panier": {
+            "coupes": 0.9,
+            "couleurs": 1.1,
+            "soins": 1,
+            "revente": 1.1
+          }
+        }
+      ],
+      "emplacements": ["rue", "centre", "residentiel"],
+      "importanceEmplacement": 0.8,
+      "superficiePi2": 1000,
+      "equipements": [
+        {
+          "id": "usage",
+          "nom": "Équipement usagé",
+          "description": "Fauteuils, bacs à shampoing et séchoirs d'occasion.",
+          "cout": 12000,
+          "dureeVieMois": 60,
+          "bonusQualite": -0.04
+        },
+        {
+          "id": "neuf",
+          "nom": "Équipement neuf",
+          "description": "Fauteuils hydrauliques, bacs, séchoirs et table de soins neufs.",
+          "cout": 28000,
+          "dureeVieMois": 84,
+          "bonusQualite": 0
+        },
+        {
+          "id": "hautdegamme",
+          "nom": "Équipement haut de gamme",
+          "description": "Bacs massants, fauteuils de designer, équipement de soins dernier cri.",
+          "cout": 45000,
+          "dureeVieMois": 96,
+          "bonusQualite": 0.05
+        }
+      ],
+      "amenagements": [
+        {
+          "id": "minimal",
+          "nom": "Aménagement minimal",
+          "description": "Peinture, miroirs simples, accueil de base.",
+          "cout": 10000,
+          "ambiance": 0.3
+        },
+        {
+          "id": "chaleureux",
+          "nom": "Aménagement chaleureux",
+          "description": "Éclairage étudié, coin attente confortable, cabine de soins fermée.",
+          "cout": 28000,
+          "ambiance": 0.6
+        },
+        {
+          "id": "design",
+          "nom": "Concept de salon signé par un designer",
+          "description": "Ambiance de spa, matériaux nobles, expérience haut de gamme.",
+          "cout": 50000,
+          "ambiance": 0.85
+        }
+      ],
+      "stockInitial": 4500,
+      "partAchatsTaxables": 1,
+      "alimentation": false,
+      "permis": [],
+      "fraisDemarrage": 2000,
+      "fraisFixesMensuels": {
+        "electricite": 550,
+        "assurances": 200,
+        "comptable": 250,
+        "entretien": 200,
+        "logiciels": 110,
+        "telecom": 90
+      },
+      "fraisFixesNote": "Électricité et eau chaude importantes (séchoirs, bacs); entretien : buanderie des serviettes.",
+      "postes": [
+        "coiffeur",
+        "estheticienne",
+        "receptionniste",
+        "gerant",
+        "commisComptable",
+        "marketeur"
+      ],
+      "equipeDepart": [
+        {
+          "posteId": "coiffeur",
+          "nombre": 2
+        }
+      ],
+      "fournisseursDefaut": {
+        "produitsCoiffure": "grossisteCoiffure",
+        "produitsEsthetique": "grossisteEsthetique"
+      },
+      "initiativesEco": ["produitsNaturels", "compost", "certification"],
+      "canaux": {
+        "meta": 1.3,
+        "tiktok": 1.2,
+        "google": 1.2,
+        "influenceurs": 1.3,
+        "radio": 0.7,
+        "journal": 1,
+        "flyers": 1,
+        "affichage": 0.8,
+        "evenements": 0.9,
+        "commandites": 0.8
+      },
+      "publiciteDefaut": {
+        "meta": 500,
+        "google": 300
+      },
+      "concurrents": {
+        "geant": {
+          "nom": "Coupe Express",
+          "description": "Chaîne de salons sans rendez-vous : rapide, bon marché et ouverte tard."
+        },
+        "local": {
+          "nom": "Studio Mèche Rebelle",
+          "description": "Salon tendance aux coiffeurs primés : prix élevés, très populaire sur Instagram."
+        },
+        "agressif": {
+          "nom": "Coupe à prix fou",
+          "description": "Forfaits à rabais et cartes de fidélité agressives; copie les promotions des autres."
+        },
+        "prudent": {
+          "nom": "Salon Chez Ginette",
+          "description": "Salon de quartier depuis 25 ans : clientèle fidèle et habitudes bien ancrées."
+        },
+        "nouveau": {
+          "nom": "Glam Bar",
+          "description": "Bar à coiffure et beauté financé par des investisseurs : décor spectaculaire et gros budget publicitaire."
+        }
+      },
+      "nouveauxProduits": [
+        {
+          "id": "barbier",
+          "nom": "Service de barbier",
+          "detail": "Taille de barbe, rasage à l'ancienne",
+          "description": "Attire une nouvelle clientèle masculine. Il faut former l'équipe et réserver un poste.",
+          "prixReference": 30,
+          "coutUnitaire": 2,
+          "tauxAchat": 0.1,
+          "elasticite": 1,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": true,
+          "minutesProduction": 25,
+          "unite": "service",
+          "categorieAppro": "produitsCoiffure",
+          "coutDeveloppement": 3000,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.65,
+          "segments": {
+            "etudiants": 1.4,
+            "familles": 0.8,
+            "professionnels": 1.3,
+            "retraites": 0.6
+          }
+        },
+        {
+          "id": "extensions",
+          "nom": "Rallonges capillaires",
+          "detail": "Pose de rallonges naturelles",
+          "description": "Un service très payant, mais long et réservé à une petite clientèle.",
+          "prixReference": 290,
+          "coutUnitaire": 120,
+          "tauxAchat": 0.02,
+          "elasticite": 1.2,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": true,
+          "minutesProduction": 150,
+          "unite": "pose",
+          "categorieAppro": "produitsCoiffure",
+          "coutDeveloppement": 4500,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.5,
+          "segments": {
+            "etudiants": 1.3,
+            "familles": 0.7,
+            "professionnels": 1.2,
+            "retraites": 0.4
+          }
+        },
+        {
+          "id": "soinsCapillaires",
+          "nom": "Soins capillaires profonds",
+          "detail": "Traitements réparateurs et soins du cuir chevelu",
+          "description": "Un ajout simple au rendez-vous qui augmente le panier moyen.",
+          "prixReference": 45,
+          "coutUnitaire": 6,
+          "tauxAchat": 0.12,
+          "elasticite": 1.1,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": true,
+          "minutesProduction": 30,
+          "unite": "soin",
+          "categorieAppro": "produitsCoiffure",
+          "coutDeveloppement": 2000,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.7,
+          "segments": {
+            "etudiants": 0.7,
+            "familles": 0.9,
+            "professionnels": 1.3,
+            "retraites": 1.1
+          }
+        },
+        {
+          "id": "maquillage",
+          "nom": "Maquillage d'événements",
+          "detail": "Mariages, bals de finissants, séances photo",
+          "description": "Très saisonnier : fort au printemps et à l'été.",
+          "prixReference": 85,
+          "coutUnitaire": 8,
+          "tauxAchat": 0.05,
+          "elasticite": 1.1,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": true,
+          "minutesProduction": 60,
+          "saisonnalite": [0.6, 0.7, 0.8, 0.9, 1.3, 1.5, 1.2, 1.1, 1.1, 0.9, 0.8, 1.4],
+          "unite": "maquillage",
+          "categorieAppro": "produitsEsthetique",
+          "coutDeveloppement": 2500,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.6,
+          "segments": {
+            "etudiants": 1.5,
+            "familles": 1,
+            "professionnels": 1,
+            "retraites": 0.4
+          }
+        }
+      ],
+      "investissements": [
+        {
+          "id": "postesCoiffure",
+          "nom": "Deux postes de coiffure de plus",
+          "description": "Fauteuils et bacs supplémentaires : moins de temps morts entre les clients.",
+          "cout": 16000,
+          "type": "equipement",
+          "dureeVieMois": 84,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": {
+            "capaciteProduction": 0.08
+          }
+        },
+        {
+          "id": "renovation",
+          "nom": "Rénovation du salon",
+          "description": "Nouveau décor, éclairage et coin détente : une expérience plus agréable.",
+          "cout": 28000,
+          "type": "ameliorations",
+          "dureeVieMois": 60,
+          "classeDpa": "13",
+          "unique": true,
+          "effets": {
+            "ambiance": 0.15
+          }
+        },
+        {
+          "id": "logicielRendezVous",
+          "nom": "Prise de rendez-vous en ligne",
+          "description": "Les clients réservent 24 h sur 24 et reçoivent des rappels : moins de rendez-vous manqués. Environ 75 $ par mois.",
+          "cout": 2500,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": {
+            "commandeEnLigne": 0.12,
+            "capaciteService": 0.05
+          },
+          "fraisMensuels": 75
+        },
+        {
+          "id": "salleSoins",
+          "nom": "Salle de soins esthétiques",
+          "description": "Une vraie salle fermée pour les soins : meilleure qualité perçue.",
+          "cout": 12000,
+          "type": "ameliorations",
+          "dureeVieMois": 60,
+          "classeDpa": "13",
+          "unique": true,
+          "effets": {
+            "qualiteLignes": {
+              "soins": 0.06
+            }
+          }
+        },
+        {
+          "id": "outilsPro",
+          "nom": "Outils professionnels haut de gamme",
+          "description": "Ciseaux, fers et séchoirs professionnels : un travail plus précis.",
+          "cout": 4000,
+          "type": "equipement",
+          "dureeVieMois": 48,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": {
+            "qualiteLignes": {
+              "coupes": 0.03,
+              "couleurs": 0.03
+            }
+          }
+        },
+        {
+          "id": "siteWeb",
+          "nom": "Site Web et vitrine en ligne",
+          "description": "Photos de réalisations, tarifs et liens de réservation. Environ 30 $ par mois.",
+          "cout": 3500,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": {
+            "commandeEnLigne": 0.08
+          },
+          "fraisMensuels": 30
+        }
+      ]
+    },
+    {
+      "id": "paysagement",
+      "nom": "Paysagement et déneigement",
+      "commerce": "l'entreprise",
+      "description": "Une entreprise de services qui entretient les pelouses et aménage les terrains l'été, puis déneige les entrées l'hiver. Très saisonnière : il faut embaucher au printemps et réduire l'équipe à l'automne.",
+      "tauxCnesst": 0.034,
+      "tauxCnesstNote": "À VÉRIFIER : estimation pour l'aménagement paysager et l'entretien de terrains (activité à risque plus élevé).",
+      "margeBruteCible": [0.6, 0.78],
+      "margeNetteCible": [0.06, 0.14],
+      "coutMainOeuvreCible": [0.36, 0.5],
+      "lignes": [
+        {
+          "id": "entretien",
+          "nom": "Entretien de pelouse",
+          "detail": "Tonte, taille et fertilisation (forfait mensuel, environ 4 visites)",
+          "prixReference": 210,
+          "coutUnitaire": 14,
+          "tauxAchat": 0.6,
+          "elasticite": 1.1,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": true,
+          "minutesProduction": 160,
+          "saisonnalite": [0, 0, 0, 0.25, 1, 1.1, 1.15, 1.1, 1, 0.6, 0, 0],
+          "unite": "forfait mensuel",
+          "categorieAppro": "paysagement"
+        },
+        {
+          "id": "amenagement",
+          "nom": "Aménagement paysager",
+          "detail": "Plates-bandes, pavé, plantation (projets)",
+          "prixReference": 3800,
+          "coutUnitaire": 1300,
+          "tauxAchat": 0.025,
+          "elasticite": 1.2,
+          "perissable": true,
+          "conservationJours": 14,
+          "production": true,
+          "minutesProduction": 1800,
+          "saisonnalite": [0, 0, 0, 0.5, 1.6, 1.6, 1.3, 1.2, 1.2, 0.6, 0.1, 0],
+          "unite": "projet",
+          "categorieAppro": "pepiniere"
+        },
+        {
+          "id": "deneigement",
+          "nom": "Déneigement résidentiel",
+          "detail": "Forfait saisonnier payé en versements mensuels",
+          "prixReference": 160,
+          "coutUnitaire": 6,
+          "tauxAchat": 0.75,
+          "elasticite": 0.9,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": true,
+          "minutesProduction": 150,
+          "saisonnalite": [1, 1, 0.8, 0.15, 0, 0, 0, 0, 0, 0, 0.6, 1],
+          "unite": "forfait mensuel",
+          "categorieAppro": "paysagement"
+        }
+      ],
+      "qualites": [
+        {
+          "id": "economique",
+          "nom": "Matériaux économiques",
+          "description": "Engrais et matériaux bon marché, travail rapide.",
+          "multiplicateurCout": 0.8,
+          "score": 0.35
+        },
+        {
+          "id": "standard",
+          "nom": "Matériaux standards",
+          "description": "Produits de qualité courante et finition soignée.",
+          "multiplicateurCout": 1,
+          "score": 0.55
+        },
+        {
+          "id": "superieure",
+          "nom": "Matériaux de qualité supérieure",
+          "description": "Pavés et végétaux de premier choix, finition impeccable.",
+          "multiplicateurCout": 1.2,
+          "score": 0.72
+        },
+        {
+          "id": "artisanale",
+          "nom": "Végétaux indigènes et produits biologiques",
+          "description": "Aménagements écologiques, engrais naturels, aucun pesticide de synthèse.",
+          "multiplicateurCout": 1.4,
+          "score": 0.88
+        }
+      ],
+      "saisonnalite": [1, 1, 0.85, 0.6, 1.1, 1.15, 1.15, 1.15, 1.1, 1, 0.9, 1],
+      "saisonnaliteNote": "Les clients actifs changent de service avec les saisons : entretien de mai à octobre, déneigement de novembre à mars. Avril et novembre sont des mois creux.",
+      "croissanceAnnuelle": 0.02,
+      "cyclicite": 1.1,
+      "transactionsParHeureEmploye": 5,
+      "libelleProduction": "Équipes sur le terrain",
+      "minutesProductionDefaut": 120,
+      "productionProprietaire": 0.5,
+      "productionSansPersonnel": 0,
+      "libellePertes": "végétaux et matériaux perdus",
+      "heuresOuvertureReference": 50,
+      "sensibilites": {
+        "prix": 2.2,
+        "qualite": 1.5,
+        "service": 1.3,
+        "note": 0.8,
+        "ambiance": 0.4,
+        "heures": 0.2,
+        "eco": 0.5,
+        "local": 0.4
+      },
+      "utiliteAlternative": 0.7,
+      "visitesParClientMois": 1,
+      "partLivraison": 0,
+      "panierLivraison": {},
+      "segments": [
+        {
+          "personaId": "etudiants",
+          "part": 0.06,
+          "panier": {
+            "entretien": 0.8,
+            "amenagement": 0.3,
+            "deneigement": 0.9
+          }
+        },
+        {
+          "personaId": "familles",
+          "part": 0.38,
+          "panier": {
+            "entretien": 1,
+            "amenagement": 1.1,
+            "deneigement": 1
+          }
+        },
+        {
+          "personaId": "professionnels",
+          "part": 0.3,
+          "panier": {
+            "entretien": 1.1,
+            "amenagement": 1.2,
+            "deneigement": 1
+          }
+        },
+        {
+          "personaId": "retraites",
+          "part": 0.26,
+          "panier": {
+            "entretien": 1,
+            "amenagement": 0.8,
+            "deneigement": 1.05
+          }
+        }
+      ],
+      "emplacements": ["industriel", "residentiel"],
+      "importanceEmplacement": 0.1,
+      "superficiePi2": 1800,
+      "equipements": [
+        {
+          "id": "usage",
+          "nom": "Camionnette et équipement usagés",
+          "description": "Camionnette usagée avec remorque, tondeuses et souffleuse d'occasion.",
+          "cout": 26000,
+          "dureeVieMois": 60,
+          "bonusQualite": -0.03,
+          "type": "vehicule",
+          "classeDpa": "10"
+        },
+        {
+          "id": "neuf",
+          "nom": "Camion et équipement neufs",
+          "description": "Camion neuf avec lame à neige, remorque, tondeuses commerciales.",
+          "cout": 45000,
+          "dureeVieMois": 72,
+          "bonusQualite": 0,
+          "type": "vehicule",
+          "classeDpa": "10"
+        },
+        {
+          "id": "hautdegamme",
+          "nom": "Flotte haut de gamme",
+          "description": "Camion lourd, tondeuse autoportée à rayon zéro et mini-chargeuse.",
+          "cout": 80000,
+          "dureeVieMois": 84,
+          "bonusQualite": 0.05,
+          "bonusProduction": 0.06,
+          "type": "vehicule",
+          "classeDpa": "10"
+        }
+      ],
+      "amenagements": [
+        {
+          "id": "minimal",
+          "nom": "Garage minimal",
+          "description": "Un garage pour ranger l'équipement, enseigne simple.",
+          "cout": 4000,
+          "ambiance": 0.2
+        },
+        {
+          "id": "chaleureux",
+          "nom": "Garage et bureau aménagés",
+          "description": "Bureau pour recevoir les clients, atelier d'entretien des machines.",
+          "cout": 12000,
+          "ambiance": 0.45
+        },
+        {
+          "id": "design",
+          "nom": "Image de marque complète",
+          "description": "Camions lettrés, uniformes et bureau soigné : une image très professionnelle.",
+          "cout": 22000,
+          "ambiance": 0.75
+        }
+      ],
+      "stockInitial": 3000,
+      "partAchatsTaxables": 1,
+      "alimentation": false,
+      "permis": ["pesticides"],
+      "fraisDemarrage": 2000,
+      "fraisFixesMensuels": {
+        "electricite": 250,
+        "assurances": 380,
+        "comptable": 275,
+        "entretien": 400,
+        "logiciels": 80,
+        "telecom": 140
+      },
+      "fraisFixesNote": "Assurances élevées (responsabilité civile et véhicules); entretien et réparation de l'équipement.",
+      "fraisParVisite": {
+        "montant": 12,
+        "libelle": "Carburant et déplacements des équipes"
+      },
+      "postes": ["paysagiste", "chefEquipe", "gerant", "commisComptable", "marketeur"],
+      "equipeDepart": [
+        {
+          "posteId": "paysagiste",
+          "nombre": 2
+        }
+      ],
+      "fournisseursDefaut": {
+        "paysagement": "distributeurHorticole",
+        "pepiniere": "grossisteHorticole"
+      },
+      "initiativesEco": ["compensationCarbone", "sansPesticides", "certification"],
+      "canaux": {
+        "meta": 1.1,
+        "tiktok": 0.6,
+        "google": 1.4,
+        "influenceurs": 0.6,
+        "radio": 1,
+        "journal": 1.3,
+        "flyers": 1.5,
+        "affichage": 0.9,
+        "evenements": 0.7,
+        "commandites": 1
+      },
+      "publiciteDefaut": {
+        "google": 500,
+        "flyers": 400,
+        "meta": 300
+      },
+      "concurrents": {
+        "geant": {
+          "nom": "Verdure Canada",
+          "description": "Franchise nationale d'entretien de pelouse : prix bas, gros budget publicitaire, service standardisé."
+        },
+        "local": {
+          "nom": "Les Jardins de l'Érablière",
+          "description": "Paysagiste réputé pour ses aménagements écologiques : prix élevés, carnet de commandes plein."
+        },
+        "agressif": {
+          "nom": "Tonte Rapide à rabais",
+          "description": "Petite entreprise qui casse les prix et copie les offres des autres."
+        },
+        "prudent": {
+          "nom": "Entretien Gagnon et Fils",
+          "description": "Entreprise familiale depuis 1979 : clientèle fidèle, réagit lentement."
+        },
+        "nouveau": {
+          "nom": "GazonTech",
+          "description": "Application qui jumelle clients et équipes, financée par du capital de risque : publicité massive et premiers mois à rabais."
+        }
+      },
+      "nouveauxProduits": [
+        {
+          "id": "contratsCommerciaux",
+          "nom": "Contrats commerciaux",
+          "detail": "Entretien et déneigement de stationnements, de copropriétés et de commerces",
+          "description": "Ventes aux entreprises (B2B) : appels d'offres, contrats de plusieurs mois et factures à 30, 45 ou 60 jours.",
+          "prixReference": 650,
+          "coutUnitaire": 30,
+          "tauxAchat": 0,
+          "elasticite": 1,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": true,
+          "minutesProduction": 600,
+          "unite": "site par mois",
+          "categorieAppro": "paysagement",
+          "coutDeveloppement": 3500,
+          "delaiMois": 1,
+          "probabiliteSucces": 1,
+          "segments": {},
+          "b2b": {
+            "quantiteMin": 2,
+            "quantiteMax": 10,
+            "coursier": false,
+            "saisonnalite": [0.6, 0.5, 0.8, 1.4, 1.2, 0.8, 0.6, 0.7, 1.1, 1.5, 1.4, 0.8],
+            "clients": [
+              {
+                "nom": "Syndicat de copropriété Les Cèdres",
+                "type": "Copropriété"
+              },
+              {
+                "nom": "Centre commercial des Rivières",
+                "type": "Commerce"
+              },
+              {
+                "nom": "Résidence Le Bel Âge",
+                "type": "Résidence pour aînés"
+              },
+              {
+                "nom": "École secondaire du Plateau",
+                "type": "École"
+              },
+              {
+                "nom": "Clinique médicale Saint-Joseph",
+                "type": "Clinique"
+              },
+              {
+                "nom": "Concessionnaire Auto Nordique",
+                "type": "Commerce"
+              },
+              {
+                "nom": "Parc d'affaires Horizon",
+                "type": "Immeuble de bureaux"
+              },
+              {
+                "nom": "Coopérative d'habitation Les Pins",
+                "type": "Coopérative"
+              }
+            ]
+          }
+        },
+        {
+          "id": "elagage",
+          "nom": "Élagage et taille d'arbres",
+          "detail": "Taille, élagage et abattage de petits arbres",
+          "description": "Un service bien payé, mais qui exige de l'équipement et de la prudence.",
+          "prixReference": 450,
+          "coutUnitaire": 20,
+          "tauxAchat": 0.04,
+          "elasticite": 1.1,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": true,
+          "minutesProduction": 360,
+          "saisonnalite": [0.2, 0.2, 0.6, 1.2, 1.4, 1.3, 1.1, 1.1, 1.3, 1.4, 0.8, 0.2],
+          "unite": "intervention",
+          "categorieAppro": "paysagement",
+          "coutDeveloppement": 4000,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.7,
+          "segments": {
+            "etudiants": 0.3,
+            "familles": 1,
+            "professionnels": 1.2,
+            "retraites": 1.1
+          }
+        },
+        {
+          "id": "irrigation",
+          "nom": "Systèmes d'arrosage automatique",
+          "detail": "Installation et mise en marche",
+          "description": "Des projets payants au printemps, mais il faut former l'équipe.",
+          "prixReference": 2400,
+          "coutUnitaire": 900,
+          "tauxAchat": 0.012,
+          "elasticite": 1.2,
+          "perissable": false,
+          "conservationJours": 365,
+          "production": true,
+          "minutesProduction": 1200,
+          "saisonnalite": [0, 0, 0.3, 1.5, 2, 1.6, 1, 0.8, 0.6, 0.3, 0, 0],
+          "unite": "installation",
+          "categorieAppro": "paysagement",
+          "coutDeveloppement": 5000,
+          "delaiMois": 2,
+          "probabiliteSucces": 0.55,
+          "segments": {
+            "etudiants": 0.2,
+            "familles": 1,
+            "professionnels": 1.4,
+            "retraites": 0.9
+          }
+        },
+        {
+          "id": "potagers",
+          "nom": "Potagers urbains clés en main",
+          "detail": "Bacs, terre, plants et conseils",
+          "description": "Tendance chez les familles et les clients écoresponsables.",
+          "prixReference": 850,
+          "coutUnitaire": 280,
+          "tauxAchat": 0.02,
+          "elasticite": 1.2,
+          "perissable": true,
+          "conservationJours": 14,
+          "production": true,
+          "minutesProduction": 480,
+          "saisonnalite": [0, 0, 0.4, 1.8, 2.4, 1.6, 0.6, 0.3, 0.2, 0, 0, 0],
+          "unite": "potager",
+          "categorieAppro": "pepiniere",
+          "coutDeveloppement": 2500,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.6,
+          "segments": {
+            "etudiants": 0.8,
+            "familles": 1.5,
+            "professionnels": 0.9,
+            "retraites": 1
+          }
+        }
+      ],
+      "investissements": [
+        {
+          "id": "camion2",
+          "nom": "Deuxième camion et remorque",
+          "description": "Une deuxième équipe peut partir en même temps : moins de temps perdu sur la route. Assurance et entretien : environ 500 $ par mois.",
+          "cout": 55000,
+          "type": "vehicule",
+          "dureeVieMois": 72,
+          "classeDpa": "10",
+          "unique": true,
+          "effets": {
+            "capaciteProduction": 0.12
+          },
+          "fraisMensuels": 500
+        },
+        {
+          "id": "souffleuse",
+          "nom": "Souffleuse industrielle et lame à neige",
+          "description": "Déneigement plus rapide et plus propre.",
+          "cout": 28000,
+          "type": "equipement",
+          "dureeVieMois": 96,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": {
+            "capaciteProduction": 0.06,
+            "qualiteLignes": {
+              "deneigement": 0.05
+            }
+          }
+        },
+        {
+          "id": "logicielRoutes",
+          "nom": "Logiciel d'optimisation des routes et de facturation",
+          "description": "Des trajets plus courts et des soumissions plus rapides. Environ 90 $ par mois.",
+          "cout": 3000,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": {
+            "fraisParVisite": 0.82,
+            "capaciteService": 0.1
+          },
+          "fraisMensuels": 90
+        },
+        {
+          "id": "tondeusesElectriques",
+          "nom": "Tondeuses et outils électriques",
+          "description": "Moins de bruit, moins d'essence et une image écoresponsable.",
+          "cout": 18000,
+          "type": "equipement",
+          "dureeVieMois": 72,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": {
+            "eco": 0.12,
+            "fraisParVisite": 0.85,
+            "qualiteLignes": {
+              "entretien": 0.02
+            }
+          }
+        },
+        {
+          "id": "siteWeb",
+          "nom": "Site Web avec soumission en ligne",
+          "description": "Les clients demandent une soumission en ligne. Environ 35 $ par mois.",
+          "cout": 4000,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": {
+            "commandeEnLigne": 0.1
+          },
+          "fraisMensuels": 35
+        },
+        {
+          "id": "remorqueFermee",
+          "nom": "Remorque fermée et abri à végétaux",
+          "description": "Les plantes et les matériaux sont mieux protégés : moins de pertes.",
+          "cout": 9000,
+          "type": "equipement",
+          "dureeVieMois": 84,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": {
+            "pertesStocks": 0.7
+          }
+        }
+      ]
+    },
+    {
+      "id": "atelier",
+      "nom": "Atelier d'ébénisterie",
+      "commerce": "l'atelier",
+      "description": "Un petit atelier de fabrication qui produit des meubles en bois massif sur mesure et des objets en bois, vendus dans sa salle d'exposition et aux détaillants. La capacité de production est le nerf de la guerre.",
+      "tauxCnesst": 0.028,
+      "tauxCnesstNote": "À VÉRIFIER : estimation pour la fabrication de meubles et d'articles en bois.",
+      "margeBruteCible": [0.5, 0.68],
+      "margeNetteCible": [0.05, 0.12],
+      "coutMainOeuvreCible": [0.3, 0.44],
+      "lignes": [
+        {
+          "id": "meubles",
+          "nom": "Meubles sur mesure",
+          "detail": "Tables, buffets, bibliothèques en bois massif",
+          "prixReference": 2250,
+          "coutUnitaire": 520,
+          "tauxAchat": 0.045,
+          "elasticite": 1.3,
+          "perissable": false,
+          "conservationJours": 720,
+          "production": true,
+          "minutesProduction": 1440,
+          "unite": "meuble",
+          "categorieAppro": "bois"
+        },
+        {
+          "id": "petitsObjets",
+          "nom": "Planches et petits objets",
+          "detail": "Planches à découper, plateaux, ustensiles",
+          "prixReference": 60,
+          "coutUnitaire": 14,
+          "tauxAchat": 0.5,
+          "elasticite": 1,
+          "perissable": false,
+          "conservationJours": 720,
+          "production": true,
+          "minutesProduction": 55,
+          "saisonnalite": [0.7, 0.8, 0.8, 0.9, 1.1, 0.9, 0.8, 0.8, 0.9, 1, 1.4, 1.9],
+          "unite": "objet",
+          "categorieAppro": "bois"
+        },
+        {
+          "id": "restauration",
+          "nom": "Restauration de meubles",
+          "detail": "Décapage, réparation et finition de meubles anciens",
+          "prixReference": 560,
+          "coutUnitaire": 60,
+          "tauxAchat": 0.03,
+          "elasticite": 1.1,
+          "perissable": false,
+          "conservationJours": 720,
+          "production": true,
+          "minutesProduction": 660,
+          "unite": "meuble restauré",
+          "categorieAppro": "finition"
+        }
+      ],
+      "qualites": [
+        {
+          "id": "economique",
+          "nom": "Bois d'ingénierie et finitions de base",
+          "description": "Contreplaqué et placages, vernis ordinaire.",
+          "multiplicateurCout": 0.8,
+          "score": 0.35
+        },
+        {
+          "id": "standard",
+          "nom": "Bois franc québécois",
+          "description": "Érable, merisier et frêne du Québec.",
+          "multiplicateurCout": 1,
+          "score": 0.55
+        },
+        {
+          "id": "superieure",
+          "nom": "Bois franc sélectionné",
+          "description": "Planches choisies une à une, assemblages traditionnels, finitions supérieures.",
+          "multiplicateurCout": 1.25,
+          "score": 0.72
+        },
+        {
+          "id": "artisanale",
+          "nom": "Bois certifié FSC et finitions naturelles",
+          "description": "Bois de forêts gérées durablement, huiles naturelles sans solvants.",
+          "multiplicateurCout": 1.45,
+          "score": 0.88
+        }
+      ],
+      "saisonnalite": [0.75, 0.8, 0.9, 1, 1.05, 0.95, 0.85, 0.9, 1.05, 1.1, 1.2, 1.45],
+      "saisonnaliteNote": "Les meubles se vendent à l'automne et avant les Fêtes; les petits objets sont des cadeaux populaires.",
+      "croissanceAnnuelle": 0.015,
+      "cyclicite": 1.5,
+      "transactionsParHeureEmploye": 3,
+      "libelleProduction": "Atelier",
+      "minutesProductionDefaut": 60,
+      "productionProprietaire": 0.6,
+      "productionSansPersonnel": 0,
+      "libellePertes": "bois et pièces perdus",
+      "heuresOuvertureReference": 45,
+      "sensibilites": {
+        "prix": 1.7,
+        "qualite": 2.2,
+        "service": 1,
+        "note": 0.6,
+        "ambiance": 0.6,
+        "heures": 0.3,
+        "eco": 0.45,
+        "local": 0.55
+      },
+      "utiliteAlternative": 0.6,
+      "visitesParClientMois": 0.2,
+      "partLivraison": 0,
+      "panierLivraison": {},
+      "segments": [
+        {
+          "personaId": "etudiants",
+          "part": 0.1,
+          "panier": {
+            "meubles": 0.4,
+            "petitsObjets": 1.2,
+            "restauration": 0.5
+          }
+        },
+        {
+          "personaId": "familles",
+          "part": 0.32,
+          "panier": {
+            "meubles": 1.1,
+            "petitsObjets": 1,
+            "restauration": 0.9
+          }
+        },
+        {
+          "personaId": "professionnels",
+          "part": 0.34,
+          "panier": {
+            "meubles": 1.2,
+            "petitsObjets": 1,
+            "restauration": 0.9
+          }
+        },
+        {
+          "personaId": "retraites",
+          "part": 0.24,
+          "panier": {
+            "meubles": 0.9,
+            "petitsObjets": 0.9,
+            "restauration": 1.5
+          }
+        }
+      ],
+      "emplacements": ["industriel", "rue"],
+      "importanceEmplacement": 0.5,
+      "superficiePi2": 2000,
+      "equipements": [
+        {
+          "id": "usage",
+          "nom": "Machines usagées",
+          "description": "Scie à table, planeuse, dégauchisseuse et outils d'occasion.",
+          "cout": 26000,
+          "dureeVieMois": 72,
+          "bonusQualite": -0.04
+        },
+        {
+          "id": "neuf",
+          "nom": "Machines neuves et dépoussiéreur",
+          "description": "Machines neuves, dépoussiéreur central, établis professionnels.",
+          "cout": 45000,
+          "dureeVieMois": 96,
+          "bonusQualite": 0
+        },
+        {
+          "id": "hautdegamme",
+          "nom": "Atelier avec commande numérique",
+          "description": "Machines haut de gamme, routeur CNC et cabine de finition.",
+          "cout": 110000,
+          "dureeVieMois": 120,
+          "bonusQualite": 0.05,
+          "bonusProduction": 0.1
+        }
+      ],
+      "amenagements": [
+        {
+          "id": "minimal",
+          "nom": "Salle d'exposition minimale",
+          "description": "Un coin de l'atelier pour montrer quelques pièces.",
+          "cout": 8000,
+          "ambiance": 0.3
+        },
+        {
+          "id": "chaleureux",
+          "nom": "Salle d'exposition soignée",
+          "description": "Espace éclairé où les clients voient et touchent les meubles.",
+          "cout": 18000,
+          "ambiance": 0.6
+        },
+        {
+          "id": "design",
+          "nom": "Salle d'exposition et atelier vitré",
+          "description": "Les clients voient les artisans au travail : une expérience mémorable.",
+          "cout": 40000,
+          "ambiance": 0.85
+        }
+      ],
+      "stockInitial": 9000,
+      "partAchatsTaxables": 1,
+      "alimentation": false,
+      "permis": [],
+      "fraisDemarrage": 2500,
+      "fraisFixesMensuels": {
+        "electricite": 900,
+        "assurances": 380,
+        "comptable": 300,
+        "entretien": 350,
+        "logiciels": 120,
+        "telecom": 100
+      },
+      "fraisFixesNote": "Électricité élevée (machines en 600 V); entretien : lames, affûtage, pièces.",
+      "postes": ["ebeniste", "journalier", "vendeur", "gerant", "commisComptable", "marketeur"],
+      "equipeDepart": [
+        {
+          "posteId": "ebeniste",
+          "nombre": 1
+        }
+      ],
+      "fournisseursDefaut": {
+        "bois": "distributeurBoisFranc",
+        "finition": "quincaillerieIndustrielle"
+      },
+      "initiativesEco": ["boisCertifie", "compost", "certification"],
+      "canaux": {
+        "meta": 1.1,
+        "tiktok": 0.9,
+        "google": 1.2,
+        "influenceurs": 1.2,
+        "radio": 0.8,
+        "journal": 1,
+        "flyers": 0.6,
+        "affichage": 0.7,
+        "evenements": 1.4,
+        "commandites": 0.8
+      },
+      "publiciteDefaut": {
+        "meta": 600,
+        "google": 400,
+        "evenements": 300
+      },
+      "concurrents": {
+        "geant": {
+          "nom": "Méga-Meubles Entrepôt",
+          "description": "Grande surface de meubles importés : prix très bas, livraison rapide, qualité moyenne."
+        },
+        "local": {
+          "nom": "Bois & Fer Atelier",
+          "description": "Designers-ébénistes branchés, très présents sur les réseaux sociaux : prix élevés, image forte."
+        },
+        "agressif": {
+          "nom": "Meubles Prêts-à-Monter Discount",
+          "description": "Soldes perpétuels sur des meubles en kit; copie les modèles populaires."
+        },
+        "prudent": {
+          "nom": "Ébénisterie Pelletier",
+          "description": "Atelier familial depuis 1972 : réputation solide, peu de publicité, change lentement."
+        },
+        "nouveau": {
+          "nom": "Meublé.co",
+          "description": "Jeune marque de meubles en ligne financée par du capital de risque : livraison gratuite et publicité massive."
+        }
+      },
+      "nouveauxProduits": [
+        {
+          "id": "detaillants",
+          "nom": "Ventes aux détaillants",
+          "detail": "Petits objets vendus en lots aux boutiques de décoration",
+          "description": "Ventes aux entreprises (B2B) : des volumes importants à prix de gros, factures à 30, 45 ou 60 jours.",
+          "prixReference": 32,
+          "coutUnitaire": 14,
+          "tauxAchat": 0,
+          "elasticite": 1,
+          "perissable": false,
+          "conservationJours": 720,
+          "production": true,
+          "minutesProduction": 45,
+          "unite": "objet",
+          "categorieAppro": "bois",
+          "coutDeveloppement": 3000,
+          "delaiMois": 1,
+          "probabiliteSucces": 1,
+          "segments": {},
+          "b2b": {
+            "quantiteMin": 40,
+            "quantiteMax": 260,
+            "coursier": true,
+            "saisonnalite": [0.5, 0.6, 0.8, 1, 1, 0.8, 0.7, 0.9, 1.3, 1.5, 1.4, 0.6],
+            "clients": [
+              {
+                "nom": "Boutique Maison Nordique",
+                "type": "Boutique de décoration"
+              },
+              {
+                "nom": "Comptoir des Artisans",
+                "type": "Boutique de produits locaux"
+              },
+              {
+                "nom": "Épicerie fine Le Garde-Manger",
+                "type": "Épicerie fine"
+              },
+              {
+                "nom": "Boutique du Musée régional",
+                "type": "Musée"
+              },
+              {
+                "nom": "Quincaillerie Beaulieu",
+                "type": "Quincaillerie"
+              },
+              {
+                "nom": "Cadeaux Saint-Laurent",
+                "type": "Boutique de cadeaux"
+              }
+            ]
+          }
+        },
+        {
+          "id": "cuisineSurMesure",
+          "nom": "Armoires de cuisine sur mesure",
+          "detail": "Conception, fabrication et installation",
+          "description": "De très gros contrats, mais chaque cuisine occupe l'atelier pendant des semaines.",
+          "prixReference": 14000,
+          "coutUnitaire": 4200,
+          "tauxAchat": 0.004,
+          "elasticite": 1.3,
+          "perissable": false,
+          "conservationJours": 720,
+          "production": true,
+          "minutesProduction": 9000,
+          "unite": "cuisine",
+          "categorieAppro": "bois",
+          "coutDeveloppement": 6000,
+          "delaiMois": 2,
+          "probabiliteSucces": 0.6,
+          "segments": {
+            "etudiants": 0.1,
+            "familles": 1.2,
+            "professionnels": 1.4,
+            "retraites": 0.9
+          }
+        },
+        {
+          "id": "ateliersInitiation",
+          "nom": "Cours d'initiation à l'ébénisterie",
+          "detail": "Ateliers de fin de semaine en petits groupes",
+          "description": "Fait connaître l'atelier et crée une communauté, mais occupe un artisan.",
+          "prixReference": 180,
+          "coutUnitaire": 20,
+          "tauxAchat": 0.03,
+          "elasticite": 1.1,
+          "perissable": false,
+          "conservationJours": 720,
+          "production": true,
+          "minutesProduction": 180,
+          "unite": "participant",
+          "categorieAppro": "finition",
+          "coutDeveloppement": 2000,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.7,
+          "segments": {
+            "etudiants": 1.3,
+            "familles": 1,
+            "professionnels": 1.1,
+            "retraites": 1.2
+          }
+        },
+        {
+          "id": "boisRecupere",
+          "nom": "Collection en bois récupéré",
+          "detail": "Meubles faits de bois de grange et de poutres récupérées",
+          "description": "Plaît aux clients écoresponsables; le bois récupéré demande plus de préparation.",
+          "prixReference": 1500,
+          "coutUnitaire": 300,
+          "tauxAchat": 0.015,
+          "elasticite": 1.2,
+          "perissable": false,
+          "conservationJours": 720,
+          "production": true,
+          "minutesProduction": 1600,
+          "unite": "meuble",
+          "categorieAppro": "bois",
+          "coutDeveloppement": 3500,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.6,
+          "segments": {
+            "etudiants": 0.8,
+            "familles": 1.1,
+            "professionnels": 1.2,
+            "retraites": 0.8
+          }
+        }
+      ],
+      "investissements": [
+        {
+          "id": "cnc",
+          "nom": "Routeur CNC",
+          "description": "Machine à commande numérique : production plus rapide et moins de pertes de bois.",
+          "cout": 45000,
+          "type": "equipement",
+          "dureeVieMois": 96,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": {
+            "capaciteProduction": 0.15,
+            "coutLignes": {
+              "petitsObjets": 0.9
+            }
+          }
+        },
+        {
+          "id": "cabineFinition",
+          "nom": "Cabine de finition au vernis",
+          "description": "Finitions sans poussière, plus belles et plus durables.",
+          "cout": 22000,
+          "type": "equipement",
+          "dureeVieMois": 120,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": {
+            "qualiteLignes": {
+              "meubles": 0.05,
+              "restauration": 0.05
+            }
+          }
+        },
+        {
+          "id": "sechoir",
+          "nom": "Séchoir à bois",
+          "description": "Acheter du bois brut et le sécher soi-même coûte moins cher.",
+          "cout": 14000,
+          "type": "equipement",
+          "dureeVieMois": 120,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": {
+            "coutLignes": {
+              "meubles": 0.86
+            }
+          }
+        },
+        {
+          "id": "fourgon",
+          "nom": "Fourgon de livraison",
+          "description": "Livrer toi-même les meubles et les commandes des détaillants. Assurance et essence : environ 450 $ par mois.",
+          "cout": 46000,
+          "type": "vehicule",
+          "dureeVieMois": 72,
+          "classeDpa": "10",
+          "unique": true,
+          "effets": {
+            "livraisonPropre": true,
+            "commandeEnLigne": 0.03
+          },
+          "fraisMensuels": 450
+        },
+        {
+          "id": "logicielConception",
+          "nom": "Logiciel de conception 3D et de devis",
+          "description": "Des soumissions plus rapides et des plans que les clients visualisent. Environ 60 $ par mois.",
+          "cout": 4000,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": {
+            "capaciteService": 0.12
+          },
+          "fraisMensuels": 60
+        },
+        {
+          "id": "siteWeb",
+          "nom": "Site Web avec boutique en ligne",
+          "description": "Vendre les petits objets en ligne et recevoir des demandes de soumission. Environ 40 $ par mois.",
+          "cout": 6000,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": {
+            "commandeEnLigne": 0.12
+          },
+          "fraisMensuels": 40
+        },
+        {
+          "id": "renovation",
+          "nom": "Rénovation de la salle d'exposition",
+          "description": "Un espace plus invitant pour présenter les meubles.",
+          "cout": 25000,
+          "type": "ameliorations",
+          "dureeVieMois": 60,
+          "classeDpa": "13",
+          "unique": true,
+          "effets": {
+            "ambiance": 0.15
+          }
+        }
+      ]
+    },
+    {
+      "id": "epicerie",
+      "nom": "Épicerie fine",
+      "commerce": "l'épicerie",
+      "description": "Une épicerie fine de quartier : fromages et charcuteries, produits fins, prêt-à-manger, vins, bières et cidres du Québec. Petites marges, beaucoup de produits périssables et des ventes en partie détaxées.",
+      "tauxCnesst": 0.0185,
+      "tauxCnesstNote": "À VÉRIFIER : estimation pour le commerce de détail alimentaire avec préparation.",
+      "margeBruteCible": [0.32, 0.44],
+      "margeNetteCible": [0.02, 0.06],
+      "coutMainOeuvreCible": [0.15, 0.23],
+      "lignes": [
+        {
+          "id": "fromages",
+          "nom": "Fromages et charcuteries",
+          "detail": "Fromages québécois et importés, charcuteries fines",
+          "prixReference": 15,
+          "coutUnitaire": 8.6,
+          "tauxAchat": 0.5,
+          "elasticite": 1,
+          "perissable": true,
+          "conservationJours": 14,
+          "production": false,
+          "taxable": false,
+          "unite": "portion",
+          "categorieAppro": "fromages"
+        },
+        {
+          "id": "epicerieFine",
+          "nom": "Produits fins d'épicerie",
+          "detail": "Huiles, vinaigres, confitures, pâtes, conserves fines",
+          "prixReference": 12,
+          "coutUnitaire": 6.4,
+          "tauxAchat": 0.65,
+          "elasticite": 1.1,
+          "perissable": false,
+          "conservationJours": 270,
+          "production": false,
+          "taxable": false,
+          "unite": "produit",
+          "categorieAppro": "epicerie"
+        },
+        {
+          "id": "pretAManger",
+          "nom": "Prêt-à-manger",
+          "detail": "Plats cuisinés, sandwichs et salades",
+          "prixReference": 14,
+          "coutUnitaire": 5.2,
+          "tauxAchat": 0.28,
+          "elasticite": 1.2,
+          "perissable": true,
+          "conservationJours": 3,
+          "production": true,
+          "minutesProduction": 6,
+          "unite": "plat",
+          "categorieAppro": "cuisine"
+        },
+        {
+          "id": "vins",
+          "nom": "Vins, bières et cidres du Québec",
+          "detail": "Microbrasseries, cidreries et vins embouteillés au Québec",
+          "prixReference": 26,
+          "coutUnitaire": 17.5,
+          "tauxAchat": 0.18,
+          "elasticite": 1,
+          "perissable": false,
+          "conservationJours": 540,
+          "production": false,
+          "unite": "bouteille",
+          "categorieAppro": "vins"
+        }
+      ],
+      "qualites": [
+        {
+          "id": "economique",
+          "nom": "Produits courants",
+          "description": "Marques connues des supermarchés.",
+          "multiplicateurCout": 0.82,
+          "score": 0.35
+        },
+        {
+          "id": "standard",
+          "nom": "Produits fins",
+          "description": "Producteurs spécialisés et sélection soignée.",
+          "multiplicateurCout": 1,
+          "score": 0.55
+        },
+        {
+          "id": "superieure",
+          "nom": "Produits d'exception",
+          "description": "Fromages affinés, produits primés.",
+          "multiplicateurCout": 1.18,
+          "score": 0.72
+        },
+        {
+          "id": "artisanale",
+          "nom": "Artisanal, biologique et local",
+          "description": "Petits producteurs québécois et certifications biologiques.",
+          "multiplicateurCout": 1.35,
+          "score": 0.88
+        }
+      ],
+      "saisonnalite": [0.88, 0.88, 0.95, 1, 0.98, 0.97, 0.92, 0.95, 0.98, 1.03, 1.06, 1.4],
+      "saisonnaliteNote": "Très forte saison des Fêtes (plateaux de fromages, cadeaux gourmands); creux en janvier, février et juillet.",
+      "croissanceAnnuelle": 0.015,
+      "cyclicite": 1.2,
+      "transactionsParHeureEmploye": 5.5,
+      "libelleProduction": "Cuisine",
+      "minutesProductionDefaut": 6,
+      "productionProprietaire": 0.1,
+      "productionSansPersonnel": 0.12,
+      "libellePertes": "produits périmés",
+      "heuresOuvertureReference": 70,
+      "sensibilites": {
+        "prix": 2.2,
+        "qualite": 1.8,
+        "service": 1.1,
+        "note": 0.4,
+        "ambiance": 0.6,
+        "heures": 0.6,
+        "eco": 0.45,
+        "local": 0.55
+      },
+      "utiliteAlternative": 0.45,
+      "visitesParClientMois": 2.5,
+      "partLivraison": 0.05,
+      "panierLivraison": {
+        "fromages": 1.2,
+        "epicerieFine": 1,
+        "pretAManger": 1.6,
+        "vins": 0
+      },
+      "segments": [
+        {
+          "personaId": "etudiants",
+          "part": 0.12,
+          "panier": {
+            "fromages": 0.8,
+            "epicerieFine": 0.8,
+            "pretAManger": 1.3,
+            "vins": 0.9
+          }
+        },
+        {
+          "personaId": "familles",
+          "part": 0.28,
+          "panier": {
+            "fromages": 1,
+            "epicerieFine": 1.1,
+            "pretAManger": 1,
+            "vins": 0.8
+          }
+        },
+        {
+          "personaId": "professionnels",
+          "part": 0.32,
+          "panier": {
+            "fromages": 1.1,
+            "epicerieFine": 0.9,
+            "pretAManger": 1.2,
+            "vins": 1.2
+          }
+        },
+        {
+          "personaId": "retraites",
+          "part": 0.28,
+          "panier": {
+            "fromages": 1.1,
+            "epicerieFine": 1.2,
+            "pretAManger": 0.7,
+            "vins": 1
+          }
+        }
+      ],
+      "emplacements": ["rue", "centre", "residentiel"],
+      "importanceEmplacement": 1,
+      "superficiePi2": 1400,
+      "equipements": [
+        {
+          "id": "usage",
+          "nom": "Équipement usagé",
+          "description": "Comptoirs réfrigérés, trancheuse et caisse d'occasion.",
+          "cout": 20000,
+          "dureeVieMois": 60,
+          "bonusQualite": -0.04
+        },
+        {
+          "id": "neuf",
+          "nom": "Équipement neuf",
+          "description": "Comptoirs réfrigérés neufs, cave à fromages, cuisinette, caisse.",
+          "cout": 40000,
+          "dureeVieMois": 84,
+          "bonusQualite": 0
+        },
+        {
+          "id": "hautdegamme",
+          "nom": "Équipement haut de gamme",
+          "description": "Cave d'affinage, comptoirs vitrés sur mesure, cuisine complète.",
+          "cout": 62000,
+          "dureeVieMois": 96,
+          "bonusQualite": 0.05
+        }
+      ],
+      "amenagements": [
+        {
+          "id": "minimal",
+          "nom": "Aménagement minimal",
+          "description": "Tablettes standards, peinture, enseigne simple.",
+          "cout": 12000,
+          "ambiance": 0.3
+        },
+        {
+          "id": "chaleureux",
+          "nom": "Aménagement chaleureux",
+          "description": "Tablettes en bois, éclairage chaud, coin dégustation.",
+          "cout": 30000,
+          "ambiance": 0.6
+        },
+        {
+          "id": "design",
+          "nom": "Concept d'épicerie signé par un designer",
+          "description": "Ambiance de marché européen, comptoirs sur mesure, cave à vin vitrée.",
+          "cout": 55000,
+          "ambiance": 0.85
+        }
+      ],
+      "stockInitial": 11000,
+      "partAchatsTaxables": 0.3,
+      "partAchatsTaxablesNote": "La plupart des aliments sont détaxés (CTI et RTI récupérables quand même); le prêt-à-manger, l'alcool et les emballages sont taxables.",
+      "alimentation": true,
+      "permis": ["racj"],
+      "fraisDemarrage": 2500,
+      "fraisFixesMensuels": {
+        "electricite": 1100,
+        "assurances": 240,
+        "comptable": 275,
+        "entretien": 280,
+        "logiciels": 110,
+        "telecom": 100
+      },
+      "fraisFixesNote": "Électricité élevée (réfrigération).",
+      "postes": [
+        "commisEpicerie",
+        "cuisinier",
+        "aideCuisine",
+        "gerant",
+        "commisComptable",
+        "marketeur"
+      ],
+      "equipeDepart": [
+        {
+          "posteId": "commisEpicerie",
+          "nombre": 3
+        }
+      ],
+      "fournisseursDefaut": {
+        "fromages": "distributeurFromages",
+        "epicerie": "grossisteFin",
+        "cuisine": "distributeurAlimentaire",
+        "vins": "distributeurVins",
+        "boulangerie": "boulangerieIndustrielle",
+        "boissons": "distributeurNational"
+      },
+      "initiativesEco": ["sacsReutilisables", "emballages", "compost", "certification"],
+      "canaux": {
+        "meta": 1.1,
+        "tiktok": 0.8,
+        "google": 1,
+        "influenceurs": 1.1,
+        "radio": 0.9,
+        "journal": 1.3,
+        "flyers": 1.3,
+        "affichage": 0.9,
+        "evenements": 1.3,
+        "commandites": 0.9
+      },
+      "publiciteDefaut": {
+        "meta": 700,
+        "flyers": 400,
+        "journal": 300
+      },
+      "concurrents": {
+        "geant": {
+          "nom": "Hypermarché Grand-Panier",
+          "description": "Supermarché à grande surface avec un comptoir de produits fins : prix bas, choix immense, service limité."
+        },
+        "local": {
+          "nom": "Le Comptoir du Terroir",
+          "description": "Épicerie fine branchée, spécialiste des produits d'ici : prix élevés, très bonne réputation."
+        },
+        "agressif": {
+          "nom": "Épicerie Prix-Choc",
+          "description": "Spéciaux chaque semaine et guerres de prix; copie les idées qui marchent."
+        },
+        "prudent": {
+          "nom": "Épicerie fine Bélanger",
+          "description": "Institution du quartier depuis 1958 : clientèle âgée et fidèle, change lentement."
+        },
+        "nouveau": {
+          "nom": "Frigo Futé",
+          "description": "Épicerie en ligne livrée à domicile, financée par du capital de risque : rabais de bienvenue et publicité massive."
+        }
+      },
+      "nouveauxProduits": [
+        {
+          "id": "paniersCadeaux",
+          "nom": "Paniers-cadeaux corporatifs",
+          "detail": "Paniers gourmands pour les employés et les clients d'entreprises",
+          "description": "Ventes aux entreprises (B2B), surtout avant les Fêtes : soumissions, contrats et factures à 30, 45 ou 60 jours.",
+          "prixReference": 85,
+          "coutUnitaire": 48,
+          "tauxAchat": 0,
+          "elasticite": 1,
+          "perissable": false,
+          "conservationJours": 120,
+          "production": false,
+          "unite": "panier",
+          "categorieAppro": "epicerie",
+          "coutDeveloppement": 3000,
+          "delaiMois": 1,
+          "probabiliteSucces": 1,
+          "segments": {},
+          "b2b": {
+            "quantiteMin": 10,
+            "quantiteMax": 120,
+            "coursier": true,
+            "saisonnalite": [0.4, 0.6, 0.6, 0.7, 0.8, 0.7, 0.4, 0.5, 0.9, 1.2, 2.2, 2.3]
+          }
+        },
+        {
+          "id": "boulangerie",
+          "nom": "Pain et viennoiseries artisanales",
+          "detail": "Pains au levain, croissants livrés chaque matin",
+          "description": "Fait revenir les clients plus souvent, mais les invendus se perdent vite.",
+          "prixReference": 6.5,
+          "coutUnitaire": 3,
+          "tauxAchat": 0.25,
+          "elasticite": 1,
+          "perissable": true,
+          "conservationJours": 2,
+          "production": false,
+          "taxable": false,
+          "unite": "pain",
+          "categorieAppro": "boulangerie",
+          "coutDeveloppement": 1500,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.7,
+          "segments": {
+            "etudiants": 0.8,
+            "familles": 1.2,
+            "professionnels": 0.9,
+            "retraites": 1.2
+          }
+        },
+        {
+          "id": "cafeComptoir",
+          "nom": "Comptoir à café",
+          "detail": "Espressos et cafés pour emporter",
+          "description": "Un petit revenu de plus et une raison de passer chaque matin.",
+          "prixReference": 4.5,
+          "coutUnitaire": 1.2,
+          "tauxAchat": 0.2,
+          "elasticite": 0.8,
+          "perissable": false,
+          "conservationJours": 60,
+          "production": false,
+          "unite": "café",
+          "categorieAppro": "boissons",
+          "coutDeveloppement": 4000,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.65,
+          "segments": {
+            "etudiants": 1.3,
+            "familles": 0.8,
+            "professionnels": 1.3,
+            "retraites": 0.8
+          }
+        },
+        {
+          "id": "vrac",
+          "nom": "Section vrac zéro déchet",
+          "detail": "Noix, grains, épices et huiles en vrac",
+          "description": "Plaît aux clients écoresponsables; il faut gérer l'hygiène des contenants.",
+          "prixReference": 9,
+          "coutUnitaire": 5,
+          "tauxAchat": 0.15,
+          "elasticite": 1.1,
+          "perissable": false,
+          "conservationJours": 120,
+          "production": false,
+          "taxable": false,
+          "unite": "sac",
+          "categorieAppro": "epicerie",
+          "coutDeveloppement": 3500,
+          "delaiMois": 1,
+          "probabiliteSucces": 0.6,
+          "segments": {
+            "etudiants": 1.5,
+            "familles": 1.1,
+            "professionnels": 0.9,
+            "retraites": 0.8
+          }
+        }
+      ],
+      "investissements": [
+        {
+          "id": "comptoirRefrigere",
+          "nom": "Comptoir réfrigéré supplémentaire",
+          "description": "Mieux conserver et mieux présenter les fromages : moins de pertes.",
+          "cout": 16000,
+          "type": "equipement",
+          "dureeVieMois": 96,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": {
+            "pertesStocks": 0.85,
+            "qualiteLignes": {
+              "fromages": 0.03
+            }
+          }
+        },
+        {
+          "id": "cuisineEquipee",
+          "nom": "Cuisine de production équipée",
+          "description": "Four mixte et refroidisseur rapide : plus de plats préparés et de meilleure qualité.",
+          "cout": 24000,
+          "type": "equipement",
+          "dureeVieMois": 96,
+          "classeDpa": "8",
+          "unique": true,
+          "effets": {
+            "capaciteProduction": 0.2,
+            "qualiteLignes": {
+              "pretAManger": 0.05
+            }
+          }
+        },
+        {
+          "id": "logicielCaisse",
+          "nom": "Logiciel de caisse et de gestion des stocks",
+          "description": "Commandes mieux ajustées : moins de produits périmés. Environ 70 $ par mois.",
+          "cout": 4000,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": {
+            "pertesStocks": 0.7
+          },
+          "fraisMensuels": 70
+        },
+        {
+          "id": "siteWeb",
+          "nom": "Commande en ligne et cueillette",
+          "description": "Les clients commandent en ligne et passent chercher leur panier. Environ 60 $ par mois.",
+          "cout": 6000,
+          "type": "informatique",
+          "dureeVieMois": 36,
+          "classeDpa": "12",
+          "unique": true,
+          "effets": {
+            "commandeEnLigne": 0.15
+          },
+          "fraisMensuels": 60
+        },
+        {
+          "id": "renovation",
+          "nom": "Rénovation et coin dégustation",
+          "description": "Un espace plus invitant avec un comptoir de dégustation.",
+          "cout": 35000,
+          "type": "ameliorations",
+          "dureeVieMois": 60,
+          "classeDpa": "13",
+          "unique": true,
+          "effets": {
+            "ambiance": 0.15
+          }
+        },
+        {
+          "id": "vehicule",
+          "nom": "Fourgonnette réfrigérée",
+          "description": "Livrer toi-même les paniers-cadeaux et les commandes. Assurance et essence : environ 450 $ par mois.",
+          "cout": 48000,
+          "type": "vehicule",
+          "dureeVieMois": 72,
+          "classeDpa": "10",
+          "unique": true,
+          "effets": {
+            "livraisonPropre": true
+          },
+          "fraisMensuels": 450
         }
       ]
     }

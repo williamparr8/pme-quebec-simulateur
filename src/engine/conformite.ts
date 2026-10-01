@@ -8,7 +8,7 @@ import type { Secteur } from './data-types';
 import type { FormeJuridique, IdDemarche } from './types';
 import { FORMES_SOCIETE_ACTIONS, FORMES_SOCIETE_PERSONNES } from './types';
 
-export type Obligation = 'toujours' | 'employes' | 'alimentation' | 'facultative';
+export type Obligation = 'toujours' | 'employes' | 'alimentation' | 'secteur' | 'facultative';
 
 export interface Demarche {
   id: IdDemarche;
@@ -75,6 +75,19 @@ export function coutDemarche(id: IdDemarche, forme: FormeJuridique): number {
   return d.coutSelonForme ? fraisImmatriculation(forme) : d.cout;
 }
 
+/** La démarche s'applique-t-elle à ce secteur (permis alimentaire, permis d'alcool…)? */
+export function estApplicable(id: IdDemarche, secteur: Secteur): boolean {
+  const d = demarche(id);
+  if (d.obligation === 'alimentation') return secteur.alimentation;
+  if (d.obligation === 'secteur') return secteur.permis.includes(id);
+  return true;
+}
+
+/** Démarches de démarrage du secteur. */
+export function demarchesSecteur(secteur: Secteur): Demarche[] {
+  return DEMARCHES.filter((d) => estApplicable(d.id, secteur));
+}
+
 /** La démarche est-elle obligatoire maintenant? */
 export function estObligatoire(id: IdDemarche, secteur: Secteur, nbEmployes: number): boolean {
   const d = demarche(id);
@@ -85,6 +98,8 @@ export function estObligatoire(id: IdDemarche, secteur: Secteur, nbEmployes: num
       return nbEmployes > 0;
     case 'alimentation':
       return secteur.alimentation;
+    case 'secteur':
+      return secteur.permis.includes(id);
     default:
       return false;
   }

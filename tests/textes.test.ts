@@ -41,6 +41,6 @@ describe('textes destinés au joueur', () => {
       }
     }
     expect([...manquants]).toEqual([]);
-    expect(ids.size).toBeGreaterThanOrEqual(120);
+    expect(ids.size).toBeGreaterThanOrEqual(150);
   });
 });

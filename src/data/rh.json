@@ -38,7 +38,7 @@
     },
     {
       "id": "ecole",
-      "nom": "Service de placement d'un cégep ou d'une école hôtelière",
+      "nom": "Service de placement d'un cégep ou d'une école de métiers",
       "description": "Gratuit : des finissants motivés, mais avec peu d'expérience.",
       "cout": 0,
       "pourcentageSalaire": 0,
@@ -84,7 +84,10 @@
       "cout": 650,
       "postes": ["barista", "gerant"],
       "gainCompetence": 0.1,
-      "gainMoral": 5
+      "gainMoral": 5,
+      "qualite": {
+        "categories": ["boissons"]
+      }
     },
     {
       "id": "cuisine",
@@ -93,7 +96,10 @@
       "cout": 700,
       "postes": ["cuisinier", "aideCuisine"],
       "gainCompetence": 0.1,
-      "gainMoral": 5
+      "gainMoral": 5,
+      "qualite": {
+        "production": true
+      }
     },
     {
       "id": "manipulateur",
@@ -104,6 +110,87 @@
       "gainCompetence": 0.02,
       "gainMoral": 1,
       "hygiene": true
+    },
+    {
+      "id": "vente",
+      "nom": "Techniques de vente-conseil",
+      "description": "Découvrir les besoins, conseiller, conclure la vente (2 jours).",
+      "cout": 350,
+      "postes": ["vendeur", "commisEpicerie", "receptionniste", "agentService"],
+      "gainCompetence": 0.08,
+      "gainMoral": 4
+    },
+    {
+      "id": "couture",
+      "nom": "Retouches avancées",
+      "description": "Ajustements complexes et réparations invisibles (3 jours).",
+      "cout": 500,
+      "postes": ["couturier"],
+      "gainCompetence": 0.1,
+      "gainMoral": 5,
+      "qualite": {
+        "lignes": ["retouches"]
+      }
+    },
+    {
+      "id": "colorimetrie",
+      "nom": "Colorimétrie avancée",
+      "description": "Balayages, corrections de couleur et nouvelles techniques (2 jours).",
+      "cout": 750,
+      "postes": ["coiffeur"],
+      "gainCompetence": 0.1,
+      "gainMoral": 6,
+      "qualite": {
+        "lignes": ["couleurs"]
+      }
+    },
+    {
+      "id": "esthetique",
+      "nom": "Techniques esthétiques avancées",
+      "description": "Soins du visage, maquillage professionnel et hygiène (2 jours).",
+      "cout": 600,
+      "postes": ["estheticienne"],
+      "gainCompetence": 0.1,
+      "gainMoral": 5,
+      "qualite": {
+        "lignes": ["soins", "maquillage"]
+      }
+    },
+    {
+      "id": "paysagement",
+      "nom": "Taille, plantation et sécurité des équipements",
+      "description": "Techniques horticoles et utilisation sécuritaire des machines (2 jours).",
+      "cout": 500,
+      "postes": ["paysagiste", "chefEquipe"],
+      "gainCompetence": 0.1,
+      "gainMoral": 5,
+      "qualite": {
+        "production": true
+      }
+    },
+    {
+      "id": "ebenisterie",
+      "nom": "Assemblage et finition en ébénisterie",
+      "description": "Assemblages traditionnels, finitions durables, sécurité des machines (3 jours).",
+      "cout": 800,
+      "postes": ["ebeniste", "journalier"],
+      "gainCompetence": 0.1,
+      "gainMoral": 5,
+      "qualite": {
+        "production": true
+      }
+    },
+    {
+      "id": "fromager",
+      "nom": "Fromager-conseil",
+      "description": "Connaître les fromages d'ici, les conserver et les accorder (2 jours).",
+      "cout": 500,
+      "postes": ["commisEpicerie", "gerant"],
+      "gainCompetence": 0.08,
+      "gainMoral": 5,
+      "qualite": {
+        "categories": ["fromages"]
+      }
     },
     {
       "id": "supervision",
@@ -123,8 +210,8 @@
   "avantages": [
     {
       "id": "repas",
-      "nom": "Repas gratuits pendant les quarts",
-      "description": "Un repas et des cafés à volonté pendant le travail.",
+      "nom": "Repas ou collation pendant les quarts",
+      "description": "Un repas ou une collation et du café offerts pendant le travail.",
       "coutMensuelParEmploye": 45,
       "gainMoral": 4,
       "reductionDepart": 0.002,
@@ -153,8 +240,8 @@
     },
     {
       "id": "rabais",
-      "nom": "Rabais employé de 50 %",
-      "description": "Sur les consommations prises en dehors des quarts.",
+      "nom": "Rabais employé de 30 %",
+      "description": "Sur les produits et les services de l'entreprise.",
       "coutMensuelParEmploye": 15,
       "gainMoral": 2,
       "reductionDepart": 0.001,

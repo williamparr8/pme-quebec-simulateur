@@ -15,8 +15,21 @@ export interface LigneProduit {
   perissable: boolean;
   /** Durée de conservation des marchandises (jours). */
   conservationJours: number;
-  /** La ligne est préparée en cuisine (exige du temps de cuisinier). */
-  cuisine: boolean;
+  /**
+   * La ligne exige du temps de production (cuisine, atelier, coiffure, équipes sur le
+   * terrain) : elle est limitée par la capacité de production de l'équipe.
+   */
+  production: boolean;
+  /** Minutes de travail de production par unité vendue. */
+  minutesProduction?: number;
+  /**
+   * Vente taxable (TPS et TVQ). Faux : produit détaxé (taux de 0 %, ex. produits
+   * alimentaires de base), qui donne quand même droit aux CTI et RTI sur les achats.
+   * Par défaut : taxable.
+   */
+  taxable?: boolean;
+  /** Saisonnalité propre à la ligne (multiplicateur du taux d'achat de janvier à décembre). */
+  saisonnalite?: number[];
   /** Unité de vente (affichage). */
   unite: string;
   /** Catégorie d'approvisionnement : détermine les fournisseurs possibles. */
@@ -39,6 +52,11 @@ export interface Equipement {
   cout: number;
   dureeVieMois: number;
   bonusQualite: number;
+  /** Hausse de la capacité de production (ex. 0,1 = +10 %). */
+  bonusProduction?: number;
+  /** Catégorie d'immobilisation (par défaut : équipement, DPA catégorie 8). */
+  type?: TypeImmobilisation;
+  classeDpa?: ClasseDpa;
 }
 
 export interface Amenagement {
@@ -46,8 +64,13 @@ export interface Amenagement {
   nom: string;
   description: string;
   cout: number;
-  /** Ambiance perçue, de 0 à 1. */
+  /** Ambiance perçue (ou attrait du site Web), de 0 à 1. */
   ambiance: number;
+  /** Catégorie d'immobilisation (par défaut : améliorations locatives, catégorie 13). */
+  type?: TypeImmobilisation;
+  classeDpa?: ClasseDpa;
+  /** Durée de vie (mois) si ce n'est pas une amélioration locative amortie sur le bail. */
+  dureeVieMois?: number;
 }
 
 export interface Sensibilites {
@@ -81,6 +104,19 @@ export interface SegmentSecteur {
   panier: Record<string, number>;
 }
 
+/** Paramètres des ventes aux entreprises d'un produit B2B. */
+export interface InfoB2B {
+  /** Quantité mensuelle demandée par un client (bornes). */
+  quantiteMin: number;
+  quantiteMax: number;
+  /** Les livraisons se font par coursier (sinon : par l'équipe de l'entreprise). */
+  coursier: boolean;
+  /** Saisonnalité des appels d'offres (janvier à décembre). */
+  saisonnalite?: number[];
+  /** Clients possibles (sinon : la liste générale des clients d'affaires). */
+  clients?: { nom: string; type: string }[];
+}
+
 /** Nouveau produit qu'une entreprise peut développer et lancer. */
 export interface NouveauProduit extends LigneProduit {
   description: string;
@@ -92,7 +128,7 @@ export interface NouveauProduit extends LigneProduit {
   /** Multiplicateur d'achat par persona. */
   segments: Record<string, number>;
   /** Produit vendu aux entreprises (soumissions et contrats) plutôt qu'en magasin. */
-  b2b?: boolean;
+  b2b?: InfoB2B;
 }
 
 export type TypeImmobilisation = 'equipement' | 'ameliorations' | 'vehicule' | 'informatique';
@@ -102,6 +138,12 @@ export type ClasseDpa = '8' | '10' | '12' | '13' | '50';
 export interface EffetsInvestissement {
   /** Hausse de la capacité de service (ex. 0,1 = +10 %). */
   capaciteService?: number;
+  /** Hausse de la capacité de production (ex. 0,1 = +10 %). */
+  capaciteProduction?: number;
+  /** Gain d'écoresponsabilité perçue (0 à 1). */
+  eco?: number;
+  /** Multiplicateur des frais variables par client (expédition, carburant). */
+  fraisParVisite?: number;
   ambiance?: number;
   qualiteLignes?: Record<string, number>;
   /** Multiplicateur du coût unitaire de certaines lignes. */
@@ -134,10 +176,18 @@ export interface Investissement {
   moisActifs?: number[];
 }
 
+/** Nom et description d'un concurrent dans un secteur (selon sa personnalité). */
+export interface IdentiteConcurrent {
+  nom: string;
+  description: string;
+}
+
 export interface Secteur {
   id: string;
   nom: string;
   description: string;
+  /** Nom commun du commerce, avec article (ex. « le café », « la boutique »). */
+  commerce: string;
   tauxCnesst: number;
   margeBruteCible: [number, number];
   margeNetteCible: [number, number];
@@ -145,9 +195,21 @@ export interface Secteur {
   lignes: LigneProduit[];
   qualites: NiveauQualite[];
   saisonnalite: number[];
+  /** Croissance annuelle tendancielle du marché (ex. 0,06 = +6 % par année). */
+  croissanceAnnuelle: number;
+  /** Sensibilité de la demande à la conjoncture (1 = moyenne; 1,5 = très cyclique). */
+  cyclicite: number;
   transactionsParHeureEmploye: number;
-  /** Unités de produits cuisinés qu'un cuisinier prépare par heure. */
-  unitesCuisineParHeure: number;
+  /** Nom de la production dans ce secteur (ex. « Cuisine », « Atelier »). */
+  libelleProduction: string;
+  /** Minutes de production par unité si la ligne ne le précise pas. */
+  minutesProductionDefaut: number;
+  /** Part des heures du propriétaire consacrée à la production (coiffeur, ébéniste…). */
+  productionProprietaire: number;
+  /** Sans employé de production, part du temps de service qui peut servir à produire. */
+  productionSansPersonnel: number;
+  /** Ce qu'on appelle les pertes de stock dans ce secteur (périmés, invendus démodés…). */
+  libellePertes: string;
   heuresOuvertureReference: number;
   sensibilites: Sensibilites;
   utiliteAlternative: number;
@@ -158,6 +220,10 @@ export interface Secteur {
   /** Panier des commandes livrées (multiplicateur par ligne). */
   panierLivraison: Record<string, number>;
   segments: SegmentSecteur[];
+  /** Emplacements permis (identifiants des emplacements des villes). */
+  emplacements: string[];
+  /** Importance de l'achalandage et de la visibilité de l'emplacement (0 à 1,3). */
+  importanceEmplacement: number;
   superficiePi2: number;
   equipements: Equipement[];
   amenagements: Amenagement[];
@@ -167,14 +233,30 @@ export interface Secteur {
   partAchatsTaxables: number;
   /** Secteur alimentaire : permis du MAPAQ et formation en hygiène obligatoires. */
   alimentation: boolean;
+  /** Démarches et permis propres au secteur (ex. permis d'épicerie de la RACJ). */
+  permis: string[];
   fraisDemarrage: number;
   fraisFixesMensuels: FraisFixesMensuels;
+  /** Frais variables par client servi (expédition, carburant) ($). */
+  fraisParVisite?: { montant: number; libelle: string };
+  /** Proportion des ventes payées par carte et taux des frais de paiement (sinon : valeurs générales). */
+  paiements?: { partCartes: number; taux: number };
   /** Postes offerts dans ce secteur (le premier est le poste de base). */
   postes: string[];
+  /** Équipe embauchée avant l'ouverture. */
+  equipeDepart: { posteId: string; nombre: number }[];
   /** Fournisseur choisi par défaut pour chaque catégorie d'approvisionnement. */
   fournisseursDefaut: Record<string, string>;
   nouveauxProduits: NouveauProduit[];
   investissements: Investissement[];
+  /** Initiatives écoresponsables offertes dans ce secteur. */
+  initiativesEco: string[];
+  /** Efficacité relative des canaux de publicité dans ce secteur (1 = moyenne). */
+  canaux: Record<string, number>;
+  /** Budget de publicité par défaut. */
+  publiciteDefaut: Record<string, number>;
+  /** Nom et description des concurrents selon leur personnalité. */
+  concurrents: Record<string, IdentiteConcurrent>;
 }
 
 export interface Emplacement {
@@ -190,16 +272,23 @@ export interface Emplacement {
 export interface Ville {
   id: string;
   nom: string;
+  region: string;
+  description: string;
   population: number;
+  /** Revenu total médian des ménages ($). */
+  revenuMedian: number;
+  /** Taux de chômage de la région au début de la partie. */
+  chomage: number;
   indiceSalaires: number;
-  penurieMainOeuvre: number;
+  /** Intensité de la concurrence (1 = moyenne) : notoriété et capacité des concurrents. */
+  concurrence: number;
   marchePotentielMensuel: Record<string, number>;
   /** Organisme qui gère les fonds locaux (FLI et FLS) de la ville. */
   fondsLocal: string;
   emplacements: Emplacement[];
 }
 
-export type RolePoste = 'service' | 'cuisine' | 'gestion' | 'administration' | 'marketing';
+export type RolePoste = 'service' | 'production' | 'gestion' | 'administration' | 'marketing';
 
 export interface Poste {
   id: string;
@@ -211,17 +300,19 @@ export interface Poste {
   salaireMax: number;
   heuresSemaineDefaut: number;
   role: RolePoste;
-  /** Contribution au service à la clientèle (1 = barista). */
+  /** Contribution au service à la clientèle (1 = employé de service à temps plein). */
   productiviteService: number;
-  /** Contribution à la production en cuisine (1 = cuisinier). */
-  productiviteCuisine: number;
+  /** Contribution à la production (1 = cuisinier, coiffeur, ébéniste, paysagiste). */
+  productiviteProduction: number;
 }
 
+/**
+ * Personnalité stratégique d'un concurrent. Les valeurs sont relatives au marché du
+ * secteur et de la ville; le nom vient du secteur (Secteur.concurrents).
+ */
 export interface PersonnaliteConcurrent {
   id: string;
-  nom: string;
   surnom: string;
-  description: string;
   couleur: string;
   indicePrix: number;
   qualite: number;
@@ -234,17 +325,24 @@ export interface PersonnaliteConcurrent {
   livraison: boolean;
   notorieteInitiale: number;
   noteInitiale: number;
-  budgetMarketing: number;
-  tauxCoutMarchandises: number;
-  fraisFixesMensuels: number;
-  /** Visites maximales servies par mois (personnel et superficie). */
-  capaciteMensuelle: number;
-  heuresOuverture: number;
+  /** Budget de publicité mensuel en proportion de la valeur du marché. */
+  partPublicite: number;
+  /** Capacité (visites par mois) en proportion du potentiel du marché. */
+  partCapacite: number;
+  /** Marge nette visée au départ (sert à estimer ses frais fixes). */
+  margeCible: number;
+  /** Trésorerie de départ en mois de frais fixes. */
+  moisTresorerie: number;
+  /** Heures d'ouverture par rapport à la référence du secteur. */
+  facteurHeures: number;
   /** Riposte-t-il aux baisses de prix des joueurs (sinon : qualité et publicité) ? */
   reagitAuxPrix: boolean;
   reactivite: number;
   delaiReactionMois: number;
-  tresorerieInitiale: number;
+  /** Copie les bonnes idées des joueurs (livraison, fidélité, écoresponsabilité). */
+  copieIdees: boolean;
+  /** Arrive en cours de partie (mois minimal et maximal), financé par du capital de risque. */
+  arrivee?: [number, number];
 }
 
 // ---------------------------------------------------------------------------
@@ -288,6 +386,8 @@ export interface InitiativeEco {
   id: string;
   nom: string;
   description: string;
+  /** Remise accordée au client par visite plutôt qu'une dépense (ex. tasse réutilisable). */
+  rabaisClient?: boolean;
   /** Gain d'écoresponsabilité perçue (0 à 1). */
   score: number;
   coutMensuel: number;
@@ -381,6 +481,8 @@ export interface Formation {
   gainMoral: number;
   /** Certification en hygiène et salubrité alimentaires du MAPAQ. */
   hygiene?: boolean;
+  /** Lignes dont la qualité s'améliore quand des employés sont formés (+0,02 chacun, max +0,04). */
+  qualite?: { categories?: string[]; lignes?: string[]; production?: boolean };
 }
 
 export interface Avantage {

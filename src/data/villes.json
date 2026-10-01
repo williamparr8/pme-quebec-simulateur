@@ -1,31 +1,56 @@
 {
   "_meta": {
-    "description": "Paramètres des villes et des emplacements. Loyers en $/pi²/an.",
+    "description": "Paramètres des villes et des emplacements. Loyers en $/pi²/an (loyer net + frais communs). Le potentiel du marché est le nombre de visites (ou de commandes, ou de comptes clients) possibles par mois dans la zone de chalandise d'un commerce du secteur.",
     "sources": [
+      {
+        "url": "https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/prof/index.cfm?Lang=F",
+        "verifie": "2026-10-01",
+        "note": "Population du Recensement 2021 (Statistique Canada)."
+      },
+      {
+        "url": "https://www150.statcan.gc.ca/n1/pub/11-627-m/11-627-m2022040-fra.pdf",
+        "verifie": "2026-10-01",
+        "note": "Revenu total médian des ménages en 2020 (Recensement 2021) : 72 500 $ au Québec, 66 500 $ à Montréal. Les autres villes sont des estimations (À VÉRIFIER)."
+      },
+      {
+        "url": "https://www.guichetemplois.gc.ca/analyse-tendances/rapport-marche-travail/qc/apercu-marche-travail",
+        "verifie": "2026-10-01",
+        "note": "Taux de chômage par région économique, août 2026 : Montréal 8,8 %, Capitale-Nationale 4,6 %, Laval 6,7 %, Outaouais 6,3 %, Estrie 3,0 %, Mauricie 5,7 %, Saguenay–Lac-Saint-Jean 3,4 %, Bas-Saint-Laurent 5,3 % (Québec : 5,6 %)."
+      },
       {
         "url": "https://2727coworking.com/articles/fr/hausse-loyer-commercial-quebec-2026",
         "verifie": "2026-09-30",
         "note": "Loyers bruts de détail de 40 à 60 $/pi² dans les rues prisées de Montréal en 2026."
       },
       {
-        "url": "https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/prof/index.cfm?Lang=F",
-        "verifie": "2026-09-30",
-        "note": "Population du Recensement 2021 (Statistique Canada)."
+        "url": "https://mktgdocs.cbre.com/2299/a9d02e8f-78ec-468d-88a8-8268d2d5bc20-26623927/Statistiques_sur_l_immobilier_.pdf",
+        "verifie": "2026-10-01",
+        "note": "Loyer industriel demandé moyen à Québec au 1er trimestre 2026 : 13,41 $/pi²."
       }
-    ]
+    ],
+    "avertissement": "Les loyers hors de Montréal, l'indice des salaires, l'intensité de la concurrence et le potentiel des marchés sont des estimations de conception (À VÉRIFIER). Voir DECISIONS.md."
   },
   "villes": [
     {
       "id": "montreal",
       "nom": "Montréal",
+      "region": "Montréal",
+      "description": "La métropole : grand marché et clientèle variée, mais concurrence vive et loyers élevés. Le chômage plus élevé facilite le recrutement.",
       "population": 1762949,
-      "indiceSalaires": 1.0,
-      "penurieMainOeuvre": 0.5,
+      "revenuMedian": 66500,
+      "chomage": 0.088,
+      "indiceSalaires": 1,
+      "concurrence": 1.1,
       "fondsLocal": "PME MTL",
       "marchePotentielMensuel": {
-        "cafe": 21000
+        "cafe": 28600,
+        "vetements": 4600,
+        "enLigne": 3250,
+        "coiffure": 1850,
+        "paysagement": 1650,
+        "atelier": 2400,
+        "epicerie": 14950
       },
-      "marchePotentielNote": "Visites potentielles par mois dans la zone de chalandise d'un café (estimation de conception).",
       "emplacements": [
         {
           "id": "rue",
@@ -33,7 +58,7 @@
           "description": "Artère animée, beaucoup de passants, loyer élevé.",
           "loyerNetPi2": 36,
           "fraisCommunsPi2": 12,
-          "achalandage": 1.0,
+          "achalandage": 1,
           "visibilite": 0.06
         },
         {
@@ -52,7 +77,501 @@
           "loyerNetPi2": 24,
           "fraisCommunsPi2": 9,
           "achalandage": 0.72,
-          "visibilite": 0.0
+          "visibilite": 0
+        },
+        {
+          "id": "industriel",
+          "nom": "Local industriel",
+          "description": "Grand local dans un parc industriel : loyer bas, quai de chargement, mais presque aucun passant.",
+          "loyerNetPi2": 14,
+          "fraisCommunsPi2": 5,
+          "achalandage": 0.5,
+          "visibilite": 0
+        },
+        {
+          "id": "enLigne",
+          "nom": "100 % en ligne (entrepôt et bureau)",
+          "description": "Aucune vitrine : un petit entrepôt pour préparer les commandes. Les clients te trouvent sur le Web.",
+          "loyerNetPi2": 12,
+          "fraisCommunsPi2": 4,
+          "achalandage": 1,
+          "visibilite": 0
+        }
+      ]
+    },
+    {
+      "id": "quebec",
+      "nom": "Québec",
+      "region": "Capitale-Nationale",
+      "description": "La capitale : marché solide, fonction publique stable et tourisme. Le chômage très bas rend le recrutement difficile.",
+      "population": 549459,
+      "revenuMedian": 70000,
+      "chomage": 0.046,
+      "indiceSalaires": 0.98,
+      "concurrence": 1,
+      "fondsLocal": "Ville de Québec (fonds de développement économique)",
+      "marchePotentielMensuel": {
+        "cafe": 25300,
+        "vetements": 4050,
+        "enLigne": 3150,
+        "coiffure": 1650,
+        "paysagement": 1750,
+        "atelier": 2100,
+        "epicerie": 13200
+      },
+      "emplacements": [
+        {
+          "id": "rue",
+          "nom": "Rue commerciale",
+          "description": "Artère animée (ex. un quartier commerçant du centre-ville), loyer élevé pour la ville.",
+          "loyerNetPi2": 28,
+          "fraisCommunsPi2": 10,
+          "achalandage": 1,
+          "visibilite": 0.06
+        },
+        {
+          "id": "centre",
+          "nom": "Centre commercial",
+          "description": "Grands centres de Sainte-Foy : achalandage régulier, frais communs élevés.",
+          "loyerNetPi2": 38,
+          "fraisCommunsPi2": 16,
+          "achalandage": 1.12,
+          "visibilite": 0.04
+        },
+        {
+          "id": "residentiel",
+          "nom": "Quartier résidentiel",
+          "description": "Clientèle fidèle du voisinage, loyer abordable.",
+          "loyerNetPi2": 20,
+          "fraisCommunsPi2": 7,
+          "achalandage": 0.72,
+          "visibilite": 0
+        },
+        {
+          "id": "industriel",
+          "nom": "Local industriel",
+          "description": "Parc industriel : loyer bas et quai de chargement, presque aucun passant.",
+          "loyerNetPi2": 13.4,
+          "fraisCommunsPi2": 4,
+          "achalandage": 0.5,
+          "visibilite": 0
+        },
+        {
+          "id": "enLigne",
+          "nom": "100 % en ligne (entrepôt et bureau)",
+          "description": "Aucune vitrine : un petit entrepôt pour préparer les commandes.",
+          "loyerNetPi2": 11,
+          "fraisCommunsPi2": 4,
+          "achalandage": 1,
+          "visibilite": 0
+        }
+      ]
+    },
+    {
+      "id": "laval",
+      "nom": "Laval",
+      "region": "Laval",
+      "description": "Grande banlieue de Montréal : familles nombreuses, grands centres commerciaux et beaucoup de terrains à entretenir.",
+      "population": 438366,
+      "revenuMedian": 79000,
+      "chomage": 0.067,
+      "indiceSalaires": 1,
+      "concurrence": 1.05,
+      "fondsLocal": "Laval économique (Ville de Laval)",
+      "marchePotentielMensuel": {
+        "cafe": 24200,
+        "vetements": 4200,
+        "enLigne": 3150,
+        "coiffure": 1600,
+        "paysagement": 1950,
+        "atelier": 2050,
+        "epicerie": 12750
+      },
+      "emplacements": [
+        {
+          "id": "rue",
+          "nom": "Rue commerciale",
+          "description": "Boulevard commercial : beaucoup de voitures, moins de passants à pied.",
+          "loyerNetPi2": 30,
+          "fraisCommunsPi2": 11,
+          "achalandage": 0.95,
+          "visibilite": 0.05
+        },
+        {
+          "id": "centre",
+          "nom": "Centre commercial",
+          "description": "Un des plus grands centres commerciaux du Québec : très achalandé, très cher.",
+          "loyerNetPi2": 44,
+          "fraisCommunsPi2": 19,
+          "achalandage": 1.18,
+          "visibilite": 0.05
+        },
+        {
+          "id": "residentiel",
+          "nom": "Quartier résidentiel",
+          "description": "Clientèle familiale du voisinage, loyer abordable.",
+          "loyerNetPi2": 22,
+          "fraisCommunsPi2": 8,
+          "achalandage": 0.72,
+          "visibilite": 0
+        },
+        {
+          "id": "industriel",
+          "nom": "Local industriel",
+          "description": "Parc industriel près des autoroutes : loyer bas, aucun passant.",
+          "loyerNetPi2": 14,
+          "fraisCommunsPi2": 5,
+          "achalandage": 0.5,
+          "visibilite": 0
+        },
+        {
+          "id": "enLigne",
+          "nom": "100 % en ligne (entrepôt et bureau)",
+          "description": "Aucune vitrine : un petit entrepôt pour préparer les commandes.",
+          "loyerNetPi2": 12,
+          "fraisCommunsPi2": 4,
+          "achalandage": 1,
+          "visibilite": 0
+        }
+      ]
+    },
+    {
+      "id": "gatineau",
+      "nom": "Gatineau",
+      "region": "Outaouais",
+      "description": "Ville frontalière d'Ottawa : revenus élevés (fonction publique fédérale), mais les salaires ontariens attirent les travailleurs.",
+      "population": 291041,
+      "revenuMedian": 80000,
+      "chomage": 0.063,
+      "indiceSalaires": 1.03,
+      "concurrence": 0.95,
+      "fondsLocal": "ID Gatineau",
+      "marchePotentielMensuel": {
+        "cafe": 23100,
+        "vetements": 3900,
+        "enLigne": 3150,
+        "coiffure": 1550,
+        "paysagement": 1850,
+        "atelier": 2000,
+        "epicerie": 12250
+      },
+      "emplacements": [
+        {
+          "id": "rue",
+          "nom": "Rue commerciale",
+          "description": "Artère commerçante du centre-ville, loyer moyen.",
+          "loyerNetPi2": 27,
+          "fraisCommunsPi2": 9,
+          "achalandage": 0.95,
+          "visibilite": 0.05
+        },
+        {
+          "id": "centre",
+          "nom": "Centre commercial",
+          "description": "Achalandage stable, loyer et frais communs élevés.",
+          "loyerNetPi2": 36,
+          "fraisCommunsPi2": 15,
+          "achalandage": 1.1,
+          "visibilite": 0.04
+        },
+        {
+          "id": "residentiel",
+          "nom": "Quartier résidentiel",
+          "description": "Clientèle du voisinage, loyer abordable.",
+          "loyerNetPi2": 20,
+          "fraisCommunsPi2": 7,
+          "achalandage": 0.72,
+          "visibilite": 0
+        },
+        {
+          "id": "industriel",
+          "nom": "Local industriel",
+          "description": "Parc industriel : loyer bas, aucun passant.",
+          "loyerNetPi2": 13,
+          "fraisCommunsPi2": 4,
+          "achalandage": 0.5,
+          "visibilite": 0
+        },
+        {
+          "id": "enLigne",
+          "nom": "100 % en ligne (entrepôt et bureau)",
+          "description": "Aucune vitrine : un petit entrepôt pour préparer les commandes.",
+          "loyerNetPi2": 11,
+          "fraisCommunsPi2": 4,
+          "achalandage": 1,
+          "visibilite": 0
+        }
+      ]
+    },
+    {
+      "id": "sherbrooke",
+      "nom": "Sherbrooke",
+      "region": "Estrie",
+      "description": "Ville universitaire : beaucoup d'étudiants, loyers raisonnables. Le chômage très bas rend la main-d'œuvre rare.",
+      "population": 172950,
+      "revenuMedian": 61000,
+      "chomage": 0.03,
+      "indiceSalaires": 0.95,
+      "concurrence": 0.9,
+      "fondsLocal": "Sherbrooke Innopole",
+      "marchePotentielMensuel": {
+        "cafe": 21450,
+        "vetements": 3500,
+        "enLigne": 3050,
+        "coiffure": 1400,
+        "paysagement": 1550,
+        "atelier": 1850,
+        "epicerie": 11200
+      },
+      "emplacements": [
+        {
+          "id": "rue",
+          "nom": "Rue commerciale",
+          "description": "Rue animée du centre-ville, près des étudiants.",
+          "loyerNetPi2": 22,
+          "fraisCommunsPi2": 8,
+          "achalandage": 0.95,
+          "visibilite": 0.05
+        },
+        {
+          "id": "centre",
+          "nom": "Centre commercial",
+          "description": "Achalandage régulier, frais communs élevés.",
+          "loyerNetPi2": 30,
+          "fraisCommunsPi2": 12,
+          "achalandage": 1.08,
+          "visibilite": 0.04
+        },
+        {
+          "id": "residentiel",
+          "nom": "Quartier résidentiel",
+          "description": "Clientèle du voisinage, loyer bas.",
+          "loyerNetPi2": 17,
+          "fraisCommunsPi2": 6,
+          "achalandage": 0.72,
+          "visibilite": 0
+        },
+        {
+          "id": "industriel",
+          "nom": "Local industriel",
+          "description": "Parc industriel : loyer très bas, aucun passant.",
+          "loyerNetPi2": 10,
+          "fraisCommunsPi2": 3.5,
+          "achalandage": 0.5,
+          "visibilite": 0
+        },
+        {
+          "id": "enLigne",
+          "nom": "100 % en ligne (entrepôt et bureau)",
+          "description": "Aucune vitrine : un petit entrepôt pour préparer les commandes.",
+          "loyerNetPi2": 9,
+          "fraisCommunsPi2": 3,
+          "achalandage": 1,
+          "visibilite": 0
+        }
+      ]
+    },
+    {
+      "id": "troisRivieres",
+      "nom": "Trois-Rivières",
+      "region": "Mauricie",
+      "description": "Ville moyenne au cœur du Québec : loyers bas, concurrence modérée, revenus un peu plus faibles.",
+      "population": 139163,
+      "revenuMedian": 60000,
+      "chomage": 0.057,
+      "indiceSalaires": 0.94,
+      "concurrence": 0.85,
+      "fondsLocal": "IDE Trois-Rivières",
+      "marchePotentielMensuel": {
+        "cafe": 20350,
+        "vetements": 3350,
+        "enLigne": 3050,
+        "coiffure": 1350,
+        "paysagement": 1550,
+        "atelier": 1700,
+        "epicerie": 10700
+      },
+      "emplacements": [
+        {
+          "id": "rue",
+          "nom": "Rue commerciale",
+          "description": "Rue commerçante du centre-ville historique.",
+          "loyerNetPi2": 20,
+          "fraisCommunsPi2": 7,
+          "achalandage": 0.92,
+          "visibilite": 0.05
+        },
+        {
+          "id": "centre",
+          "nom": "Centre commercial",
+          "description": "Achalandage régulier, frais communs élevés.",
+          "loyerNetPi2": 28,
+          "fraisCommunsPi2": 11,
+          "achalandage": 1.08,
+          "visibilite": 0.04
+        },
+        {
+          "id": "residentiel",
+          "nom": "Quartier résidentiel",
+          "description": "Clientèle du voisinage, loyer bas.",
+          "loyerNetPi2": 16,
+          "fraisCommunsPi2": 6,
+          "achalandage": 0.72,
+          "visibilite": 0
+        },
+        {
+          "id": "industriel",
+          "nom": "Local industriel",
+          "description": "Parc industriel : loyer très bas, aucun passant.",
+          "loyerNetPi2": 9,
+          "fraisCommunsPi2": 3,
+          "achalandage": 0.5,
+          "visibilite": 0
+        },
+        {
+          "id": "enLigne",
+          "nom": "100 % en ligne (entrepôt et bureau)",
+          "description": "Aucune vitrine : un petit entrepôt pour préparer les commandes.",
+          "loyerNetPi2": 8.5,
+          "fraisCommunsPi2": 3,
+          "achalandage": 1,
+          "visibilite": 0
+        }
+      ]
+    },
+    {
+      "id": "saguenay",
+      "nom": "Saguenay",
+      "region": "Saguenay–Lac-Saint-Jean",
+      "description": "Ville régionale fière de ses commerces locaux : beaucoup de neige, chômage bas et main-d'œuvre recherchée.",
+      "population": 144723,
+      "revenuMedian": 69000,
+      "chomage": 0.034,
+      "indiceSalaires": 0.97,
+      "concurrence": 0.85,
+      "fondsLocal": "Promotion Saguenay",
+      "marchePotentielMensuel": {
+        "cafe": 20350,
+        "vetements": 3350,
+        "enLigne": 3050,
+        "coiffure": 1350,
+        "paysagement": 1650,
+        "atelier": 1700,
+        "epicerie": 10700
+      },
+      "emplacements": [
+        {
+          "id": "rue",
+          "nom": "Rue commerciale",
+          "description": "Rue commerçante d'un arrondissement, loyer modéré.",
+          "loyerNetPi2": 19,
+          "fraisCommunsPi2": 7,
+          "achalandage": 0.92,
+          "visibilite": 0.05
+        },
+        {
+          "id": "centre",
+          "nom": "Centre commercial",
+          "description": "Achalandage régulier, frais communs élevés.",
+          "loyerNetPi2": 27,
+          "fraisCommunsPi2": 11,
+          "achalandage": 1.08,
+          "visibilite": 0.04
+        },
+        {
+          "id": "residentiel",
+          "nom": "Quartier résidentiel",
+          "description": "Clientèle du voisinage, loyer bas.",
+          "loyerNetPi2": 15,
+          "fraisCommunsPi2": 5,
+          "achalandage": 0.72,
+          "visibilite": 0
+        },
+        {
+          "id": "industriel",
+          "nom": "Local industriel",
+          "description": "Parc industriel : loyer très bas, aucun passant.",
+          "loyerNetPi2": 9,
+          "fraisCommunsPi2": 3,
+          "achalandage": 0.5,
+          "visibilite": 0
+        },
+        {
+          "id": "enLigne",
+          "nom": "100 % en ligne (entrepôt et bureau)",
+          "description": "Aucune vitrine : un petit entrepôt pour préparer les commandes.",
+          "loyerNetPi2": 8.5,
+          "fraisCommunsPi2": 3,
+          "achalandage": 1,
+          "visibilite": 0
+        }
+      ]
+    },
+    {
+      "id": "rimouski",
+      "nom": "Rimouski",
+      "region": "Bas-Saint-Laurent",
+      "description": "Petite ville côtière : petit marché, peu de concurrents et loyers bas, mais il faut convaincre une clientèle fidèle à ses habitudes.",
+      "population": 48935,
+      "revenuMedian": 63000,
+      "chomage": 0.053,
+      "indiceSalaires": 0.94,
+      "concurrence": 0.8,
+      "fondsLocal": "SOPER (Société de promotion économique de Rimouski)",
+      "marchePotentielMensuel": {
+        "cafe": 17050,
+        "vetements": 2750,
+        "enLigne": 3000,
+        "coiffure": 1100,
+        "paysagement": 1350,
+        "atelier": 1400,
+        "epicerie": 9000
+      },
+      "emplacements": [
+        {
+          "id": "rue",
+          "nom": "Rue commerciale",
+          "description": "Rue principale du centre-ville, près du fleuve.",
+          "loyerNetPi2": 18,
+          "fraisCommunsPi2": 6,
+          "achalandage": 0.9,
+          "visibilite": 0.06
+        },
+        {
+          "id": "centre",
+          "nom": "Centre commercial",
+          "description": "Le centre commercial régional : achalandage stable, frais communs élevés.",
+          "loyerNetPi2": 25,
+          "fraisCommunsPi2": 10,
+          "achalandage": 1.08,
+          "visibilite": 0.04
+        },
+        {
+          "id": "residentiel",
+          "nom": "Quartier résidentiel",
+          "description": "Clientèle du voisinage, loyer bas.",
+          "loyerNetPi2": 15,
+          "fraisCommunsPi2": 5,
+          "achalandage": 0.72,
+          "visibilite": 0
+        },
+        {
+          "id": "industriel",
+          "nom": "Local industriel",
+          "description": "Parc industriel : loyer très bas, aucun passant.",
+          "loyerNetPi2": 8.5,
+          "fraisCommunsPi2": 3,
+          "achalandage": 0.5,
+          "visibilite": 0
+        },
+        {
+          "id": "enLigne",
+          "nom": "100 % en ligne (entrepôt et bureau)",
+          "description": "Aucune vitrine : un petit entrepôt pour préparer les commandes.",
+          "loyerNetPi2": 8,
+          "fraisCommunsPi2": 3,
+          "achalandage": 1,
+          "visibilite": 0
         }
       ]
     }

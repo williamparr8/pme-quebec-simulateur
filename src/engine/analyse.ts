@@ -2,6 +2,7 @@
  * Analyse pédagogique du mois : ce qui a bien ou mal fonctionné, et pourquoi.
  * Retourne des codes de messages; le texte est dans src/i18n/fr-CA.ts.
  */
+import { posteParId } from '../data';
 import type { Secteur } from './data-types';
 import type { Decisions, Entreprise, Message, MoisArchive } from './types';
 
@@ -95,14 +96,17 @@ export function analyserMois(
       params: { perdues: i.perduesRupture, lignes: lignes.join(',') },
     });
   }
-  const aCuisinier = ent.employes.some(
-    (e) => e.posteId === 'cuisinier' || e.posteId === 'aideCuisine',
-  );
-  if (aCuisinier && i.perduesCuisine >= 20 && i.chiffreAffaires > 0) {
+  const aProducteur = ent.employes.some((e) => posteParId(e.posteId).role === 'production');
+  if (aProducteur && i.perduesProduction >= 20 && i.chiffreAffaires > 0) {
     m.push({
-      code: 'cuisineInsuffisante',
+      code: 'productionInsuffisante',
       niveau: 'alerte',
-      params: { perdues: i.perduesCuisine },
+      params: {
+        perdues: i.perduesProduction,
+        production: secteur.libelleProduction,
+        heures: i.capaciteProduction,
+        demandees: i.demandeProduction,
+      },
     });
   }
   const cmv = (archive.mouvements.coutMarchandises ?? 0) / 100;
@@ -111,7 +115,7 @@ export function analyserMois(
     m.push({
       code: 'pertesPeremption',
       niveau: 'alerte',
-      params: { montant: perimes, pct: perimes / cmv },
+      params: { montant: perimes, pct: perimes / cmv, libelle: secteur.libellePertes },
     });
   }
   if (i.tauxDefauts > 0.06) {

@@ -1,21 +1,36 @@
 {
   "_meta": {
-    "description": "Dilemmes (événements avec choix). Jalon 3 : ressources humaines. {nom} est remplacé par le nom de l'employé concerné.",
+    "description": "Événements et dilemmes (au moins 60). Chaque événement a une probabilité selon le contexte (condition, mois, secteurs, poids), 2 à 4 choix avec leurs conséquences (parfois cachées ou différées) et une leçon d'affaires. Marqueurs : {nom} (employé concerné), {commerce} / {Commerce} (le commerce), {concurrent} (concurrent visé), {prix} (montant d'une offre).",
     "sources": [
       {
         "url": "https://www.cnesst.gouv.qc.ca/fr/conditions-travail",
         "verifie": "2026-10-01",
         "note": "Normes du travail : obligations familiales (10 jours, dont 2 rémunérés), harcèlement psychologique, recours après 2 ans de service, jours fériés."
+      },
+      {
+        "url": "https://www.oqlf.gouv.qc.ca/",
+        "verifie": "2026-10-01",
+        "note": "Charte de la langue française : français nettement prédominant dans l'affichage; traitement des plaintes par l'OQLF."
+      },
+      {
+        "url": "https://www.cai.gouv.qc.ca/",
+        "verifie": "2026-10-01",
+        "note": "Loi 25 : registre et déclaration des incidents de confidentialité."
+      },
+      {
+        "url": "https://www.cnesst.gouv.qc.ca/fr/prevention-securite",
+        "verifie": "2026-10-01",
+        "note": "Accidents du travail : l'employeur paie 90 % du salaire net les 14 premiers jours; obligations de prévention."
       }
     ],
-    "avertissement": "Les montants des règlements et des pénalités sont des estimations de conception."
+    "avertissement": "Les montants (réparations, règlements, amendes, subventions) et les probabilités sont des estimations pédagogiques (À VÉRIFIER). Voir DECISIONS.md."
   },
-  "dilemmes": [
+  "evenements": [
     {
       "id": "conflitHoraire",
       "categorie": "rh",
       "titre": "Conflit d'horaire",
-      "description": "{nom} et un collègue veulent tous les deux congé samedi prochain pour un événement familial. Il faut quelqu'un au comptoir.",
+      "description": "{nom} et un collègue veulent tous les deux congé samedi prochain pour un événement familial. Il faut pourtant quelqu'un au travail ce jour-là.",
       "condition": "employes2",
       "cible": "aleatoire",
       "choixParDefaut": "anciennete",
@@ -25,8 +40,16 @@
           "libelle": "Trancher selon l'ancienneté",
           "explication": "Une règle claire et connue de tous évite l'arbitraire, même si quelqu'un est déçu.",
           "effets": [
-            { "type": "moral", "cible": "concerne", "valeur": -4 },
-            { "type": "moral", "cible": "autres", "valeur": 1 }
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": -4
+            },
+            {
+              "type": "moral",
+              "cible": "autres",
+              "valeur": 1
+            }
           ]
         },
         {
@@ -37,8 +60,20 @@
             {
               "type": "hasard",
               "probabilite": 0.65,
-              "siOui": [{ "type": "moral", "cible": "tous", "valeur": 2 }],
-              "siNon": [{ "type": "moral", "cible": "tous", "valeur": -5 }]
+              "siOui": [
+                {
+                  "type": "moral",
+                  "cible": "tous",
+                  "valeur": 2
+                }
+              ],
+              "siNon": [
+                {
+                  "type": "moral",
+                  "cible": "tous",
+                  "valeur": -5
+                }
+              ]
             }
           ]
         },
@@ -47,18 +82,26 @@
           "libelle": "Travailler toi-même ce samedi",
           "explication": "Tu règles le problème, mais ton temps a aussi une valeur. Un propriétaire épuisé prend de mauvaises décisions.",
           "effets": [
-            { "type": "heuresProprietaire", "valeur": 2 },
-            { "type": "moral", "cible": "tous", "valeur": 2 }
+            {
+              "type": "heuresProprietaire",
+              "valeur": 2
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 2
+            }
           ]
         }
       ],
-      "lecon": "Les horaires sont la première source de conflits en restauration. Des règles écrites et équitables (rotation des fins de semaine, ancienneté, délai pour les demandes) réduisent les tensions."
+      "lecon": "Les horaires sont la première source de conflits en restauration. Des règles écrites et équitables (rotation des fins de semaine, ancienneté, délai pour les demandes) réduisent les tensions.",
+      "nature": "negatif"
     },
     {
       "id": "demandeAugmentation",
       "categorie": "rh",
       "titre": "Demande d'augmentation",
-      "description": "{nom}, l'un de tes meilleurs employés, demande une augmentation de 8 %. Un autre café lui a fait une offre.",
+      "description": "{nom}, l'un de tes meilleurs employés, demande une augmentation de 8 %. Un concurrent lui a fait une offre.",
       "condition": "employeCompetent",
       "cible": "plusCompetent",
       "choixParDefaut": "refuser",
@@ -68,8 +111,16 @@
           "libelle": "Accorder les 8 %",
           "explication": "Garder un employé performant coûte souvent moins cher que de le remplacer.",
           "effets": [
-            { "type": "salaire", "cible": "concerne", "pourcentage": 0.08 },
-            { "type": "moral", "cible": "concerne", "valeur": 10 }
+            {
+              "type": "salaire",
+              "cible": "concerne",
+              "pourcentage": 0.08
+            },
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": 10
+            }
           ]
         },
         {
@@ -77,15 +128,27 @@
           "libelle": "Offrir 4 % et une formation payée",
           "explication": "Une augmentation plus modeste avec de la formation montre que tu investis dans sa progression.",
           "effets": [
-            { "type": "salaire", "cible": "concerne", "pourcentage": 0.04 },
-            { "type": "competence", "cible": "concerne", "valeur": 0.05 },
+            {
+              "type": "salaire",
+              "cible": "concerne",
+              "pourcentage": 0.04
+            },
+            {
+              "type": "competence",
+              "cible": "concerne",
+              "valeur": 0.05
+            },
             {
               "type": "depense",
               "categorie": "formation",
               "montant": 400,
               "libelle": "Formation offerte à un employé"
             },
-            { "type": "moral", "cible": "concerne", "valeur": 4 }
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": 4
+            }
           ]
         },
         {
@@ -93,12 +156,21 @@
           "libelle": "Refuser",
           "explication": "C'est ton droit, mais un employé qui a une autre offre risque de partir.",
           "effets": [
-            { "type": "moral", "cible": "concerne", "valeur": -12 },
-            { "type": "depart", "cible": "concerne", "probabilite": 0.45 }
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": -12
+            },
+            {
+              "type": "depart",
+              "cible": "concerne",
+              "probabilite": 0.45
+            }
           ]
         }
       ],
-      "lecon": "Remplacer un employé coûte cher : recrutement, formation, erreurs du début et clients moins bien servis. On estime souvent ce coût à plusieurs mois de salaire."
+      "lecon": "Remplacer un employé coûte cher : recrutement, formation, erreurs du début et clients moins bien servis. On estime souvent ce coût à plusieurs mois de salaire.",
+      "nature": "negatif"
     },
     {
       "id": "retards",
@@ -114,22 +186,39 @@
           "libelle": "Donner un avertissement écrit",
           "explication": "La discipline progressive (avis verbal, avis écrit, suspension) est équitable et documentée.",
           "effets": [
-            { "type": "moral", "cible": "concerne", "valeur": -3 },
-            { "type": "moral", "cible": "autres", "valeur": 2 }
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": -3
+            },
+            {
+              "type": "moral",
+              "cible": "autres",
+              "valeur": 2
+            }
           ]
         },
         {
           "id": "ignorer",
           "libelle": "Ne rien dire",
           "explication": "Tolérer ce comportement nuit au moral de ceux qui font leur part.",
-          "effets": [{ "type": "moral", "cible": "autres", "valeur": -4 }]
+          "effets": [
+            {
+              "type": "moral",
+              "cible": "autres",
+              "valeur": -4
+            }
+          ]
         },
         {
           "id": "congedier",
           "libelle": "Le congédier sur-le-champ",
           "explication": "Sans avertissement préalable, un congédiement peut être contesté : après 2 ans de service, un employé peut porter plainte pour congédiement sans cause juste et suffisante.",
           "effets": [
-            { "type": "congedier", "cible": "concerne" },
+            {
+              "type": "congedier",
+              "cible": "concerne"
+            },
             {
               "type": "risque",
               "probabilite": 0.3,
@@ -147,7 +236,8 @@
           ]
         }
       ],
-      "lecon": "Avant un congédiement pour motif disciplinaire, il faut des avertissements documentés : c'est la discipline progressive."
+      "lecon": "Avant un congédiement pour motif disciplinaire, il faut des avertissements documentés : c'est la discipline progressive.",
+      "nature": "negatif"
     },
     {
       "id": "heuresNonPayees",
@@ -163,8 +253,16 @@
           "libelle": "Payer les heures d'inventaire",
           "explication": "Toute heure travaillée doit être payée (à 150 % si la semaine dépasse 40 heures).",
           "effets": [
-            { "type": "prime", "montant": 45, "parEmploye": true },
-            { "type": "moral", "cible": "tous", "valeur": 2 }
+            {
+              "type": "prime",
+              "montant": 45,
+              "parEmploye": true
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 2
+            }
           ]
         },
         {
@@ -172,14 +270,22 @@
           "libelle": "Accepter l'offre de travail non payé",
           "explication": "Un employé ne peut pas renoncer à ses droits : la Loi sur les normes du travail est d'ordre public.",
           "effets": [
-            { "type": "moral", "cible": "tous", "valeur": -5 },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -5
+            },
             {
               "type": "risque",
               "probabilite": 0.4,
               "delaiMois": 2,
               "code": "plainteCNT",
               "effets": [
-                { "type": "prime", "montant": 60, "parEmploye": true },
+                {
+                  "type": "prime",
+                  "montant": 60,
+                  "parEmploye": true
+                },
                 {
                   "type": "depense",
                   "categorie": "amendes",
@@ -194,10 +300,16 @@
           "id": "reporter",
           "libelle": "Faire l'inventaire pendant les heures d'ouverture",
           "explication": "Personne n'est lésé, mais le service est un peu ralenti ce mois-ci.",
-          "effets": [{ "type": "capacite", "facteur": 0.98 }]
+          "effets": [
+            {
+              "type": "capacite",
+              "facteur": 0.98
+            }
+          ]
         }
       ],
-      "lecon": "Le salaire minimum, les heures supplémentaires et le paiement des heures travaillées sont des normes d'ordre public : même un employé consentant ne peut pas y renoncer."
+      "lecon": "Le salaire minimum, les heures supplémentaires et le paiement des heures travaillées sont des normes d'ordre public : même un employé consentant ne peut pas y renoncer.",
+      "nature": "negatif"
     },
     {
       "id": "harcelement",
@@ -213,24 +325,49 @@
           "libelle": "Interdire l'accès au client",
           "explication": "Tu protèges ton employé : c'est ton obligation légale, même si tu perds un client.",
           "effets": [
-            { "type": "moral", "cible": "concerne", "valeur": 8 },
-            { "type": "moral", "cible": "autres", "valeur": 3 },
-            { "type": "notoriete", "valeur": -0.003 }
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": 8
+            },
+            {
+              "type": "moral",
+              "cible": "autres",
+              "valeur": 3
+            },
+            {
+              "type": "notoriete",
+              "valeur": -0.003
+            }
           ]
         },
         {
           "id": "discuter",
           "libelle": "Rencontrer le client et documenter la situation",
           "explication": "Appliquer ta politique de prévention, avec un suivi écrit, est une bonne pratique.",
-          "effets": [{ "type": "moral", "cible": "concerne", "valeur": 4 }]
+          "effets": [
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": 4
+            }
+          ]
         },
         {
           "id": "ignorer",
           "libelle": "Lui dire que « le client a toujours raison »",
           "explication": "L'employeur doit prévenir et faire cesser le harcèlement, même s'il vient d'un client.",
           "effets": [
-            { "type": "moral", "cible": "concerne", "valeur": -12 },
-            { "type": "moral", "cible": "autres", "valeur": -4 },
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": -12
+            },
+            {
+              "type": "moral",
+              "cible": "autres",
+              "valeur": -4
+            },
             {
               "type": "risque",
               "probabilite": 0.35,
@@ -248,7 +385,8 @@
           ]
         }
       ],
-      "lecon": "Depuis 2019, tout employeur québécois doit avoir une politique de prévention du harcèlement psychologique et sexuel et de traitement des plaintes."
+      "lecon": "Depuis 2019, tout employeur québécois doit avoir une politique de prévention du harcèlement psychologique et sexuel et de traitement des plaintes.",
+      "nature": "negatif"
     },
     {
       "id": "congeFamilial",
@@ -264,9 +402,20 @@
           "libelle": "Accorder le congé et réorganiser l'horaire",
           "explication": "La loi permet jusqu'à 10 jours par année pour des obligations familiales, dont 2 rémunérés.",
           "effets": [
-            { "type": "capacite", "facteur": 0.97 },
-            { "type": "moral", "cible": "concerne", "valeur": 6 },
-            { "type": "moral", "cible": "autres", "valeur": 2 }
+            {
+              "type": "capacite",
+              "facteur": 0.97
+            },
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": 6
+            },
+            {
+              "type": "moral",
+              "cible": "autres",
+              "valeur": 2
+            }
           ]
         },
         {
@@ -274,8 +423,16 @@
           "libelle": "Refuser : c'est trop occupé",
           "explication": "Refuser un congé prévu par la loi est illégal et peut mener à une plainte.",
           "effets": [
-            { "type": "moral", "cible": "concerne", "valeur": -15 },
-            { "type": "moral", "cible": "autres", "valeur": -4 },
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": -15
+            },
+            {
+              "type": "moral",
+              "cible": "autres",
+              "valeur": -4
+            },
             {
               "type": "risque",
               "probabilite": 0.5,
@@ -293,7 +450,8 @@
           ]
         }
       ],
-      "lecon": "La Loi sur les normes du travail prévoit 10 jours par année pour obligations familiales ou maladie (dont 2 rémunérés) et des congés plus longs si un proche est gravement malade."
+      "lecon": "La Loi sur les normes du travail prévoit 10 jours par année pour obligations familiales ou maladie (dont 2 rémunérés) et des congés plus longs si un proche est gravement malade.",
+      "nature": "negatif"
     },
     {
       "id": "volInterne",
@@ -315,7 +473,11 @@
               "montant": 900,
               "libelle": "Caméra et procédure de contrôle de la caisse"
             },
-            { "type": "moral", "cible": "tous", "valeur": -1 }
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -1
+            }
           ]
         },
         {
@@ -326,10 +488,23 @@
             {
               "type": "hasard",
               "probabilite": 0.5,
-              "siOui": [{ "type": "congedier", "cible": "concerne" }],
+              "siOui": [
+                {
+                  "type": "congedier",
+                  "cible": "concerne"
+                }
+              ],
               "siNon": [
-                { "type": "moral", "cible": "tous", "valeur": -10 },
-                { "type": "depart", "cible": "concerne", "probabilite": 0.6 }
+                {
+                  "type": "moral",
+                  "cible": "tous",
+                  "valeur": -10
+                },
+                {
+                  "type": "depart",
+                  "cible": "concerne",
+                  "probabilite": 0.6
+                }
               ]
             }
           ]
@@ -348,7 +523,8 @@
           ]
         }
       ],
-      "lecon": "La séparation des tâches, le rapprochement quotidien de la caisse et l'inventaire régulier sont des contrôles internes de base. Ils dissuadent la fraude sans accuser personne."
+      "lecon": "La séparation des tâches, le rapprochement quotidien de la caisse et l'inventaire régulier sont des contrôles internes de base. Ils dissuadent la fraude sans accuser personne.",
+      "nature": "negatif"
     },
     {
       "id": "tempsDesFetes",
@@ -364,8 +540,15 @@
           "libelle": "Fermer plus tôt ces deux soirs",
           "explication": "Tu perds quelques ventes, mais l'équipe s'en souviendra.",
           "effets": [
-            { "type": "capacite", "facteur": 0.96 },
-            { "type": "moral", "cible": "tous", "valeur": 4 }
+            {
+              "type": "capacite",
+              "facteur": 0.96
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 4
+            }
           ]
         },
         {
@@ -373,24 +556,39 @@
           "libelle": "Verser une prime de 60 $ à ceux qui travaillent",
           "explication": "Une prime pour les quarts difficiles est appréciée.",
           "effets": [
-            { "type": "prime", "montant": 60, "parEmploye": true },
-            { "type": "moral", "cible": "tous", "valeur": 5 }
+            {
+              "type": "prime",
+              "montant": 60,
+              "parEmploye": true
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 5
+            }
           ]
         },
         {
           "id": "imposer",
           "libelle": "Garder l'horaire habituel",
           "explication": "Tu as le droit de fixer l'horaire, mais le moral en souffre.",
-          "effets": [{ "type": "moral", "cible": "tous", "valeur": -6 }]
+          "effets": [
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -6
+            }
+          ]
         }
       ],
-      "lecon": "Noël et le jour de l'An sont des jours fériés : l'employé qui travaille ces jours-là reçoit son salaire plus une indemnité (ou un congé compensatoire)."
+      "lecon": "Noël et le jour de l'An sont des jours fériés : l'employé qui travaille ces jours-là reçoit son salaire plus une indemnité (ou un congé compensatoire).",
+      "nature": "neutre"
     },
     {
       "id": "equipeEpuisee",
       "categorie": "rh",
       "titre": "Équipe épuisée",
-      "description": "Ton équipe n'arrive plus à suivre : files d'attente, pauses sautées, tensions au comptoir.",
+      "description": "Ton équipe n'arrive plus à suivre : clients qui attendent, pauses sautées, tensions dans l'équipe.",
       "condition": "surcharge",
       "cible": "moralBas",
       "choixParDefaut": "rien",
@@ -400,8 +598,16 @@
           "libelle": "Verser une prime de reconnaissance de 150 $",
           "explication": "Reconnaître l'effort aide, mais ne règle pas le manque de personnel.",
           "effets": [
-            { "type": "prime", "montant": 150, "parEmploye": true },
-            { "type": "moral", "cible": "tous", "valeur": 6 }
+            {
+              "type": "prime",
+              "montant": 150,
+              "parEmploye": true
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 6
+            }
           ]
         },
         {
@@ -409,18 +615,32 @@
           "libelle": "Travailler plus d'heures toi-même",
           "explication": "Tu mets la main à la pâte pendant les heures de pointe.",
           "effets": [
-            { "type": "heuresProprietaire", "valeur": 10 },
-            { "type": "moral", "cible": "tous", "valeur": 3 }
+            {
+              "type": "heuresProprietaire",
+              "valeur": 10
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 3
+            }
           ]
         },
         {
           "id": "rien",
           "libelle": "Leur demander de tenir le coup",
           "explication": "La surcharge prolongée mène à l'épuisement et aux démissions.",
-          "effets": [{ "type": "moral", "cible": "tous", "valeur": -6 }]
+          "effets": [
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -6
+            }
+          ]
         }
       ],
-      "lecon": "Quand la demande dépasse la capacité, il faut embaucher ou réorganiser le travail : la surcharge chronique coûte plus cher en roulement de personnel."
+      "lecon": "Quand la demande dépasse la capacité, il faut embaucher ou réorganiser le travail : la surcharge chronique coûte plus cher en roulement de personnel.",
+      "nature": "negatif"
     },
     {
       "id": "formationSoir",
@@ -442,8 +662,16 @@
               "montant": 800,
               "libelle": "Certificat en gestion d'un employé"
             },
-            { "type": "competence", "cible": "concerne", "valeur": 0.08 },
-            { "type": "moral", "cible": "concerne", "valeur": 10 }
+            {
+              "type": "competence",
+              "cible": "concerne",
+              "valeur": 0.08
+            },
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": 10
+            }
           ]
         },
         {
@@ -457,18 +685,4318 @@
               "montant": 400,
               "libelle": "Certificat en gestion d'un employé (50 %)"
             },
-            { "type": "competence", "cible": "concerne", "valeur": 0.04 },
-            { "type": "moral", "cible": "concerne", "valeur": 5 }
+            {
+              "type": "competence",
+              "cible": "concerne",
+              "valeur": 0.04
+            },
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": 5
+            }
           ]
         },
         {
           "id": "refuser",
           "libelle": "Refuser",
           "explication": "Économie à court terme, déception à long terme.",
-          "effets": [{ "type": "moral", "cible": "concerne", "valeur": -5 }]
+          "effets": [
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": -5
+            }
+          ]
         }
       ],
-      "lecon": "Les frais de formation sont des dépenses déductibles. Une entreprise qui développe ses employés les garde plus longtemps et prépare sa relève."
+      "lecon": "Les frais de formation sont des dépenses déductibles. Une entreprise qui développe ses employés les garde plus longtemps et prépare sa relève.",
+      "nature": "neutre"
+    },
+    {
+      "id": "verglas",
+      "categorie": "meteo",
+      "nature": "negatif",
+      "titre": "Tempête de verglas et panne d’électricité",
+      "description": "Une tempête de verglas prive le quartier d'électricité pendant trois jours. {Commerce} est dans le noir et les produits réfrigérés se réchauffent.",
+      "condition": "toujours",
+      "mois": [12, 1, 2, 3],
+      "cible": "aleatoire",
+      "choixParDefaut": "fermer",
+      "choix": [
+        {
+          "id": "fermer",
+          "libelle": "Fermer et attendre le retour du courant",
+          "explication": "La solution prudente : aucune dépense, mais 3 jours de ventes perdus. L'assurance « interruption des affaires » peut compenser une partie des pertes.",
+          "effets": [
+            {
+              "type": "fermeture",
+              "jours": 3
+            },
+            {
+              "type": "stockPerdu",
+              "proportion": 0.6,
+              "perissables": true,
+              "libelle": "Produits perdus pendant la panne de courant"
+            },
+            {
+              "type": "si",
+              "condition": "assure",
+              "alors": [
+                {
+                  "type": "encaissement",
+                  "montant": 1500,
+                  "categorie": "assurance",
+                  "libelle": "Indemnité d’assurance (interruption des affaires)"
+                }
+              ],
+              "sinon": []
+            }
+          ]
+        },
+        {
+          "id": "generatrice",
+          "libelle": "Louer une génératrice (1 200 $)",
+          "explication": "Tu restes ouvert presque tout le temps et tu sauves tes produits. Le quartier s’en souviendra.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "entretien",
+              "montant": 1200,
+              "libelle": "Location d’une génératrice"
+            },
+            {
+              "type": "fermeture",
+              "jours": 1
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.01
+            }
+          ]
+        },
+        {
+          "id": "chandelles",
+          "libelle": "Ouvrir quand même à la lueur des chandelles",
+          "explication": "Une ambiance originale… ou un service désorganisé. Les produits réfrigérés restent à risque.",
+          "effets": [
+            {
+              "type": "fermeture",
+              "jours": 2
+            },
+            {
+              "type": "stockPerdu",
+              "proportion": 0.4,
+              "perissables": true,
+              "libelle": "Produits perdus pendant la panne de courant"
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.5,
+              "siOui": [
+                {
+                  "type": "notoriete",
+                  "valeur": 0.02
+                },
+                {
+                  "type": "image",
+                  "valeur": 0.02
+                }
+              ],
+              "siNon": [
+                {
+                  "type": "satisfaction",
+                  "valeur": -0.04
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Un plan de continuité (génératrice, liste de fournisseurs, message aux clients) réduit les pertes lors d'un sinistre. L'assurance « interruption des affaires » compense une partie du bénéfice perdu, mais seulement si on l'a achetée."
+    },
+    {
+      "id": "canicule",
+      "categorie": "meteo",
+      "nature": "negatif",
+      "titre": "Canicule",
+      "description": "Une vague de chaleur de 35 °C frappe la ville pendant une semaine. Il fait très chaud au travail.",
+      "condition": "employes1",
+      "mois": [6, 7, 8],
+      "cible": "aleatoire",
+      "choixParDefaut": "rien",
+      "choix": [
+        {
+          "id": "climatiseurs",
+          "libelle": "Installer des climatiseurs portatifs (900 $)",
+          "explication": "Une équipe au frais travaille mieux, et les clients restent plus longtemps.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "entretien",
+              "montant": 900,
+              "libelle": "Climatiseurs portatifs"
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 3
+            },
+            {
+              "type": "demande",
+              "facteur": 1.03,
+              "mois": 1,
+              "libelle": "Clients attirés par la fraîcheur"
+            }
+          ]
+        },
+        {
+          "id": "horaire",
+          "libelle": "Réduire les heures de travail en après-midi",
+          "explication": "Moins de production, mais l’équipe apprécie.",
+          "effets": [
+            {
+              "type": "capacite",
+              "facteur": 0.92
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 1
+            }
+          ]
+        },
+        {
+          "id": "rien",
+          "libelle": "Ne rien changer",
+          "explication": "La chaleur extrême est un risque pour la santé et la sécurité du travail.",
+          "effets": [
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -5
+            },
+            {
+              "type": "satisfaction",
+              "valeur": -0.03
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.25,
+              "siOui": [
+                {
+                  "type": "capacite",
+                  "facteur": 0.93
+                },
+                {
+                  "type": "competence",
+                  "cible": "concerne",
+                  "valeur": -0.02
+                }
+              ],
+              "siNon": []
+            }
+          ]
+        }
+      ],
+      "lecon": "L'employeur doit protéger la santé et la sécurité de ses travailleurs (Loi sur la santé et la sécurité du travail). La CNESST reconnaît le coup de chaleur comme un risque : pauses, eau et aménagement des heures font partie de la prévention."
+    },
+    {
+      "id": "tempeteNeige",
+      "categorie": "meteo",
+      "nature": "negatif",
+      "titre": "Grosse tempête de neige",
+      "description": "40 cm de neige en une journée : les rues sont bloquées et les écoles sont fermées.",
+      "condition": "vitrine",
+      "mois": [12, 1, 2, 3],
+      "cible": "aleatoire",
+      "choixParDefaut": "ouvrir",
+      "choix": [
+        {
+          "id": "ouvrir",
+          "libelle": "Ouvrir quand même avec l’équipe disponible",
+          "explication": "Les clients du voisinage apprécient, mais plusieurs employés arrivent en retard.",
+          "effets": [
+            {
+              "type": "demande",
+              "facteur": 0.95,
+              "mois": 1,
+              "libelle": "Tempête de neige"
+            },
+            {
+              "type": "capacite",
+              "facteur": 0.92
+            }
+          ]
+        },
+        {
+          "id": "fermer",
+          "libelle": "Fermer pour la journée",
+          "explication": "Aucun risque, mais une journée de ventes perdue.",
+          "effets": [
+            {
+              "type": "fermeture",
+              "jours": 1
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 2
+            }
+          ]
+        },
+        {
+          "id": "taxi",
+          "libelle": "Payer le taxi aux employés (250 $)",
+          "explication": "Le commerce reste ouvert à pleine capacité.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "divers",
+              "montant": 250,
+              "libelle": "Taxis pour les employés pendant la tempête"
+            },
+            {
+              "type": "demande",
+              "facteur": 0.96,
+              "mois": 1,
+              "libelle": "Tempête de neige"
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 2
+            }
+          ]
+        }
+      ],
+      "lecon": "Les aléas météo font partie de la saisonnalité au Québec. Un bon gestionnaire prévoit des plans (personnel de remplacement, communication sur les réseaux sociaux) plutôt que de subir."
+    },
+    {
+      "id": "hiverNeigeux",
+      "categorie": "meteo",
+      "nature": "negatif",
+      "titre": "Hiver record de neige",
+      "description": "Les bordées se succèdent : tes équipes passent deux fois plus souvent chez les clients au forfait, sans revenu de plus.",
+      "condition": "toujours",
+      "secteurs": ["paysagement"],
+      "mois": [12, 1, 2],
+      "cible": "aleatoire",
+      "choixParDefaut": "absorber",
+      "choix": [
+        {
+          "id": "supplement",
+          "libelle": "Facturer le supplément prévu au contrat",
+          "explication": "Ton contrat prévoit un supplément au-delà de 300 cm : légal, mais certains clients grognent.",
+          "effets": [
+            {
+              "type": "encaissement",
+              "montant": 2500,
+              "categorie": "autre",
+              "libelle": "Supplément de précipitations facturé aux clients"
+            },
+            {
+              "type": "capacite",
+              "facteur": 0.85
+            },
+            {
+              "type": "satisfaction",
+              "valeur": -0.04
+            }
+          ]
+        },
+        {
+          "id": "absorber",
+          "libelle": "Absorber le coût pour garder les clients",
+          "explication": "Plus d’essence et d’heures supplémentaires, mais des clients fidèles.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "entretien",
+              "montant": 1500,
+              "libelle": "Carburant et réparations supplémentaires"
+            },
+            {
+              "type": "capacite",
+              "facteur": 0.85
+            },
+            {
+              "type": "note",
+              "valeur": 0.05
+            }
+          ]
+        },
+        {
+          "id": "soustraiter",
+          "libelle": "Sous-traiter une partie des routes (2 000 $)",
+          "explication": "Ton équipe respire, mais tu paies un sous-traitant.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 2000,
+              "libelle": "Sous-traitants de déneigement"
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 3
+            }
+          ]
+        }
+      ],
+      "lecon": "Un forfait saisonnier transfère le risque météo à l'entreprise : un hiver doux est très payant, un hiver record peut faire perdre de l'argent. Plusieurs contrats prévoient une clause de précipitations pour partager ce risque."
+    },
+    {
+      "id": "secheresse",
+      "categorie": "meteo",
+      "nature": "negatif",
+      "titre": "Sécheresse et interdiction d’arrosage",
+      "description": "La ville interdit l'arrosage des pelouses pendant six semaines. Les gazons jaunissent et les clients annulent des visites.",
+      "condition": "toujours",
+      "secteurs": ["paysagement"],
+      "mois": [6, 7, 8],
+      "cible": "aleatoire",
+      "choixParDefaut": "attendre",
+      "choix": [
+        {
+          "id": "diversifier",
+          "libelle": "Proposer des services de remplacement (500 $ de publicité)",
+          "explication": "Paillis, plantes indigènes résistantes à la sécheresse : tu transformes le problème en occasion.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "publicite",
+              "montant": 500,
+              "libelle": "Publicité : aménagements résistants à la sécheresse"
+            },
+            {
+              "type": "demande",
+              "facteur": 0.95,
+              "mois": 2,
+              "libelle": "Sécheresse"
+            },
+            {
+              "type": "image",
+              "valeur": 0.02
+            }
+          ]
+        },
+        {
+          "id": "heures",
+          "libelle": "Réduire les heures de l’équipe de 15 %",
+          "explication": "Tu réduis la masse salariale, mais l’équipe s’inquiète.",
+          "effets": [
+            {
+              "type": "heures",
+              "cible": "tous",
+              "facteur": 0.85
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -4
+            },
+            {
+              "type": "demande",
+              "facteur": 0.85,
+              "mois": 2,
+              "libelle": "Sécheresse"
+            }
+          ]
+        },
+        {
+          "id": "attendre",
+          "libelle": "Attendre la pluie",
+          "explication": "Tu paies l’équipe pour moins de travail.",
+          "effets": [
+            {
+              "type": "demande",
+              "facteur": 0.85,
+              "mois": 2,
+              "libelle": "Sécheresse"
+            }
+          ]
+        }
+      ],
+      "lecon": "Diversifier ses services réduit la dépendance à la météo. Un plan B pour les périodes creuses protège le chiffre d'affaires et les emplois."
+    },
+    {
+      "id": "degatEau",
+      "categorie": "meteo",
+      "nature": "negatif",
+      "titre": "Dégât d’eau",
+      "description": "Un tuyau a éclaté pendant la nuit : 5 cm d'eau dans {commerce}.",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "urgence",
+      "choix": [
+        {
+          "id": "urgence",
+          "libelle": "Faire réparer en urgence et appeler l’assureur",
+          "explication": "La bonne réaction. Si tu es assuré, tu ne paies que la franchise.",
+          "effets": [
+            {
+              "type": "si",
+              "condition": "assure",
+              "alors": [
+                {
+                  "type": "depense",
+                  "categorie": "sinistres",
+                  "montant": 1000,
+                  "libelle": "Franchise d’assurance (dégât d’eau)"
+                },
+                {
+                  "type": "fermeture",
+                  "jours": 2
+                }
+              ],
+              "sinon": [
+                {
+                  "type": "depense",
+                  "categorie": "sinistres",
+                  "montant": 9000,
+                  "libelle": "Réparations du dégât d’eau (aucune assurance)"
+                },
+                {
+                  "type": "fermeture",
+                  "jours": 4
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "soiMeme",
+          "libelle": "Nettoyer avec l’équipe et réparer soi-même",
+          "explication": "Moins cher tout de suite, mais l’humidité cachée peut causer de la moisissure.",
+          "effets": [
+            {
+              "type": "si",
+              "condition": "assure",
+              "alors": [
+                {
+                  "type": "depense",
+                  "categorie": "sinistres",
+                  "montant": 400,
+                  "libelle": "Matériel de nettoyage"
+                }
+              ],
+              "sinon": [
+                {
+                  "type": "depense",
+                  "categorie": "sinistres",
+                  "montant": 2500,
+                  "libelle": "Matériel et réparations"
+                }
+              ]
+            },
+            {
+              "type": "fermeture",
+              "jours": 3
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -3
+            },
+            {
+              "type": "risque",
+              "probabilite": 0.3,
+              "delaiMois": 3,
+              "code": "moisissures",
+              "effets": [
+                {
+                  "type": "depense",
+                  "categorie": "sinistres",
+                  "montant": 4000,
+                  "libelle": "Décontamination (moisissures)"
+                },
+                {
+                  "type": "fermeture",
+                  "jours": 2
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "L'assurance des biens couvre le dégât d'eau soudain, moins la franchise; elle ne couvre pas l'usure ni l'infiltration lente. Sans assurance, l'entreprise paie tout, et une petite PME peut ne pas s'en relever."
+    },
+    {
+      "id": "pannePrincipale",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Panne de l’équipement principal",
+      "description": "Ton équipement principal tombe en panne en pleine période achalandée.",
+      "condition": "equipementUse",
+      "cible": "aleatoire",
+      "choixParDefaut": "attendre",
+      "choix": [
+        {
+          "id": "urgence",
+          "libelle": "Réparation d’urgence par le fabricant (2 200 $)",
+          "explication": "Cher, mais tout fonctionne dès demain.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "entretien",
+              "montant": 2200,
+              "libelle": "Réparation d’urgence"
+            },
+            {
+              "type": "capacite",
+              "facteur": 0.97
+            }
+          ]
+        },
+        {
+          "id": "usagee",
+          "libelle": "Pièce usagée et réparation maison (600 $)",
+          "explication": "Économique… si ça tient.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "entretien",
+              "montant": 600,
+              "libelle": "Pièce usagée"
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.5,
+              "siOui": [],
+              "siNon": [
+                {
+                  "type": "capacite",
+                  "facteur": 0.85
+                },
+                {
+                  "type": "depense",
+                  "categorie": "entretien",
+                  "montant": 1500,
+                  "libelle": "Nouvelle réparation"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "attendre",
+          "libelle": "Attendre le technicien régulier (10 jours)",
+          "explication": "Aucun frais d’urgence, mais une capacité très réduite.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "entretien",
+              "montant": 900,
+              "libelle": "Réparation par le technicien régulier"
+            },
+            {
+              "type": "capacite",
+              "facteur": 0.75
+            }
+          ]
+        }
+      ],
+      "lecon": "L'équipement s'use : l'entretien préventif et un budget de remplacement coûtent moins cher que les pannes en pleine saison. L'amortissement rappelle que les immobilisations ont une durée de vie limitée."
+    },
+    {
+      "id": "fournisseurFaillite",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Ton fournisseur fait faillite",
+      "description": "Un de tes principaux fournisseurs déclare faillite du jour au lendemain. Il faut trouver une solution avant la prochaine livraison.",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "fiable",
+      "choix": [
+        {
+          "id": "fiable",
+          "libelle": "Passer au fournisseur de rechange le plus fiable",
+          "explication": "Un peu plus cher le premier mois, mais sans rupture.",
+          "effets": [
+            {
+              "type": "fournisseurFaillite",
+              "mode": "fiable"
+            },
+            {
+              "type": "couts",
+              "facteur": 1.03,
+              "mois": 1,
+              "libelle": "Changement de fournisseur"
+            }
+          ]
+        },
+        {
+          "id": "detail",
+          "libelle": "Acheter au détail en attendant",
+          "explication": "Tu évites les ruptures, mais tu paies plus cher et tu passes des heures à magasiner.",
+          "effets": [
+            {
+              "type": "fournisseurFaillite",
+              "mode": "moinsCher"
+            },
+            {
+              "type": "couts",
+              "facteur": 1.12,
+              "mois": 1,
+              "libelle": "Achats au détail en dépannage"
+            },
+            {
+              "type": "heuresProprietaire",
+              "valeur": 4
+            }
+          ]
+        },
+        {
+          "id": "retirer",
+          "libelle": "Retirer temporairement les produits concernés",
+          "explication": "Aucun coût de plus, mais des clients déçus.",
+          "effets": [
+            {
+              "type": "fournisseurFaillite",
+              "mode": "fiable"
+            },
+            {
+              "type": "demande",
+              "facteur": 0.93,
+              "mois": 1,
+              "libelle": "Produits temporairement retirés"
+            }
+          ]
+        }
+      ],
+      "lecon": "Dépendre d'un seul fournisseur est un risque. Les entreprises prudentes gardent un fournisseur de rechange, surveillent la santé financière de leurs fournisseurs et ont un peu de stock de sécurité."
+    },
+    {
+      "id": "ruptureChaine",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Rupture de la chaîne d’approvisionnement",
+      "description": "Un blocage au port de Montréal et une pénurie de camionneurs retardent les livraisons : comptes une semaine de plus pour recevoir tes commandes pendant deux mois.",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "attendre",
+      "choix": [
+        {
+          "id": "securite",
+          "libelle": "Augmenter le stock de sécurité",
+          "explication": "Tu commandes plus tôt et plus gros : plus d’argent dort en stock, mais pas de rupture.",
+          "effets": [
+            {
+              "type": "delais",
+              "jours": 7,
+              "mois": 2,
+              "anticipation": true
+            },
+            {
+              "type": "couts",
+              "facteur": 1.02,
+              "mois": 2,
+              "libelle": "Frais de possession d’un stock plus élevé"
+            }
+          ]
+        },
+        {
+          "id": "express",
+          "libelle": "Payer le transport express (1 500 $)",
+          "explication": "Les retards sont presque effacés.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "divers",
+              "montant": 1500,
+              "libelle": "Transport express"
+            },
+            {
+              "type": "delais",
+              "jours": 2,
+              "mois": 2,
+              "anticipation": true
+            }
+          ]
+        },
+        {
+          "id": "attendre",
+          "libelle": "Attendre que la situation se règle",
+          "explication": "Tes commandes habituelles risquent d’arriver trop tard.",
+          "effets": [
+            {
+              "type": "delais",
+              "jours": 7,
+              "mois": 2,
+              "anticipation": false
+            }
+          ]
+        }
+      ],
+      "lecon": "Le stock de sécurité protège contre la variabilité de la demande ET du délai de livraison. Quand les délais s'allongent, le point de commande doit monter, sinon les ruptures se multiplient."
+    },
+    {
+      "id": "grevePostes",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Grève à la poste",
+      "description": "Une grève paralyse la livraison des colis partout au pays pour plusieurs semaines.",
+      "condition": "toujours",
+      "secteurs": ["enLigne"],
+      "cible": "aleatoire",
+      "choixParDefaut": "retarder",
+      "choix": [
+        {
+          "id": "messagerie",
+          "libelle": "Passer à un service de messagerie privé (+3 $ par colis)",
+          "explication": "Plus cher, mais les clients reçoivent leurs commandes.",
+          "effets": [
+            {
+              "type": "fraisParVisite",
+              "facteur": 1.4,
+              "mois": 1
+            },
+            {
+              "type": "demande",
+              "facteur": 0.95,
+              "mois": 1,
+              "libelle": "Grève à la poste"
+            }
+          ]
+        },
+        {
+          "id": "retarder",
+          "libelle": "Informer les clients et retarder les envois",
+          "explication": "Aucun coût de plus, mais des clients impatients.",
+          "effets": [
+            {
+              "type": "demande",
+              "facteur": 0.85,
+              "mois": 1,
+              "libelle": "Grève à la poste"
+            },
+            {
+              "type": "satisfaction",
+              "valeur": -0.06
+            },
+            {
+              "type": "note",
+              "valeur": -0.1
+            }
+          ]
+        },
+        {
+          "id": "suspendre",
+          "libelle": "Suspendre les ventes hors de ta région",
+          "explication": "Tu livres seulement les clients proches.",
+          "effets": [
+            {
+              "type": "demande",
+              "facteur": 0.7,
+              "mois": 1,
+              "libelle": "Ventes suspendues hors région"
+            }
+          ]
+        }
+      ],
+      "lecon": "Un commerce en ligne dépend de ses transporteurs. Avoir plus d'un transporteur et communiquer honnêtement les délais protège la réputation."
+    },
+    {
+      "id": "greveTransportCommun",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Grève du transport en commun",
+      "description": "Les autobus et le métro sont en grève pour une semaine. Plusieurs employés ne savent pas comment se rendre au travail.",
+      "condition": "vitrine",
+      "cible": "aleatoire",
+      "choixParDefaut": "rien",
+      "choix": [
+        {
+          "id": "taxis",
+          "libelle": "Rembourser le taxi de l’équipe (400 $)",
+          "explication": "L’équipe est là et apprécie le geste.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "divers",
+              "montant": 400,
+              "libelle": "Taxis pendant la grève"
+            },
+            {
+              "type": "demande",
+              "facteur": 0.93,
+              "mois": 1,
+              "libelle": "Grève du transport en commun"
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 2
+            }
+          ]
+        },
+        {
+          "id": "horaire",
+          "libelle": "Ouvrir plus tard et fermer plus tôt",
+          "explication": "Moins d’heures, mais une équipe complète.",
+          "effets": [
+            {
+              "type": "capacite",
+              "facteur": 0.9
+            },
+            {
+              "type": "demande",
+              "facteur": 0.9,
+              "mois": 1,
+              "libelle": "Grève du transport en commun"
+            }
+          ]
+        },
+        {
+          "id": "rien",
+          "libelle": "Ne rien changer",
+          "explication": "Des employés arrivent en retard ou ne viennent pas.",
+          "effets": [
+            {
+              "type": "capacite",
+              "facteur": 0.85
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -3
+            },
+            {
+              "type": "demande",
+              "facteur": 0.93,
+              "mois": 1,
+              "libelle": "Grève du transport en commun"
+            }
+          ]
+        }
+      ],
+      "lecon": "Une grève hors de ton contrôle touche tes ventes et tes employés. La flexibilité (horaires, covoiturage) et la communication limitent les dégâts."
+    },
+    {
+      "id": "inflationFournisseurs",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Hausse de prix des fournisseurs",
+      "description": "Tes fournisseurs annoncent une hausse de 6 % de leurs prix dès le mois prochain (transport et matières premières).",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "absorber",
+      "choix": [
+        {
+          "id": "repercuter",
+          "libelle": "Augmenter tes prix de 4 %",
+          "explication": "Tu protèges ta marge brute; quelques clients sensibles au prix iront ailleurs.",
+          "effets": [
+            {
+              "type": "prix",
+              "facteur": 1.04
+            },
+            {
+              "type": "couts",
+              "facteur": 1.06,
+              "mois": 12,
+              "libelle": "Hausse des prix des fournisseurs"
+            }
+          ]
+        },
+        {
+          "id": "absorber",
+          "libelle": "Absorber la hausse",
+          "explication": "Tes clients ne voient rien, mais ta marge brute fond.",
+          "effets": [
+            {
+              "type": "couts",
+              "facteur": 1.06,
+              "mois": 12,
+              "libelle": "Hausse des prix des fournisseurs"
+            }
+          ]
+        },
+        {
+          "id": "negocier",
+          "libelle": "Négocier un contrat d’un an à prix fixe",
+          "explication": "Peut-être un meilleur prix… si le fournisseur accepte.",
+          "effets": [
+            {
+              "type": "hasard",
+              "probabilite": 0.6,
+              "siOui": [
+                {
+                  "type": "couts",
+                  "facteur": 1.02,
+                  "mois": 12,
+                  "libelle": "Contrat à prix fixe négocié"
+                }
+              ],
+              "siNon": [
+                {
+                  "type": "couts",
+                  "facteur": 1.06,
+                  "mois": 12,
+                  "libelle": "Hausse des prix des fournisseurs"
+                }
+              ]
+            },
+            {
+              "type": "heuresProprietaire",
+              "valeur": 2
+            }
+          ]
+        }
+      ],
+      "lecon": "Quand les coûts montent, la marge brute baisse si les prix ne suivent pas. Il faut connaître sa marge par produit pour décider quoi répercuter, et négocier des ententes à prix fixe quand c'est possible."
+    },
+    {
+      "id": "livraisonDefectueuse",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Livraison non conforme",
+      "description": "Une livraison importante arrive abîmée ou non conforme à la commande.",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "accepter",
+      "choix": [
+        {
+          "id": "refuser",
+          "libelle": "Refuser la livraison et exiger un crédit",
+          "explication": "Ton droit : tu n’as pas à payer pour une marchandise non conforme. Quelques ruptures à prévoir.",
+          "effets": [
+            {
+              "type": "demande",
+              "facteur": 0.97,
+              "mois": 1,
+              "libelle": "Ruptures après une livraison refusée"
+            }
+          ]
+        },
+        {
+          "id": "rabais",
+          "libelle": "Accepter et vendre la marchandise à rabais",
+          "explication": "Tu récupères une partie de la valeur, mais ton image en prend un coup.",
+          "effets": [
+            {
+              "type": "stockPerdu",
+              "proportion": 0.08,
+              "libelle": "Marchandise abîmée vendue à perte"
+            },
+            {
+              "type": "image",
+              "valeur": -0.02
+            }
+          ]
+        },
+        {
+          "id": "accepter",
+          "libelle": "Accepter et vendre au plein prix",
+          "explication": "Risqué : des clients pourraient s’en apercevoir.",
+          "effets": [
+            {
+              "type": "hasard",
+              "probabilite": 0.5,
+              "siOui": [
+                {
+                  "type": "note",
+                  "valeur": -0.15
+                },
+                {
+                  "type": "satisfaction",
+                  "valeur": -0.05
+                }
+              ],
+              "siNon": []
+            }
+          ]
+        }
+      ],
+      "lecon": "Vérifier chaque livraison (bon de réception, quantité, qualité) avant de signer protège l'entreprise. Une marchandise non conforme peut être refusée ou créditée par le fournisseur."
+    },
+    {
+      "id": "inspectionMapaq",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Inspection surprise du MAPAQ",
+      "description": "Un inspecteur du ministère de l’Agriculture, des Pêcheries et de l’Alimentation se présente sans avertir.",
+      "condition": "alimentation",
+      "cible": "aleatoire",
+      "choixParDefaut": "visite",
+      "choix": [
+        {
+          "id": "visite",
+          "libelle": "Faire la visite avec lui et noter ses recommandations",
+          "explication": "La bonne attitude. Le résultat dépend de ta préparation : registres des températures, personne formée en hygiène…",
+          "effets": [
+            {
+              "type": "si",
+              "condition": "hygieneConforme",
+              "alors": [
+                {
+                  "type": "image",
+                  "valeur": 0.01
+                }
+              ],
+              "sinon": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 1500,
+                  "libelle": "Constat d’infraction du MAPAQ"
+                },
+                {
+                  "type": "fermeture",
+                  "jours": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "menage",
+          "libelle": "Faire un grand ménage d’urgence pendant qu’il attend",
+          "explication": "Ça ne change pas grand-chose à ce qu’il verra, mais ça montre ta bonne foi.",
+          "effets": [
+            {
+              "type": "heuresProprietaire",
+              "valeur": 3
+            },
+            {
+              "type": "si",
+              "condition": "hygieneConforme",
+              "alors": [],
+              "sinon": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 1000,
+                  "libelle": "Constat d’infraction du MAPAQ"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Lui demander de revenir plus tard",
+          "explication": "Refuser l’accès à un inspecteur est une infraction en soi.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "amendes",
+              "montant": 2000,
+              "libelle": "Amende pour entrave à une inspection"
+            },
+            {
+              "type": "fermeture",
+              "jours": 2
+            },
+            {
+              "type": "note",
+              "valeur": -0.1
+            }
+          ]
+        }
+      ],
+      "lecon": "Les inspecteurs du MAPAQ peuvent entrer sans préavis. Une personne formée en hygiène et salubrité, des registres à jour et de bonnes pratiques quotidiennes sont la meilleure préparation. Les résultats d'inspection sont publics."
+    },
+    {
+      "id": "volEtalage",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Vol à l’étalage organisé",
+      "description": "Ton inventaire montre qu’il manque beaucoup de marchandise : un groupe vole régulièrement dans {commerce}.",
+      "condition": "vitrine",
+      "secteurs": ["vetements", "epicerie", "cafe"],
+      "cible": "aleatoire",
+      "choixParDefaut": "rien",
+      "choix": [
+        {
+          "id": "cameras",
+          "libelle": "Installer des caméras (2 500 $)",
+          "explication": "Un effet dissuasif durable.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "entretien",
+              "montant": 2500,
+              "libelle": "Caméras de surveillance"
+            },
+            {
+              "type": "stockPerdu",
+              "proportion": 0.03,
+              "libelle": "Marchandise volée"
+            }
+          ]
+        },
+        {
+          "id": "agent",
+          "libelle": "Embaucher un agent de sécurité pour un mois (1 800 $)",
+          "explication": "Efficace à court terme seulement.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 1800,
+              "libelle": "Agence de sécurité"
+            },
+            {
+              "type": "stockPerdu",
+              "proportion": 0.03,
+              "libelle": "Marchandise volée"
+            }
+          ]
+        },
+        {
+          "id": "rien",
+          "libelle": "Ne rien faire",
+          "explication": "Les vols continuent quelques mois.",
+          "effets": [
+            {
+              "type": "stockPerdu",
+              "proportion": 0.05,
+              "libelle": "Marchandise volée"
+            },
+            {
+              "type": "pertesRecurrentes",
+              "montant": 400,
+              "mois": 3,
+              "libelle": "Vol à l’étalage"
+            }
+          ]
+        }
+      ],
+      "lecon": "La « démarque inconnue » (vols, erreurs, bris) coûte en moyenne environ 1,5 à 2 % des ventes dans le commerce de détail. Elle n'apparaît qu'à l'inventaire : d'où l'importance de compter régulièrement."
+    },
+    {
+      "id": "cyberattaque",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Rançongiciel",
+      "description": "Un rançongiciel a chiffré tes ordinateurs et ta liste de clients. Les pirates exigent 3 000 $ en cryptomonnaie.",
+      "condition": "toujours",
+      "poidsSecteurs": {
+        "enLigne": 2.5
+      },
+      "cible": "aleatoire",
+      "choixParDefaut": "zero",
+      "choix": [
+        {
+          "id": "payer",
+          "libelle": "Payer la rançon",
+          "explication": "Rien ne garantit que les pirates tiendront parole, et tu finances le crime.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "sinistres",
+              "montant": 3000,
+              "libelle": "Rançon payée à des pirates"
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.6,
+              "siOui": [],
+              "siNon": [
+                {
+                  "type": "fermeture",
+                  "jours": 2
+                },
+                {
+                  "type": "capacite",
+                  "facteur": 0.9
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "expert",
+          "libelle": "Restaurer les sauvegardes avec un expert (1 800 $)",
+          "explication": "La meilleure option… si les sauvegardes existent et sont à jour.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 1800,
+              "libelle": "Expert en sécurité informatique"
+            },
+            {
+              "type": "fermeture",
+              "jours": 1
+            }
+          ]
+        },
+        {
+          "id": "zero",
+          "libelle": "Tout recommencer à zéro",
+          "explication": "Aucun coût direct, mais tu perds des données et des journées de travail.",
+          "effets": [
+            {
+              "type": "fermeture",
+              "jours": 3
+            },
+            {
+              "type": "capacite",
+              "facteur": 0.85
+            },
+            {
+              "type": "notoriete",
+              "valeur": -0.02
+            }
+          ]
+        }
+      ],
+      "lecon": "Copies de sauvegarde régulières et hors ligne, mots de passe forts et double authentification sont les meilleures protections. La Loi 25 oblige aussi à tenir un registre des incidents de confidentialité et à aviser la Commission d'accès à l'information en cas de risque de préjudice sérieux."
+    },
+    {
+      "id": "erreurPaie",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Erreur de paie",
+      "description": "Ton logiciel de paie a oublié de payer les heures supplémentaires de deux employés depuis trois mois.",
+      "condition": "employes2",
+      "cible": "aleatoire",
+      "choixParDefaut": "corriger",
+      "choix": [
+        {
+          "id": "corriger",
+          "libelle": "Payer les montants dus avec des excuses",
+          "explication": "L’erreur est réparée et la confiance aussi.",
+          "effets": [
+            {
+              "type": "prime",
+              "montant": 600
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 1
+            }
+          ]
+        },
+        {
+          "id": "avenir",
+          "libelle": "Corriger seulement pour l’avenir",
+          "explication": "Tu économises tout de suite… jusqu’à la plainte.",
+          "effets": [
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -6
+            },
+            {
+              "type": "risque",
+              "probabilite": 0.5,
+              "delaiMois": 3,
+              "code": "plainteCNT",
+              "effets": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 1200,
+                  "libelle": "Pénalité de la CNESST (normes du travail)"
+                },
+                {
+                  "type": "prime",
+                  "montant": 600
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Les heures au-delà de 40 heures par semaine sont payées à 150 % (Loi sur les normes du travail). Un salarié peut porter plainte à la CNESST, qui réclame les sommes dues plus une indemnité."
+    },
+    {
+      "id": "chantier",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Chantier devant ton commerce",
+      "description": "La ville refait la chaussée et les égouts devant {commerce} pendant trois mois. Des cônes orange partout!",
+      "condition": "vitrine",
+      "cible": "aleatoire",
+      "choixParDefaut": "rien",
+      "choix": [
+        {
+          "id": "promotion",
+          "libelle": "Lancer une campagne « On reste ouvert! » (800 $)",
+          "explication": "Tu rappelles aux clients que tu es accessible.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "publicite",
+              "montant": 800,
+              "libelle": "Campagne « On reste ouvert! »"
+            },
+            {
+              "type": "demande",
+              "facteur": 0.85,
+              "mois": 3,
+              "libelle": "Chantier de la ville"
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.02
+            }
+          ]
+        },
+        {
+          "id": "aide",
+          "libelle": "Demander l’aide financière de la ville",
+          "explication": "Plusieurs villes, dont Montréal, indemnisent les commerçants touchés par des travaux majeurs. Il faut monter un dossier.",
+          "effets": [
+            {
+              "type": "demande",
+              "facteur": 0.8,
+              "mois": 3,
+              "libelle": "Chantier de la ville"
+            },
+            {
+              "type": "heuresProprietaire",
+              "valeur": 3
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.7,
+              "siOui": [
+                {
+                  "type": "encaissement",
+                  "montant": 4000,
+                  "categorie": "subvention",
+                  "libelle": "Aide financière de la ville (travaux majeurs)"
+                }
+              ],
+              "siNon": []
+            }
+          ]
+        },
+        {
+          "id": "rien",
+          "libelle": "Ne rien faire",
+          "explication": "Les clients prennent l’habitude d’aller ailleurs.",
+          "effets": [
+            {
+              "type": "demande",
+              "facteur": 0.78,
+              "mois": 3,
+              "libelle": "Chantier de la ville"
+            }
+          ]
+        }
+      ],
+      "lecon": "Les travaux publics peuvent faire chuter l'achalandage d'un commerce pendant des mois. Il existe des programmes d'aide pour les commerçants touchés; encore faut-il les connaître et les demander."
+    },
+    {
+      "id": "mauvaisAvisViral",
+      "categorie": "marketing",
+      "nature": "negatif",
+      "titre": "Un mauvais avis devient viral",
+      "description": "Un client mécontent a publié une vidéo sur {commerce}; elle a été vue 80 000 fois.",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "ignorer",
+      "choix": [
+        {
+          "id": "empathie",
+          "libelle": "Répondre publiquement avec empathie et inviter le client à revenir",
+          "explication": "Les internautes voient un commerçant à l’écoute.",
+          "effets": [
+            {
+              "type": "note",
+              "valeur": -0.05
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.01
+            },
+            {
+              "type": "image",
+              "valeur": -0.01
+            }
+          ]
+        },
+        {
+          "id": "secher",
+          "libelle": "Répondre sèchement pour rétablir les faits",
+          "explication": "Même si tu as raison, une réponse agressive alimente la controverse.",
+          "effets": [
+            {
+              "type": "note",
+              "valeur": -0.25
+            },
+            {
+              "type": "image",
+              "valeur": -0.05
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.03
+            }
+          ]
+        },
+        {
+          "id": "ignorer",
+          "libelle": "Ignorer la vidéo",
+          "explication": "Le silence laisse le client raconter son histoire.",
+          "effets": [
+            {
+              "type": "note",
+              "valeur": -0.15
+            },
+            {
+              "type": "image",
+              "valeur": -0.03
+            }
+          ]
+        }
+      ],
+      "lecon": "En gestion de crise, on répond vite, avec calme et empathie, et on règle le problème hors ligne. Une réponse agressive transforme un client mécontent en controverse."
+    },
+    {
+      "id": "articleJournal",
+      "categorie": "marketing",
+      "nature": "positif",
+      "titre": "Un journaliste veut faire ton portrait",
+      "description": "Un journaliste du journal local veut écrire un article sur {commerce}.",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "accepter",
+          "libelle": "Accepter l’entrevue",
+          "explication": "De la publicité gratuite et crédible.",
+          "effets": [
+            {
+              "type": "notoriete",
+              "valeur": 0.05
+            },
+            {
+              "type": "heuresProprietaire",
+              "valeur": 2
+            }
+          ]
+        },
+        {
+          "id": "degustation",
+          "libelle": "Accepter et organiser une démonstration (300 $)",
+          "explication": "L’article sera plus vivant, avec des photos.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "publicite",
+              "montant": 300,
+              "libelle": "Démonstration pour la presse"
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.06
+            },
+            {
+              "type": "image",
+              "valeur": 0.03
+            }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Refuser, faute de temps",
+          "explication": "Une occasion ratée.",
+          "effets": []
+        }
+      ],
+      "lecon": "Les relations de presse (« publicité gratuite ») sont souvent plus crédibles qu'une annonce payée. Avoir une histoire à raconter (fondateur, produits d'ici) aide à attirer les médias."
+    },
+    {
+      "id": "influenceur",
+      "categorie": "marketing",
+      "nature": "positif",
+      "titre": "Proposition d’une influenceuse",
+      "description": "Une influenceuse locale (45 000 abonnés) propose de parler de {commerce} contre 1 500 $ ou des produits gratuits.",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "payer",
+          "libelle": "Payer 1 500 $ (publication identifiée comme publicité)",
+          "explication": "Une campagne claire et légale.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "publicite",
+              "montant": 1500,
+              "libelle": "Partenariat avec une influenceuse"
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.05
+            }
+          ]
+        },
+        {
+          "id": "produits",
+          "libelle": "Offrir seulement des produits gratuits",
+          "explication": "Moins cher, mais elle n’est pas obligée d’en parler beaucoup.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "publicite",
+              "montant": 300,
+              "libelle": "Produits offerts à une influenceuse"
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.5,
+              "siOui": [
+                {
+                  "type": "notoriete",
+                  "valeur": 0.04
+                }
+              ],
+              "siNon": [
+                {
+                  "type": "notoriete",
+                  "valeur": 0.01
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Refuser",
+          "explication": "Aucun risque, aucune visibilité.",
+          "effets": []
+        }
+      ],
+      "lecon": "Une publication commanditée doit être clairement identifiée comme publicité (Bureau de la concurrence, Normes canadiennes de la publicité). Les petits influenceurs locaux ont souvent une communauté plus engagée."
+    },
+    {
+      "id": "faussesCritiques",
+      "categorie": "marketing",
+      "nature": "negatif",
+      "titre": "Des critiques suspectes",
+      "description": "Une vague d’avis à une étoile, tous publiés le même soir par des comptes sans photo.",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "rien",
+      "choix": [
+        {
+          "id": "signaler",
+          "libelle": "Signaler les avis à la plateforme",
+          "explication": "La plateforme en retire une bonne partie.",
+          "effets": [
+            {
+              "type": "note",
+              "valeur": -0.05
+            },
+            {
+              "type": "heuresProprietaire",
+              "valeur": 1
+            }
+          ]
+        },
+        {
+          "id": "acheter",
+          "libelle": "Acheter de faux avis positifs pour compenser (200 $)",
+          "explication": "Illégal et risqué : les plateformes détectent ces manœuvres.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "publicite",
+              "montant": 200,
+              "libelle": "Achat d’avis"
+            },
+            {
+              "type": "risque",
+              "probabilite": 0.4,
+              "delaiMois": 2,
+              "code": "fauxAvisDecouverts",
+              "effets": [
+                {
+                  "type": "note",
+                  "valeur": -0.3
+                },
+                {
+                  "type": "image",
+                  "valeur": -0.08
+                },
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 1000,
+                  "libelle": "Sanction pour faux avis"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "rien",
+          "libelle": "Ne rien faire",
+          "explication": "Les faux avis restent en ligne.",
+          "effets": [
+            {
+              "type": "note",
+              "valeur": -0.2
+            }
+          ]
+        }
+      ],
+      "lecon": "Publier ou acheter de faux avis est une pratique commerciale trompeuse interdite par la Loi sur la concurrence. La seule vraie défense : beaucoup d'avis authentiques de clients satisfaits."
+    },
+    {
+      "id": "festival",
+      "categorie": "marketing",
+      "nature": "positif",
+      "titre": "Festival en ville",
+      "description": "Un grand festival se tient à deux rues de {commerce} pendant 10 jours.",
+      "condition": "vitrine",
+      "mois": [6, 7, 8],
+      "cible": "aleatoire",
+      "choixParDefaut": "normal",
+      "choix": [
+        {
+          "id": "heures",
+          "libelle": "Prolonger les heures et payer des heures supplémentaires (1 200 $)",
+          "explication": "Tu sers tous les festivaliers, mais les heures supplémentaires coûtent 150 %.",
+          "effets": [
+            {
+              "type": "prime",
+              "montant": 1200
+            },
+            {
+              "type": "demande",
+              "facteur": 1.18,
+              "mois": 1,
+              "libelle": "Festival en ville"
+            },
+            {
+              "type": "capacite",
+              "facteur": 1.15
+            }
+          ]
+        },
+        {
+          "id": "kiosque",
+          "libelle": "Installer un kiosque sur le site (2 500 $)",
+          "explication": "Une grande visibilité auprès de nouveaux clients.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "publicite",
+              "montant": 2500,
+              "libelle": "Kiosque au festival"
+            },
+            {
+              "type": "demande",
+              "facteur": 1.12,
+              "mois": 1,
+              "libelle": "Festival en ville"
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.04
+            }
+          ]
+        },
+        {
+          "id": "normal",
+          "libelle": "Fonctionner normalement",
+          "explication": "Tu profites un peu de l’achalandage.",
+          "effets": [
+            {
+              "type": "demande",
+              "facteur": 1.1,
+              "mois": 1,
+              "libelle": "Festival en ville"
+            }
+          ]
+        }
+      ],
+      "lecon": "Les pointes de demande se préparent : personnel, stocks et heures d'ouverture. Sinon, la capacité limite les ventes et les clients repartent déçus."
+    },
+    {
+      "id": "commanditeDemande",
+      "categorie": "marketing",
+      "nature": "neutre",
+      "titre": "Demande de commandite",
+      "description": "L’équipe de hockey mineur du quartier demande une commandite pour ses chandails.",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "accepter",
+          "libelle": "Commanditer l’équipe (1 000 $)",
+          "explication": "Ton logo sur les chandails toute la saison.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "publicite",
+              "montant": 1000,
+              "libelle": "Commandite du hockey mineur"
+            },
+            {
+              "type": "image",
+              "valeur": 0.03
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.02
+            }
+          ]
+        },
+        {
+          "id": "produits",
+          "libelle": "Offrir des produits pour la fête de fin de saison (200 $)",
+          "explication": "Un geste apprécié et peu coûteux.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "publicite",
+              "montant": 200,
+              "libelle": "Produits offerts à une équipe"
+            },
+            {
+              "type": "image",
+              "valeur": 0.01
+            }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Refuser poliment",
+          "explication": "Aucun coût.",
+          "effets": []
+        }
+      ],
+      "lecon": "La commandite bâtit l'image de marque dans la communauté. Une commandite en échange de visibilité est une dépense de publicité déductible, alors qu'un don sans contrepartie à un organisme de bienfaisance donne plutôt droit à un crédit ou à une déduction pour dons."
+    },
+    {
+      "id": "emissionTele",
+      "categorie": "marketing",
+      "nature": "positif",
+      "titre": "Tournage d’une émission de télé",
+      "description": "Une émission de télé populaire veut tourner une scène dans {commerce}.",
+      "condition": "pasEnLigne",
+      "poids": 0.5,
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "journee",
+          "libelle": "Accepter et fermer une journée",
+          "explication": "Un cachet et une visibilité exceptionnelle.",
+          "effets": [
+            {
+              "type": "fermeture",
+              "jours": 1
+            },
+            {
+              "type": "encaissement",
+              "montant": 1500,
+              "categorie": "autre",
+              "libelle": "Cachet de tournage"
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.07
+            }
+          ]
+        },
+        {
+          "id": "soir",
+          "libelle": "Accepter seulement le soir, après la fermeture",
+          "explication": "Moins de cachet, mais aucune vente perdue. Longue soirée pour toi!",
+          "effets": [
+            {
+              "type": "heuresProprietaire",
+              "valeur": 4
+            },
+            {
+              "type": "encaissement",
+              "montant": 1000,
+              "categorie": "autre",
+              "libelle": "Cachet de tournage"
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.05
+            }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Refuser",
+          "explication": "Tu évites le dérangement.",
+          "effets": []
+        }
+      ],
+      "lecon": "Le placement de produit et les tournages offrent une visibilité difficile à acheter. Le cachet reçu est un revenu imposable."
+    },
+    {
+      "id": "tendanceVirale",
+      "categorie": "marketing",
+      "nature": "positif",
+      "titre": "Ton produit devient viral",
+      "description": "Une vidéo sur un de tes produits fait le tour des réseaux sociaux. Les clients affluent!",
+      "condition": "toujours",
+      "poids": 0.6,
+      "cible": "aleatoire",
+      "choixParDefaut": "rien",
+      "choix": [
+        {
+          "id": "capacite",
+          "libelle": "Payer des heures supplémentaires et commander plus (800 $)",
+          "explication": "Tu sers la vague au lieu de la subir.",
+          "effets": [
+            {
+              "type": "prime",
+              "montant": 800
+            },
+            {
+              "type": "capacite",
+              "facteur": 1.1
+            },
+            {
+              "type": "demande",
+              "facteur": 1.25,
+              "mois": 1,
+              "libelle": "Produit viral"
+            }
+          ]
+        },
+        {
+          "id": "prix",
+          "libelle": "Augmenter les prix de 10 % pendant la vague",
+          "explication": "Plus de marge… et des clients qui se sentent exploités.",
+          "effets": [
+            {
+              "type": "prix",
+              "facteur": 1.1
+            },
+            {
+              "type": "demande",
+              "facteur": 1.15,
+              "mois": 1,
+              "libelle": "Produit viral"
+            },
+            {
+              "type": "image",
+              "valeur": -0.02
+            }
+          ]
+        },
+        {
+          "id": "rien",
+          "libelle": "Ne rien changer",
+          "explication": "Attention aux files d’attente et aux ruptures.",
+          "effets": [
+            {
+              "type": "demande",
+              "facteur": 1.25,
+              "mois": 1,
+              "libelle": "Produit viral"
+            }
+          ]
+        }
+      ],
+      "lecon": "Un effet de mode est souvent éphémère : il faut de la capacité et des stocks pour en profiter, sans s'engager dans des coûts permanents."
+    },
+    {
+      "id": "plainteOqlf",
+      "categorie": "juridique",
+      "nature": "negatif",
+      "titre": "Plainte à l’OQLF",
+      "description": "Un client a porté plainte à l'Office québécois de la langue française : une partie de ton affichage et de ton site Web n'est pas en français.",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "ignorer",
+      "choix": [
+        {
+          "id": "corriger",
+          "libelle": "Corriger rapidement (affiches et site : 900 $)",
+          "explication": "L’Office ferme le dossier quand l’entreprise se conforme.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 900,
+              "libelle": "Traduction et nouvel affichage"
+            }
+          ]
+        },
+        {
+          "id": "contester",
+          "libelle": "Contester la plainte",
+          "explication": "La Charte est claire : le français doit être nettement prédominant.",
+          "effets": [
+            {
+              "type": "risque",
+              "probabilite": 0.6,
+              "delaiMois": 2,
+              "code": "amendeOqlf",
+              "effets": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 3000,
+                  "libelle": "Amende (Charte de la langue française)"
+                },
+                {
+                  "type": "depense",
+                  "categorie": "honoraires",
+                  "montant": 900,
+                  "libelle": "Traduction et nouvel affichage"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ignorer",
+          "libelle": "Ignorer la lettre",
+          "explication": "L’Office peut transmettre le dossier au Directeur des poursuites criminelles et pénales.",
+          "effets": [
+            {
+              "type": "risque",
+              "probabilite": 0.8,
+              "delaiMois": 2,
+              "code": "amendeOqlf",
+              "effets": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 3000,
+                  "libelle": "Amende (Charte de la langue française)"
+                },
+                {
+                  "type": "depense",
+                  "categorie": "honoraires",
+                  "montant": 900,
+                  "libelle": "Traduction et nouvel affichage"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "La Charte de la langue française exige que le français soit nettement prédominant dans l'affichage public et présent dans les sites Web, les catalogues et les emballages. Après une plainte, l'OQLF accompagne d'abord l'entreprise; les amendes viennent si elle ne se conforme pas."
+    },
+    {
+      "id": "plainteCNT",
+      "categorie": "juridique",
+      "nature": "negatif",
+      "titre": "Plainte d’un ancien employé",
+      "description": "Un ancien employé dépose une plainte à la CNESST : il affirme ne pas avoir reçu toute son indemnité de vacances.",
+      "condition": "departRecent",
+      "cible": "aleatoire",
+      "choixParDefaut": "ignorer",
+      "choix": [
+        {
+          "id": "verifier",
+          "libelle": "Vérifier les registres et payer s’il a raison",
+          "explication": "Une erreur se corrige à peu de frais.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "divers",
+              "montant": 650,
+              "libelle": "Indemnité de vacances due à un ancien employé"
+            }
+          ]
+        },
+        {
+          "id": "avocat",
+          "libelle": "Contester avec un avocat (1 500 $)",
+          "explication": "Coûteux, et inutile si l’employé a raison.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 1500,
+              "libelle": "Avocat (plainte aux normes du travail)"
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.5,
+              "siOui": [],
+              "siNon": [
+                {
+                  "type": "depense",
+                  "categorie": "divers",
+                  "montant": 650,
+                  "libelle": "Indemnité de vacances due"
+                },
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 500,
+                  "libelle": "Indemnité additionnelle (CNESST)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ignorer",
+          "libelle": "Ignorer la plainte",
+          "explication": "La CNESST peut réclamer les sommes en justice au nom de l’employé.",
+          "effets": [
+            {
+              "type": "risque",
+              "probabilite": 0.9,
+              "delaiMois": 2,
+              "code": "plainteCNT",
+              "effets": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 1500,
+                  "libelle": "Pénalité de la CNESST (normes du travail)"
+                },
+                {
+                  "type": "depense",
+                  "categorie": "divers",
+                  "montant": 650,
+                  "libelle": "Indemnité de vacances due"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "L'indemnité de vacances (4 %, puis 6 % après 3 ans) est due même quand l'employé quitte. Tenir un registre de paie exact est une obligation de l'employeur."
+    },
+    {
+      "id": "accidentTravail",
+      "categorie": "juridique",
+      "nature": "negatif",
+      "titre": "Accident de travail",
+      "description": "{nom} s’est blessé en manipulant de l’équipement et sera absent trois semaines.",
+      "condition": "employes1",
+      "poidsSecteurs": {
+        "paysagement": 2.5,
+        "atelier": 2.5
+      },
+      "cible": "aleatoire",
+      "choixParDefaut": "declarer",
+      "choix": [
+        {
+          "id": "declarer",
+          "libelle": "Déclarer l’accident à la CNESST et accompagner l’employé",
+          "explication": "La CNESST verse les indemnités après les 14 premiers jours, que l’employeur paie à 90 %.",
+          "effets": [
+            {
+              "type": "capacite",
+              "facteur": 0.93
+            },
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": 5
+            },
+            {
+              "type": "moral",
+              "cible": "autres",
+              "valeur": 2
+            }
+          ]
+        },
+        {
+          "id": "assignation",
+          "libelle": "Proposer une assignation temporaire (tâches légères)",
+          "explication": "Permis si le médecin l’autorise : l’employé reste actif et l’équipe moins débordée.",
+          "effets": [
+            {
+              "type": "capacite",
+              "facteur": 0.97
+            },
+            {
+              "type": "moral",
+              "cible": "concerne",
+              "valeur": 2
+            }
+          ]
+        },
+        {
+          "id": "cacher",
+          "libelle": "Lui demander de ne pas déclarer et le payer en argent comptant",
+          "explication": "Illégal : l’employé perd sa protection et l’entreprise risque gros.",
+          "effets": [
+            {
+              "type": "risque",
+              "probabilite": 0.5,
+              "delaiMois": 3,
+              "code": "accidentNonDeclare",
+              "effets": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 3000,
+                  "libelle": "Amende de la CNESST (accident non déclaré)"
+                },
+                {
+                  "type": "moral",
+                  "cible": "tous",
+                  "valeur": -8
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Tout accident du travail doit être déclaré (Loi sur les accidents du travail et les maladies professionnelles). L'employeur verse 90 % du salaire net pendant les 14 premiers jours; la CNESST prend ensuite le relais. Le dossier d'accidents influence la cotisation future."
+    },
+    {
+      "id": "poursuiteClient",
+      "categorie": "juridique",
+      "nature": "negatif",
+      "titre": "Mise en demeure d’une cliente",
+      "description": "Une cliente dit avoir glissé sur un plancher mouillé dans {commerce} et réclame 8 000 $.",
+      "condition": "vitrine",
+      "cible": "aleatoire",
+      "choixParDefaut": "assureur",
+      "choix": [
+        {
+          "id": "assureur",
+          "libelle": "Transmettre le dossier à ton assureur",
+          "explication": "C’est exactement le rôle de l’assurance responsabilité civile.",
+          "effets": [
+            {
+              "type": "si",
+              "condition": "assure",
+              "alors": [
+                {
+                  "type": "depense",
+                  "categorie": "sinistres",
+                  "montant": 500,
+                  "libelle": "Franchise d’assurance responsabilité"
+                }
+              ],
+              "sinon": [
+                {
+                  "type": "depense",
+                  "categorie": "sinistres",
+                  "montant": 6000,
+                  "libelle": "Règlement d’une réclamation (aucune assurance)"
+                },
+                {
+                  "type": "depense",
+                  "categorie": "honoraires",
+                  "montant": 1200,
+                  "libelle": "Avocat"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "entente",
+          "libelle": "Négocier une entente à l’amiable (2 500 $)",
+          "explication": "Rapide et discret.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "sinistres",
+              "montant": 2500,
+              "libelle": "Entente à l’amiable avec une cliente"
+            }
+          ]
+        },
+        {
+          "id": "ignorer",
+          "libelle": "Ignorer la mise en demeure",
+          "explication": "La cliente peut te poursuivre aux petites créances (jusqu’à 15 000 $).",
+          "effets": [
+            {
+              "type": "risque",
+              "probabilite": 0.7,
+              "delaiMois": 3,
+              "code": "poursuiteClient",
+              "effets": [
+                {
+                  "type": "depense",
+                  "categorie": "sinistres",
+                  "montant": 8000,
+                  "libelle": "Jugement : dommages à une cliente"
+                },
+                {
+                  "type": "depense",
+                  "categorie": "honoraires",
+                  "montant": 1500,
+                  "libelle": "Avocat"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Une mise en demeure ne doit jamais être ignorée. L'assurance responsabilité civile protège l'entreprise contre ce type de réclamation; sans elle, une seule poursuite peut coûter plus qu'une année de profit."
+    },
+    {
+      "id": "inspectionCnesst",
+      "categorie": "juridique",
+      "nature": "negatif",
+      "titre": "Visite d’un inspecteur de la CNESST",
+      "description": "Un inspecteur constate des risques : protecteurs de machines retirés, équipement de protection mal utilisé.",
+      "condition": "employes1",
+      "poidsSecteurs": {
+        "paysagement": 2,
+        "atelier": 2.5,
+        "cafe": 0.6,
+        "epicerie": 0.6,
+        "vetements": 0.3,
+        "enLigne": 0.6,
+        "coiffure": 0.4
+      },
+      "cible": "aleatoire",
+      "choixParDefaut": "delai",
+      "choix": [
+        {
+          "id": "corriger",
+          "libelle": "Corriger immédiatement (2 000 $)",
+          "explication": "Le dossier est fermé et l’équipe se sent en sécurité.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "entretien",
+              "montant": 2000,
+              "libelle": "Mise aux normes de sécurité"
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 2
+            }
+          ]
+        },
+        {
+          "id": "delai",
+          "libelle": "Demander un délai pour corriger",
+          "explication": "L’inspecteur l’accorde, mais revient vérifier.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "entretien",
+              "montant": 2000,
+              "libelle": "Mise aux normes de sécurité"
+            },
+            {
+              "type": "risque",
+              "probabilite": 0.3,
+              "delaiMois": 2,
+              "code": "avisCnesst",
+              "effets": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 1500,
+                  "libelle": "Constat d’infraction (santé et sécurité)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "contester",
+          "libelle": "Contester l’avis de correction",
+          "explication": "Les risques sont réels : la contestation a peu de chances.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 800,
+              "libelle": "Avocat (contestation)"
+            },
+            {
+              "type": "depense",
+              "categorie": "amendes",
+              "montant": 1500,
+              "libelle": "Constat d’infraction (santé et sécurité)"
+            },
+            {
+              "type": "depense",
+              "categorie": "entretien",
+              "montant": 2000,
+              "libelle": "Mise aux normes de sécurité"
+            }
+          ]
+        }
+      ],
+      "lecon": "La Loi sur la santé et la sécurité du travail oblige l'employeur à éliminer les dangers à la source. La prévention coûte moins cher que les accidents, les amendes et la hausse de la cotisation."
+    },
+    {
+      "id": "marqueCommerce",
+      "categorie": "juridique",
+      "nature": "negatif",
+      "titre": "Conflit de marque de commerce",
+      "description": "Une entreprise de Toronto, qui a enregistré une marque semblable à ton nom, t’envoie une mise en demeure.",
+      "condition": "anciennete6",
+      "poids": 0.5,
+      "cible": "aleatoire",
+      "choixParDefaut": "ignorer",
+      "choix": [
+        {
+          "id": "negocier",
+          "libelle": "Consulter un agent de marques et négocier (2 500 $)",
+          "explication": "Souvent, une entente de coexistence règle le conflit.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 2500,
+              "libelle": "Agent de marques de commerce"
+            }
+          ]
+        },
+        {
+          "id": "changer",
+          "libelle": "Changer de nom et d’enseigne (6 000 $)",
+          "explication": "Tu repars à neuf, mais une partie des clients ne te reconnaît plus.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 6000,
+              "libelle": "Nouveau nom, enseigne et image"
+            },
+            {
+              "type": "notoriete",
+              "valeur": -0.05
+            }
+          ]
+        },
+        {
+          "id": "ignorer",
+          "libelle": "Ignorer la lettre",
+          "explication": "Un procès en contrefaçon de marque coûte très cher.",
+          "effets": [
+            {
+              "type": "hasard",
+              "probabilite": 0.4,
+              "siOui": [],
+              "siNon": [
+                {
+                  "type": "depense",
+                  "categorie": "honoraires",
+                  "montant": 9000,
+                  "libelle": "Frais juridiques (marque de commerce)"
+                },
+                {
+                  "type": "notoriete",
+                  "valeur": -0.03
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Immatriculer un nom au Registraire des entreprises ne protège pas une marque. Il faut vérifier les marques existantes et enregistrer la sienne auprès de l'Office de la propriété intellectuelle du Canada (OPIC)."
+    },
+    {
+      "id": "loi25Incident",
+      "categorie": "juridique",
+      "nature": "negatif",
+      "titre": "Fuite de renseignements personnels",
+      "description": "Ton fournisseur de site Web t’avise qu’une faille a exposé les courriels et les adresses de tes clients.",
+      "condition": "enLigneOuSite",
+      "cible": "aleatoire",
+      "choixParDefaut": "cacher",
+      "choix": [
+        {
+          "id": "aviser",
+          "libelle": "Aviser les clients et la Commission d’accès à l’information",
+          "explication": "La transparence est obligatoire quand le risque de préjudice est sérieux.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 1200,
+              "libelle": "Conseils juridiques (Loi 25)"
+            },
+            {
+              "type": "image",
+              "valeur": -0.01
+            }
+          ]
+        },
+        {
+          "id": "surveillance",
+          "libelle": "Aviser et offrir une surveillance de crédit (2 500 $)",
+          "explication": "Un geste qui rassure les clients.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 2500,
+              "libelle": "Surveillance de crédit offerte aux clients"
+            },
+            {
+              "type": "image",
+              "valeur": 0.01
+            }
+          ]
+        },
+        {
+          "id": "cacher",
+          "libelle": "Corriger la faille sans rien dire",
+          "explication": "Illégal si le risque est sérieux, et ça finit souvent par se savoir.",
+          "effets": [
+            {
+              "type": "risque",
+              "probabilite": 0.4,
+              "delaiMois": 3,
+              "code": "loi25Sanction",
+              "effets": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 5000,
+                  "libelle": "Sanction administrative (Loi 25)"
+                },
+                {
+                  "type": "image",
+                  "valeur": -0.06
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Depuis la Loi 25, une entreprise doit tenir un registre des incidents de confidentialité et aviser la Commission d'accès à l'information et les personnes touchées quand il y a un risque de préjudice sérieux. Les sanctions peuvent être élevées."
+    },
+    {
+      "id": "protectionConsommateur",
+      "categorie": "juridique",
+      "nature": "negatif",
+      "titre": "Plainte à l’Office de la protection du consommateur",
+      "description": "Un client affirme que ta promotion annoncée ne s’appliquait pas à tous les produits, contrairement à ta publicité.",
+      "condition": "promotionRecente",
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "honorer",
+          "libelle": "Honorer le prix annoncé et corriger la publicité",
+          "explication": "Le client repart content et ta réputation est sauve.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "divers",
+              "montant": 300,
+              "libelle": "Rabais honorés"
+            },
+            {
+              "type": "image",
+              "valeur": 0.01
+            }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Refuser : c’était écrit en petits caractères",
+          "explication": "Une restriction cachée peut être une représentation trompeuse.",
+          "effets": [
+            {
+              "type": "risque",
+              "probabilite": 0.5,
+              "delaiMois": 2,
+              "code": "amendeOpc",
+              "effets": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 2000,
+                  "libelle": "Amende (Loi sur la protection du consommateur)"
+                },
+                {
+                  "type": "image",
+                  "valeur": -0.03
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "La Loi sur la protection du consommateur interdit les représentations fausses ou trompeuses. Un commerçant doit respecter le prix annoncé; les restrictions importantes doivent être claires."
+    },
+    {
+      "id": "verificationFiscale",
+      "categorie": "fiscal",
+      "nature": "negatif",
+      "titre": "Vérification fiscale",
+      "description": "Revenu Québec t’avise d’une vérification de tes déclarations de TPS et de TVQ des deux dernières années.",
+      "condition": "anciennete12",
+      "cible": "aleatoire",
+      "choixParDefaut": "seul",
+      "choix": [
+        {
+          "id": "comptable",
+          "libelle": "Engager ton comptable pour préparer le dossier (1 500 $)",
+          "explication": "Des pièces justificatives bien classées réduisent le risque d’ajustement.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 1500,
+              "libelle": "Comptable (vérification fiscale)"
+            },
+            {
+              "type": "si",
+              "condition": "compteBancaire",
+              "alors": [],
+              "sinon": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 2500,
+                  "libelle": "Cotisation : dépenses non justifiées, intérêts et pénalités"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "seul",
+          "libelle": "Gérer seul la vérification",
+          "explication": "Tu économises les honoraires, mais tu y passes beaucoup de temps.",
+          "effets": [
+            {
+              "type": "heuresProprietaire",
+              "valeur": 8
+            },
+            {
+              "type": "si",
+              "condition": "compteBancaire",
+              "alors": [
+                {
+                  "type": "hasard",
+                  "probabilite": 0.3,
+                  "siOui": [
+                    {
+                      "type": "depense",
+                      "categorie": "amendes",
+                      "montant": 1000,
+                      "libelle": "Cotisation : intérêts et pénalités"
+                    }
+                  ],
+                  "siNon": []
+                }
+              ],
+              "sinon": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 3500,
+                  "libelle": "Cotisation : dépenses non justifiées, intérêts et pénalités"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Il faut conserver les livres et les pièces justificatives pendant 6 ans. Un compte bancaire distinct et des registres en ordre rendent une vérification simple; mélanger dépenses personnelles et d'affaires mène à des ajustements, des intérêts et des pénalités."
+    },
+    {
+      "id": "tentationComptant",
+      "categorie": "fiscal",
+      "nature": "neutre",
+      "titre": "Ventes au comptant non déclarées?",
+      "description": "Un ami entrepreneur te suggère de ne pas déclarer une partie des ventes payées comptant : « tout le monde le fait ».",
+      "condition": "pasEnLigne",
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "refuser",
+          "libelle": "Refuser : tout déclarer",
+          "explication": "La seule option légale.",
+          "effets": []
+        },
+        {
+          "id": "accepter",
+          "libelle": "Accepter pour quelques mois",
+          "explication": "Tu « économises » des taxes et de l’impôt… jusqu’à ce que ça se sache.",
+          "effets": [
+            {
+              "type": "encaissement",
+              "montant": 2000,
+              "categorie": "autre",
+              "libelle": "Taxes et impôts éludés (ventes non déclarées)"
+            },
+            {
+              "type": "risque",
+              "probabilite": 0.35,
+              "delaiMois": 6,
+              "code": "evasionDecouverte",
+              "effets": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 9000,
+                  "libelle": "Cotisation pour revenus non déclarés : taxes, impôt, pénalités de 50 % et intérêts"
+                },
+                {
+                  "type": "image",
+                  "valeur": -0.05
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Ne pas déclarer des ventes est de l'évasion fiscale : c'est illégal. Les pénalités atteignent 50 % des sommes éludées, plus les intérêts, et peuvent mener à des poursuites pénales. En restauration, Revenu Québec impose même un module d'enregistrement des ventes (MEV). La planification fiscale légale (choix de la forme juridique, salaire ou dividendes, DPA) existe : c'est elle qu'il faut utiliser."
+    },
+    {
+      "id": "hausseMargeBanque",
+      "categorie": "finance",
+      "nature": "negatif",
+      "titre": "Ta banque revoit ton dossier",
+      "description": "À cause de tes résultats récents, ta banque augmente de 1 point le taux de ta marge de crédit.",
+      "condition": "margeUtilisee",
+      "cible": "aleatoire",
+      "choixParDefaut": "accepter",
+      "choix": [
+        {
+          "id": "accepter",
+          "libelle": "Accepter",
+          "explication": "Les intérêts sur la marge augmentent.",
+          "effets": [
+            {
+              "type": "tauxMarge",
+              "ecart": 0.01
+            }
+          ]
+        },
+        {
+          "id": "magasiner",
+          "libelle": "Magasiner une autre institution (300 $)",
+          "explication": "Une autre banque pourrait t’offrir mieux… ou pas.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 300,
+              "libelle": "Frais de dossier bancaire"
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.5,
+              "siOui": [],
+              "siNon": [
+                {
+                  "type": "tauxMarge",
+                  "ecart": 0.01
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Le taux d'intérêt reflète le risque perçu par le prêteur. Des résultats en baisse et une marge de crédit toujours utilisée font monter le taux : un bon suivi de la trésorerie protège ta cote de crédit."
+    },
+    {
+      "id": "subventionSalariale",
+      "categorie": "finance",
+      "nature": "positif",
+      "titre": "Subvention salariale d’Emploi-Québec",
+      "description": "Services Québec propose une subvention salariale (environ 50 % du salaire pendant 30 semaines) pour embaucher une personne éloignée du marché du travail.",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "embaucher",
+          "libelle": "Embaucher une personne admissible",
+          "explication": "Un nouvel employé à former, en bonne partie payé par la subvention.",
+          "effets": [
+            {
+              "type": "embaucher",
+              "competence": 0.82
+            },
+            {
+              "type": "encaissement",
+              "montant": 4000,
+              "categorie": "subvention",
+              "libelle": "Subvention salariale d’Emploi-Québec"
+            }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Ne pas embaucher pour l’instant",
+          "explication": "Pas de nouvel employé.",
+          "effets": []
+        }
+      ],
+      "lecon": "La subvention salariale d'Emploi-Québec aide les entreprises qui embauchent des personnes à risque de chômage prolongé. Les conditions d'admissibilité sont vérifiées par Services Québec avant l'embauche."
+    },
+    {
+      "id": "subventionInnovation",
+      "categorie": "finance",
+      "nature": "positif",
+      "titre": "Programme d’aide à l’innovation",
+      "description": "Un conseiller te parle d’un programme qui rembourse une partie des projets d’innovation (nouvelle technologie, nouveau procédé).",
+      "condition": "anciennete6",
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "demander",
+          "libelle": "Préparer une demande avec un consultant (800 $)",
+          "explication": "Le dossier doit démontrer un vrai projet d’innovation.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 800,
+              "libelle": "Consultant (demande de subvention)"
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.6,
+              "siOui": [
+                {
+                  "type": "encaissement",
+                  "montant": 5000,
+                  "categorie": "subvention",
+                  "libelle": "Subvention à l’innovation"
+                }
+              ],
+              "siNon": []
+            }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Laisser tomber (trop de paperasse)",
+          "explication": "Aucun coût, aucune aide.",
+          "effets": []
+        }
+      ],
+      "lecon": "Plusieurs programmes publics (PARI-CNRC, Investissement Québec, crédits d'impôt) financent l'innovation des PME, avec des conditions précises. Une subvention reçue est un revenu (ou réduit le coût du bien) dans les états financiers."
+    },
+    {
+      "id": "clientNePaiePas",
+      "categorie": "finance",
+      "nature": "negatif",
+      "titre": "Un client d’affaires ne paie pas",
+      "description": "Ton plus gros client d’affaires ne répond plus et ses factures restent impayées.",
+      "condition": "clientsAffaires",
+      "cible": "aleatoire",
+      "choixParDefaut": "attendre",
+      "choix": [
+        {
+          "id": "miseEnDemeure",
+          "libelle": "Envoyer une mise en demeure (300 $)",
+          "explication": "Souvent suffisant pour être payé.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 300,
+              "libelle": "Mise en demeure"
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.6,
+              "siOui": [],
+              "siNon": [
+                {
+                  "type": "creanceClient",
+                  "mode": "radier"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "agence",
+          "libelle": "Confier le dossier à une agence de recouvrement (30 %)",
+          "explication": "Tu récupères 70 % de la créance.",
+          "effets": [
+            {
+              "type": "creanceClient",
+              "mode": "recouvrer",
+              "part": 0.7
+            }
+          ]
+        },
+        {
+          "id": "attendre",
+          "libelle": "Attendre",
+          "explication": "Plus une facture est vieille, plus elle risque de ne jamais être payée.",
+          "effets": [
+            {
+              "type": "hasard",
+              "probabilite": 0.4,
+              "siOui": [
+                {
+                  "type": "creanceClient",
+                  "mode": "radier"
+                }
+              ],
+              "siNon": []
+            }
+          ]
+        }
+      ],
+      "lecon": "Une politique de crédit (vérifier la cote, limite de crédit, relances à 30 jours) réduit les mauvaises créances. Une créance irrécouvrable est une charge, mais l'entreprise récupère la TPS et la TVQ déjà remises sur la facture."
+    },
+    {
+      "id": "offreRachat",
+      "categorie": "finance",
+      "nature": "neutre",
+      "titre": "Offre de rachat",
+      "description": "{concurrent} t’offre {prix} pour racheter ton entreprise.",
+      "condition": "offreRachat",
+      "poids": 0.6,
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "vendre",
+          "libelle": "Accepter l’offre et vendre",
+          "explication": "La partie se termine : tu encaisses le prix de vente.",
+          "effets": [
+            {
+              "type": "vente",
+              "facteur": 1
+            }
+          ]
+        },
+        {
+          "id": "negocier",
+          "libelle": "Négocier 15 % de plus",
+          "explication": "L’acheteur peut accepter… ou retirer son offre.",
+          "effets": [
+            {
+              "type": "hasard",
+              "probabilite": 0.4,
+              "siOui": [
+                {
+                  "type": "vente",
+                  "facteur": 1.15
+                }
+              ],
+              "siNon": []
+            }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Refuser et continuer",
+          "explication": "Tu crois que ton entreprise vaudra plus plus tard.",
+          "effets": []
+        }
+      ],
+      "lecon": "On évalue souvent une PME par un multiple de son BAIIA (bénéfice avant intérêts, impôts et amortissement), ajusté selon le risque et la croissance. Vendre ou continuer dépend de tes objectifs, de la valeur future attendue et de ton appétit pour le risque."
+    },
+    {
+      "id": "hausseLoyer",
+      "categorie": "finance",
+      "nature": "negatif",
+      "titre": "Le propriétaire augmente les frais communs",
+      "description": "Le propriétaire invoque la hausse des taxes foncières : ton loyer total augmenterait de 5 %.",
+      "condition": "anciennete12",
+      "cible": "aleatoire",
+      "choixParDefaut": "accepter",
+      "choix": [
+        {
+          "id": "accepter",
+          "libelle": "Accepter",
+          "explication": "Ton bail permet de refacturer les frais communs.",
+          "effets": [
+            {
+              "type": "loyer",
+              "pourcentage": 0.05
+            }
+          ]
+        },
+        {
+          "id": "contester",
+          "libelle": "Faire vérifier le calcul par un avocat (1 500 $)",
+          "explication": "Peut-être que tout n’est pas justifié.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 1500,
+              "libelle": "Avocat (bail commercial)"
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.5,
+              "siOui": [
+                {
+                  "type": "loyer",
+                  "pourcentage": 0.02
+                }
+              ],
+              "siNon": [
+                {
+                  "type": "loyer",
+                  "pourcentage": 0.05
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "prolonger",
+          "libelle": "Accepter une hausse de 3 % contre une prolongation du bail",
+          "explication": "Plus de stabilité, moins de surprise.",
+          "effets": [
+            {
+              "type": "loyer",
+              "pourcentage": 0.03
+            }
+          ]
+        }
+      ],
+      "lecon": "Un bail commercial n'est pas encadré comme un bail résidentiel : il n'y a pas de Tribunal administratif du logement. Tout dépend du contrat (durée, indexation, frais communs, option de renouvellement). Il faut le lire avant de signer!"
+    },
+    {
+      "id": "fraudeCourriel",
+      "categorie": "finance",
+      "nature": "negatif",
+      "titre": "Courriel suspect d’un fournisseur",
+      "description": "Tu reçois une facture d’un fournisseur avec de « nouvelles coordonnées bancaires » et un rabais si tu paies aujourd’hui.",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "payer",
+      "choix": [
+        {
+          "id": "verifier",
+          "libelle": "Appeler le fournisseur au numéro habituel pour vérifier",
+          "explication": "Le fournisseur n’a jamais envoyé ce courriel : c’était une fraude.",
+          "effets": [
+            {
+              "type": "heuresProprietaire",
+              "valeur": 1
+            }
+          ]
+        },
+        {
+          "id": "payer",
+          "libelle": "Payer tout de suite pour profiter du rabais",
+          "explication": "L’urgence est une technique classique de fraude.",
+          "effets": [
+            {
+              "type": "hasard",
+              "probabilite": 0.85,
+              "siOui": [
+                {
+                  "type": "depense",
+                  "categorie": "sinistres",
+                  "montant": 1850,
+                  "libelle": "Fraude par courriel (faux fournisseur)"
+                }
+              ],
+              "siNon": []
+            }
+          ]
+        }
+      ],
+      "lecon": "La fraude au faux fournisseur est très répandue. Toute demande de changement de coordonnées bancaires doit être confirmée par un appel au numéro connu du fournisseur."
+    },
+    {
+      "id": "concurrentOuvreEnFace",
+      "categorie": "marche",
+      "nature": "negatif",
+      "titre": "Un concurrent ouvre en face",
+      "description": "{concurrent} signe un bail juste en face de {commerce}, avec un gros budget de publicité.",
+      "condition": "nouveauAVenir",
+      "cible": "aleatoire",
+      "choixParDefaut": "difference",
+      "choix": [
+        {
+          "id": "fidelisation",
+          "libelle": "Lancer une campagne de fidélisation (1 500 $)",
+          "explication": "Tu rappelles à tes clients pourquoi ils t’aiment.",
+          "effets": [
+            {
+              "type": "concurrent",
+              "action": "arrivee"
+            },
+            {
+              "type": "depense",
+              "categorie": "publicite",
+              "montant": 1500,
+              "libelle": "Campagne de fidélisation"
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.03
+            },
+            {
+              "type": "image",
+              "valeur": 0.02
+            }
+          ]
+        },
+        {
+          "id": "prix",
+          "libelle": "Baisser tes prix de 5 % avant son ouverture",
+          "explication": "Une guerre de prix réduit les marges de tout le monde.",
+          "effets": [
+            {
+              "type": "concurrent",
+              "action": "arrivee"
+            },
+            {
+              "type": "prix",
+              "facteur": 0.95
+            }
+          ]
+        },
+        {
+          "id": "difference",
+          "libelle": "Miser sur ta différence sans rien changer",
+          "explication": "Tu restes calme et tu observes.",
+          "effets": [
+            {
+              "type": "concurrent",
+              "action": "arrivee"
+            }
+          ]
+        }
+      ],
+      "lecon": "Quand un concurrent arrive, il faut connaître son avantage concurrentiel (prix, qualité, service, proximité). Une baisse de prix précipitée est facile à copier; une différence réelle l'est beaucoup moins."
+    },
+    {
+      "id": "penurieMainOeuvre",
+      "categorie": "rh",
+      "nature": "negatif",
+      "titre": "Pénurie de main-d’œuvre",
+      "description": "Plusieurs commerces du secteur cherchent du personnel : tes employés reçoivent des offres.",
+      "condition": "employes2",
+      "mois": [1, 2, 3, 4, 9, 10, 11, 12],
+      "cible": "aleatoire",
+      "choixParDefaut": "rien",
+      "choix": [
+        {
+          "id": "salaires",
+          "libelle": "Augmenter tous les salaires de 3 %",
+          "explication": "Ta masse salariale augmente, mais l’équipe reste.",
+          "effets": [
+            {
+              "type": "salaire",
+              "cible": "tous",
+              "pourcentage": 0.03
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 4
+            }
+          ]
+        },
+        {
+          "id": "primeRetention",
+          "libelle": "Verser une prime de rétention de 300 $ par employé",
+          "explication": "Un coût ponctuel, mais l’effet s’estompe.",
+          "effets": [
+            {
+              "type": "prime",
+              "montant": 300,
+              "parEmploye": true
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 3
+            },
+            {
+              "type": "penurie",
+              "valeur": 0.1,
+              "mois": 2
+            }
+          ]
+        },
+        {
+          "id": "rien",
+          "libelle": "Ne rien faire",
+          "explication": "Des employés risquent de partir et le recrutement sera difficile.",
+          "effets": [
+            {
+              "type": "penurie",
+              "valeur": 0.2,
+              "mois": 3
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -3
+            }
+          ]
+        }
+      ],
+      "lecon": "En pénurie de main-d'œuvre, garder ses employés coûte moins cher que d'en recruter. Salaire, horaires, reconnaissance et ambiance de travail font la différence."
+    },
+    {
+      "id": "annonceSalaireMinimum",
+      "categorie": "rh",
+      "nature": "neutre",
+      "titre": "Annonce de la hausse du salaire minimum",
+      "description": "Le gouvernement annonce une hausse du salaire minimum au 1er mai. Tes employés les plus anciens gagnent à peine plus que le minimum.",
+      "condition": "employes2",
+      "mois": [1, 2, 3],
+      "cible": "aleatoire",
+      "choixParDefaut": "minimum",
+      "choix": [
+        {
+          "id": "ecart",
+          "libelle": "Ajuster les salaires de toute l’équipe (+3 %)",
+          "explication": "Tu préserves l’écart entre les nouveaux et les anciens.",
+          "effets": [
+            {
+              "type": "salaire",
+              "cible": "tous",
+              "pourcentage": 0.03
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 3
+            }
+          ]
+        },
+        {
+          "id": "minimum",
+          "libelle": "Ajuster seulement ceux qui sont au minimum",
+          "explication": "Obligatoire, mais les anciens voient l’écart fondre.",
+          "effets": [
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -2
+            }
+          ]
+        },
+        {
+          "id": "prix",
+          "libelle": "Augmenter tes prix de 2 %",
+          "explication": "Tu transfères une partie de la hausse aux clients.",
+          "effets": [
+            {
+              "type": "prix",
+              "facteur": 1.02
+            }
+          ]
+        }
+      ],
+      "lecon": "La hausse du salaire minimum crée une « compression salariale » : les employés expérimentés gagnent presque autant que les nouveaux. Ajuster toute l'échelle coûte plus cher, mais protège le moral et la rétention."
+    },
+    {
+      "id": "demandeCollective",
+      "categorie": "rh",
+      "nature": "negatif",
+      "titre": "Demande d’augmentation collective",
+      "description": "Toute l’équipe signe une lettre pour demander 5 % d’augmentation.",
+      "condition": "employes3",
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "accorder",
+          "libelle": "Accorder 5 %",
+          "explication": "Un moral au sommet, une masse salariale plus lourde.",
+          "effets": [
+            {
+              "type": "salaire",
+              "cible": "tous",
+              "pourcentage": 0.05
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 8
+            }
+          ]
+        },
+        {
+          "id": "negocier",
+          "libelle": "Négocier 2,5 % et une journée de congé mobile",
+          "explication": "Un compromis apprécié.",
+          "effets": [
+            {
+              "type": "salaire",
+              "cible": "tous",
+              "pourcentage": 0.025
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 3
+            },
+            {
+              "type": "capacite",
+              "facteur": 0.98
+            }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Refuser",
+          "explication": "Une équipe frustrée peut se tourner vers un syndicat.",
+          "effets": [
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -10
+            },
+            {
+              "type": "risque",
+              "probabilite": 0.3,
+              "delaiMois": 3,
+              "code": "syndicatApresRefus",
+              "effets": [
+                {
+                  "type": "syndicat"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Une demande collective est un signal : l'équipe s'organise. Écouter, expliquer la situation financière et négocier de bonne foi évite souvent l'escalade."
+    },
+    {
+      "id": "tentativeSyndicalisation",
+      "categorie": "rh",
+      "nature": "negatif",
+      "titre": "Tentative de syndicalisation",
+      "description": "Des employés font signer des cartes d’adhésion à un syndicat.",
+      "condition": "moralFragile",
+      "cible": "aleatoire",
+      "choixParDefaut": "rien",
+      "choix": [
+        {
+          "id": "ameliorer",
+          "libelle": "Respecter leur droit et améliorer les conditions de travail",
+          "explication": "Légal et constructif.",
+          "effets": [
+            {
+              "type": "salaire",
+              "cible": "tous",
+              "pourcentage": 0.02
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 5
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.5,
+              "siOui": [],
+              "siNon": [
+                {
+                  "type": "syndicat"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "menacer",
+          "libelle": "Menacer de congédier les meneurs",
+          "explication": "C’est une pratique interdite par le Code du travail : plainte au Tribunal administratif du travail.",
+          "effets": [
+            {
+              "type": "syndicat"
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -15
+            },
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 3000,
+              "libelle": "Avocat (plainte au Tribunal administratif du travail)"
+            },
+            {
+              "type": "depense",
+              "categorie": "amendes",
+              "montant": 2000,
+              "libelle": "Ordonnance du Tribunal administratif du travail"
+            }
+          ]
+        },
+        {
+          "id": "rien",
+          "libelle": "Ne rien faire",
+          "explication": "Si la majorité signe, le syndicat sera accrédité.",
+          "effets": [
+            {
+              "type": "hasard",
+              "probabilite": 0.6,
+              "siOui": [
+                {
+                  "type": "syndicat"
+                }
+              ],
+              "siNon": []
+            }
+          ]
+        }
+      ],
+      "lecon": "Le droit d'association est protégé par le Code du travail du Québec : un employeur ne peut pas menacer, congédier ou intimider des employés à cause d'activités syndicales. Au Québec, un syndicat est accrédité quand la majorité des salariés a signé une carte."
+    },
+    {
+      "id": "recessionAnnonce",
+      "categorie": "marche",
+      "nature": "negatif",
+      "titre": "Les clients se serrent la ceinture",
+      "description": "Les économistes parlent de ralentissement : les ménages réduisent leurs dépenses non essentielles.",
+      "condition": "ralentissement",
+      "cible": "aleatoire",
+      "choixParDefaut": "cap",
+      "choix": [
+        {
+          "id": "economique",
+          "libelle": "Lancer une offre économique (prix −5 %)",
+          "explication": "Tu retiens les clients sensibles au prix.",
+          "effets": [
+            {
+              "type": "prix",
+              "facteur": 0.95
+            },
+            {
+              "type": "demande",
+              "facteur": 1.04,
+              "mois": 3,
+              "libelle": "Offre économique"
+            }
+          ]
+        },
+        {
+          "id": "couper",
+          "libelle": "Couper la publicité de moitié",
+          "explication": "Tu réduis tes dépenses… et ta visibilité.",
+          "effets": [
+            {
+              "type": "publicite",
+              "facteur": 0.5
+            }
+          ]
+        },
+        {
+          "id": "cap",
+          "libelle": "Garder le cap",
+          "explication": "Tu fais confiance à ton positionnement.",
+          "effets": []
+        }
+      ],
+      "lecon": "En ralentissement, la demande baisse surtout pour les biens et services non essentiels (forte élasticité-revenu). Les entreprises qui gardent une trésorerie solide traversent mieux les cycles économiques."
+    },
+    {
+      "id": "chuteDollar",
+      "categorie": "marche",
+      "nature": "negatif",
+      "titre": "Le dollar canadien chute",
+      "description": "Le dollar canadien perd 6 % face au dollar américain : tes achats importés coûtent plus cher.",
+      "condition": "importateur",
+      "cible": "aleatoire",
+      "choixParDefaut": "absorber",
+      "choix": [
+        {
+          "id": "local",
+          "libelle": "Passer à des fournisseurs canadiens",
+          "explication": "Plus de risque de change, et un argument « achat local ».",
+          "effets": [
+            {
+              "type": "fournisseursCanadiens"
+            }
+          ]
+        },
+        {
+          "id": "absorber",
+          "libelle": "Absorber la hausse",
+          "explication": "Ta marge brute diminue pendant quelques mois.",
+          "effets": [
+            {
+              "type": "couts",
+              "facteur": 1.06,
+              "mois": 4,
+              "libelle": "Dollar canadien plus faible"
+            }
+          ]
+        },
+        {
+          "id": "prix",
+          "libelle": "Augmenter tes prix de 3 %",
+          "explication": "Tu protèges ta marge.",
+          "effets": [
+            {
+              "type": "prix",
+              "facteur": 1.03
+            },
+            {
+              "type": "couts",
+              "facteur": 1.06,
+              "mois": 4,
+              "libelle": "Dollar canadien plus faible"
+            }
+          ]
+        }
+      ],
+      "lecon": "Acheter en dollars américains expose l'entreprise au risque de change : une baisse du dollar canadien augmente le coût des marchandises. Les fournisseurs locaux réduisent ce risque."
+    },
+    {
+      "id": "achatLocal",
+      "categorie": "marche",
+      "nature": "positif",
+      "titre": "L’achat local a la cote",
+      "description": "Une grande campagne gouvernementale encourage les Québécois à acheter local.",
+      "condition": "toujours",
+      "poids": 0.7,
+      "cible": "aleatoire",
+      "choixParDefaut": "rien",
+      "choix": [
+        {
+          "id": "panierBleu",
+          "libelle": "T’inscrire au Panier Bleu et afficher l’origine des produits",
+          "explication": "Gratuit et apprécié des clients attachés à l’achat local.",
+          "effets": [
+            {
+              "type": "panierBleu"
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.02
+            }
+          ]
+        },
+        {
+          "id": "rien",
+          "libelle": "Ne rien faire",
+          "explication": "Tu laisses passer l’occasion.",
+          "effets": []
+        }
+      ],
+      "lecon": "Les tendances de consommation (achat local, écoresponsabilité) changent la valeur que les clients accordent à certains attributs. Une entreprise attentive ajuste son positionnement et le fait savoir."
+    },
+    {
+      "id": "concurrentEnVente",
+      "categorie": "marche",
+      "nature": "positif",
+      "titre": "Un concurrent en difficulté",
+      "description": "{concurrent} est en difficulté financière et cherche un acheteur pour sa liste de clients.",
+      "condition": "concurrentEnDifficulte",
+      "cible": "aleatoire",
+      "choixParDefaut": "rien",
+      "choix": [
+        {
+          "id": "liste",
+          "libelle": "Racheter sa liste de clients et sa marque (8 000 $)",
+          "explication": "Ses clients deviennent les tiens, et un concurrent disparaît.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "publicite",
+              "montant": 8000,
+              "libelle": "Achat de la liste de clients d’un concurrent"
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.08
+            },
+            {
+              "type": "concurrent",
+              "action": "fermer"
+            }
+          ]
+        },
+        {
+          "id": "employe",
+          "libelle": "Embaucher son meilleur employé",
+          "explication": "Un employé expérimenté et compétent.",
+          "effets": [
+            {
+              "type": "embaucher",
+              "competence": 1.15
+            }
+          ]
+        },
+        {
+          "id": "rien",
+          "libelle": "Ne rien faire",
+          "explication": "Ses clients se répartiront entre les commerces restants.",
+          "effets": []
+        }
+      ],
+      "lecon": "Racheter un concurrent (ou sa clientèle) est une façon rapide de croître. On paie alors pour l'achalandage (goodwill) : la valeur des clients et de la réputation au-delà des biens tangibles."
+    },
+    {
+      "id": "employeCleDemission",
+      "categorie": "rh",
+      "nature": "negatif",
+      "titre": "Un employé clé démissionne",
+      "description": "{nom}, ton employé le plus compétent, annonce qu’il part chez un concurrent dans deux semaines.",
+      "condition": "employeCompetent",
+      "cible": "plusCompetent",
+      "choixParDefaut": "partir",
+      "choix": [
+        {
+          "id": "contreOffre",
+          "libelle": "Faire une contre-offre (+10 %)",
+          "explication": "Ça marche parfois, mais pas toujours.",
+          "effets": [
+            {
+              "type": "salaire",
+              "cible": "concerne",
+              "pourcentage": 0.1
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.6,
+              "siOui": [
+                {
+                  "type": "moral",
+                  "cible": "concerne",
+                  "valeur": 6
+                }
+              ],
+              "siNon": [
+                {
+                  "type": "depart",
+                  "cible": "concerne",
+                  "probabilite": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "partir",
+          "libelle": "Lui souhaiter bonne chance et recruter",
+          "explication": "Le départ est inévitable.",
+          "effets": [
+            {
+              "type": "depart",
+              "cible": "concerne",
+              "probabilite": 1
+            }
+          ]
+        },
+        {
+          "id": "transfert",
+          "libelle": "Lui offrir une prime pour former son remplaçant (500 $)",
+          "explication": "Le savoir reste dans l’entreprise.",
+          "effets": [
+            {
+              "type": "prime",
+              "montant": 500
+            },
+            {
+              "type": "competence",
+              "cible": "autres",
+              "valeur": 0.03
+            },
+            {
+              "type": "depart",
+              "cible": "concerne",
+              "probabilite": 1
+            }
+          ]
+        }
+      ],
+      "lecon": "Un plan de relève et des tâches bien documentées réduisent la dépendance envers un seul employé. Le transfert de connaissances avant un départ protège la qualité du service."
+    },
+    {
+      "id": "stagiaire",
+      "categorie": "rh",
+      "nature": "positif",
+      "titre": "Un stagiaire du cégep",
+      "description": "Un cégep te propose d’accueillir un stagiaire en gestion de commerce pendant 8 semaines.",
+      "condition": "toujours",
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "accepter",
+          "libelle": "Accepter le stage (non rémunéré)",
+          "explication": "Un coup de main… qui demande de l’encadrement.",
+          "effets": [
+            {
+              "type": "capacite",
+              "facteur": 1.04
+            },
+            {
+              "type": "heuresProprietaire",
+              "valeur": 3
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.01
+            }
+          ]
+        },
+        {
+          "id": "bourse",
+          "libelle": "Accepter et lui verser une bourse (800 $)",
+          "explication": "Un stagiaire motivé, et un crédit d’impôt pour stage peut réduire le coût.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "formation",
+              "montant": 800,
+              "libelle": "Bourse de stage"
+            },
+            {
+              "type": "capacite",
+              "facteur": 1.06
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 2
+            }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Refuser",
+          "explication": "Pas de temps pour encadrer.",
+          "effets": []
+        }
+      ],
+      "lecon": "Accueillir des stagiaires aide à recruter de futurs employés. Au Québec, un crédit d'impôt remboursable pour stage en milieu de travail réduit le coût de l'encadrement des stagiaires admissibles."
+    },
+    {
+      "id": "conflitEquipe",
+      "categorie": "rh",
+      "nature": "negatif",
+      "titre": "Conflit dans l’équipe",
+      "description": "Deux employés ne se parlent plus et l’ambiance se détériore.",
+      "condition": "employes3",
+      "cible": "aleatoire",
+      "choixParDefaut": "laisser",
+      "choix": [
+        {
+          "id": "mediation",
+          "libelle": "Faire appel à un médiateur (600 $)",
+          "explication": "Un tiers neutre aide à trouver une solution.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 600,
+              "libelle": "Médiation en milieu de travail"
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 4
+            }
+          ]
+        },
+        {
+          "id": "rencontre",
+          "libelle": "Rencontrer les deux employés et fixer des règles",
+          "explication": "Gratuit, mais délicat.",
+          "effets": [
+            {
+              "type": "heuresProprietaire",
+              "valeur": 2
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.7,
+              "siOui": [
+                {
+                  "type": "moral",
+                  "cible": "tous",
+                  "valeur": 2
+                }
+              ],
+              "siNon": [
+                {
+                  "type": "moral",
+                  "cible": "tous",
+                  "valeur": -4
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "laisser",
+          "libelle": "Laisser faire",
+          "explication": "Les conflits non réglés s’enveniment.",
+          "effets": [
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -6
+            },
+            {
+              "type": "capacite",
+              "facteur": 0.97
+            }
+          ]
+        }
+      ],
+      "lecon": "Un conflit non géré nuit au moral, à la productivité et au service. L'employeur doit aussi prévenir le harcèlement psychologique, une obligation de la Loi sur les normes du travail."
+    },
+    {
+      "id": "grippe",
+      "categorie": "rh",
+      "nature": "negatif",
+      "titre": "Épidémie de grippe dans l’équipe",
+      "description": "La grippe frappe : plusieurs employés sont malades en même temps.",
+      "condition": "employes2",
+      "mois": [12, 1, 2, 3],
+      "cible": "aleatoire",
+      "choixParDefaut": "venir",
+      "choix": [
+        {
+          "id": "payer",
+          "libelle": "Payer les congés de maladie",
+          "explication": "La loi prévoit 2 jours payés par année; aller au-delà montre que tu tiens à ton équipe.",
+          "effets": [
+            {
+              "type": "prime",
+              "montant": 400
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": 4
+            },
+            {
+              "type": "capacite",
+              "facteur": 0.85
+            }
+          ]
+        },
+        {
+          "id": "venir",
+          "libelle": "Demander aux employés malades de venir travailler",
+          "explication": "Tu gardes ta capacité… et la grippe se propage.",
+          "effets": [
+            {
+              "type": "capacite",
+              "facteur": 0.95
+            },
+            {
+              "type": "hasard",
+              "probabilite": 0.5,
+              "siOui": [
+                {
+                  "type": "satisfaction",
+                  "valeur": -0.04
+                },
+                {
+                  "type": "capacite",
+                  "facteur": 0.9
+                },
+                {
+                  "type": "moral",
+                  "cible": "tous",
+                  "valeur": -6
+                }
+              ],
+              "siNon": [
+                {
+                  "type": "moral",
+                  "cible": "tous",
+                  "valeur": -3
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reduire",
+          "libelle": "Réduire les heures d’ouverture une semaine",
+          "explication": "Moins de ventes, mais une équipe qui se rétablit.",
+          "effets": [
+            {
+              "type": "capacite",
+              "facteur": 0.85
+            },
+            {
+              "type": "demande",
+              "facteur": 0.95,
+              "mois": 1,
+              "libelle": "Heures réduites (grippe)"
+            }
+          ]
+        }
+      ],
+      "lecon": "La Loi sur les normes du travail accorde 2 jours d'absence payés par année pour maladie. Encourager des employés malades à travailler propage la maladie et nuit au service."
+    },
+    {
+      "id": "penurieCafe",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Mauvaise récolte de café",
+      "description": "Une sécheresse au Brésil fait bondir le prix mondial du café vert.",
+      "condition": "toujours",
+      "secteurs": ["cafe"],
+      "cible": "aleatoire",
+      "choixParDefaut": "absorber",
+      "choix": [
+        {
+          "id": "prix",
+          "libelle": "Augmenter les prix de 4 %",
+          "explication": "Les clients comprennent quand l’explication est affichée.",
+          "effets": [
+            {
+              "type": "prix",
+              "facteur": 1.04
+            },
+            {
+              "type": "couts",
+              "facteur": 1.08,
+              "mois": 4,
+              "libelle": "Prix mondial du café"
+            }
+          ]
+        },
+        {
+          "id": "absorber",
+          "libelle": "Absorber la hausse",
+          "explication": "Ta marge brute baisse quelques mois.",
+          "effets": [
+            {
+              "type": "couts",
+              "facteur": 1.08,
+              "mois": 4,
+              "libelle": "Prix mondial du café"
+            }
+          ]
+        },
+        {
+          "id": "melange",
+          "libelle": "Passer à un mélange moins cher",
+          "explication": "Les connaisseurs remarquent la différence.",
+          "effets": [
+            {
+              "type": "couts",
+              "facteur": 1.02,
+              "mois": 4,
+              "libelle": "Mélange moins cher"
+            },
+            {
+              "type": "image",
+              "valeur": -0.03
+            },
+            {
+              "type": "note",
+              "valeur": -0.05
+            }
+          ]
+        }
+      ],
+      "lecon": "Le prix des matières premières (café, cacao, blé) fluctue selon les récoltes mondiales. Les entreprises qui en dépendent surveillent ces marchés et ajustent prix, recettes ou contrats d'achat."
+    },
+    {
+      "id": "vendrediFou",
+      "categorie": "marketing",
+      "nature": "neutre",
+      "titre": "Le Vendredi fou approche",
+      "description": "Les grandes chaînes annoncent des rabais de 50 % pour le Vendredi fou.",
+      "condition": "toujours",
+      "secteurs": ["vetements", "enLigne", "atelier"],
+      "mois": [11],
+      "cible": "aleatoire",
+      "choixParDefaut": "ignorer",
+      "choix": [
+        {
+          "id": "rabais",
+          "libelle": "Participer avec 15 % de rabais sur tout le mois",
+          "explication": "Plus de clients, moins de marge par vente.",
+          "effets": [
+            {
+              "type": "promotion",
+              "taux": 0.15
+            },
+            {
+              "type": "demande",
+              "facteur": 1.15,
+              "mois": 1,
+              "libelle": "Vendredi fou"
+            }
+          ]
+        },
+        {
+          "id": "cadeau",
+          "libelle": "Offrir un cadeau avec achat (600 $)",
+          "explication": "Tu attires les clients sans brader tes prix.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "publicite",
+              "montant": 600,
+              "libelle": "Cadeaux avec achat"
+            },
+            {
+              "type": "demande",
+              "facteur": 1.06,
+              "mois": 1,
+              "libelle": "Vendredi fou"
+            }
+          ]
+        },
+        {
+          "id": "ignorer",
+          "libelle": "Ignorer l’événement",
+          "explication": "Une partie des clients achète ailleurs.",
+          "effets": [
+            {
+              "type": "demande",
+              "facteur": 0.93,
+              "mois": 1,
+              "libelle": "Vendredi fou chez les concurrents"
+            }
+          ]
+        }
+      ],
+      "lecon": "Les grandes promotions déplacent les achats dans le temps et réduisent la marge. Un petit commerce a souvent intérêt à se distinguer par la valeur (service, cadeau, qualité) plutôt qu'à suivre les rabais des géants."
+    },
+    {
+      "id": "locationChaise",
+      "categorie": "rh",
+      "nature": "positif",
+      "titre": "Un coiffeur vedette veut louer une chaise",
+      "description": "Un coiffeur très populaire propose de louer une chaise chez toi, comme travailleur autonome, pour 900 $ par mois.",
+      "condition": "toujours",
+      "secteurs": ["coiffure"],
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "louer",
+          "libelle": "Accepter la location de chaise",
+          "explication": "Un revenu stable et sa clientèle attire du monde, mais tu ne le diriges pas.",
+          "effets": [
+            {
+              "type": "revenusRecurrents",
+              "montant": 900,
+              "mois": 12,
+              "libelle": "Location d’une chaise à un coiffeur autonome"
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.03
+            }
+          ]
+        },
+        {
+          "id": "embaucher",
+          "libelle": "Lui proposer plutôt un poste de salarié",
+          "explication": "Il accepte si le salaire est attrayant.",
+          "effets": [
+            {
+              "type": "embaucher",
+              "posteId": "coiffeur",
+              "competence": 1.22,
+              "majorationSalaire": 0.2
+            },
+            {
+              "type": "notoriete",
+              "valeur": 0.02
+            }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Refuser",
+          "explication": "Tu gardes le contrôle de ton salon.",
+          "effets": []
+        }
+      ],
+      "lecon": "Travailleur autonome ou salarié? Ce n'est pas l'étiquette qui compte, mais la réalité : horaire imposé, outils fournis, subordination. Revenu Québec et la CNESST peuvent requalifier un faux travailleur autonome en salarié, avec des cotisations à payer."
+    },
+    {
+      "id": "volEquipement",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Vol d’équipement",
+      "description": "Pendant la nuit, des voleurs ont vidé la remorque : tondeuses, souffleuses et outils ont disparu.",
+      "condition": "toujours",
+      "secteurs": ["paysagement"],
+      "cible": "aleatoire",
+      "choixParDefaut": "remplacer",
+      "choix": [
+        {
+          "id": "remplacer",
+          "libelle": "Remplacer l’équipement tout de suite",
+          "explication": "Les équipes repartent rapidement.",
+          "effets": [
+            {
+              "type": "si",
+              "condition": "assure",
+              "alors": [
+                {
+                  "type": "depense",
+                  "categorie": "sinistres",
+                  "montant": 1000,
+                  "libelle": "Franchise d’assurance (vol)"
+                }
+              ],
+              "sinon": [
+                {
+                  "type": "depense",
+                  "categorie": "sinistres",
+                  "montant": 7000,
+                  "libelle": "Remplacement de l’équipement volé"
+                }
+              ]
+            },
+            {
+              "type": "capacite",
+              "facteur": 0.95
+            }
+          ]
+        },
+        {
+          "id": "louer",
+          "libelle": "Louer de l’équipement en attendant (1 200 $)",
+          "explication": "Le temps de recevoir l’indemnité ou de trouver de l’usagé.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "entretien",
+              "montant": 1200,
+              "libelle": "Location d’équipement"
+            },
+            {
+              "type": "si",
+              "condition": "assure",
+              "alors": [
+                {
+                  "type": "depense",
+                  "categorie": "sinistres",
+                  "montant": 1000,
+                  "libelle": "Franchise d’assurance (vol)"
+                }
+              ],
+              "sinon": [
+                {
+                  "type": "depense",
+                  "categorie": "sinistres",
+                  "montant": 4500,
+                  "libelle": "Équipement usagé de remplacement"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Les biens mobiles (outils, équipement sur les chantiers) doivent être assurés expressément. Un inventaire avec numéros de série facilite la réclamation."
+    },
+    {
+      "id": "commandeHotel",
+      "categorie": "marche",
+      "nature": "positif",
+      "titre": "Grosse commande d’un hôtel",
+      "description": "Un hôtel boutique veut 40 tables de chevet sur mesure, livrées dans deux mois.",
+      "condition": "toujours",
+      "secteurs": ["atelier"],
+      "cible": "aleatoire",
+      "choixParDefaut": "refuser",
+      "choix": [
+        {
+          "id": "accepter",
+          "libelle": "Accepter et faire des heures supplémentaires",
+          "explication": "Un gros contrat, mais l’atelier sera débordé.",
+          "effets": [
+            {
+              "type": "encaissement",
+              "montant": 6000,
+              "categorie": "autre",
+              "libelle": "Marge sur une commande spéciale d’un hôtel"
+            },
+            {
+              "type": "prime",
+              "montant": 1500
+            },
+            {
+              "type": "capacite",
+              "facteur": 0.8,
+              "mois": 2
+            },
+            {
+              "type": "moral",
+              "cible": "tous",
+              "valeur": -4
+            }
+          ]
+        },
+        {
+          "id": "delai",
+          "libelle": "Accepter avec un délai de trois mois",
+          "explication": "Moins rentable, mais sans épuiser l’équipe.",
+          "effets": [
+            {
+              "type": "encaissement",
+              "montant": 4500,
+              "categorie": "autre",
+              "libelle": "Marge sur une commande spéciale d’un hôtel"
+            },
+            {
+              "type": "capacite",
+              "facteur": 0.9,
+              "mois": 3
+            }
+          ]
+        },
+        {
+          "id": "refuser",
+          "libelle": "Refuser",
+          "explication": "Tu restes concentré sur ta clientèle habituelle.",
+          "effets": []
+        }
+      ],
+      "lecon": "Accepter une grosse commande exige de vérifier sa capacité de production. Un contrat payant peut nuire aux clients réguliers si l'atelier est déjà occupé."
+    },
+    {
+      "id": "rappelProduit",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Rappel d’un produit alimentaire",
+      "description": "L’Agence canadienne d’inspection des aliments rappelle un fromage que tu vends (risque de Listeria).",
+      "condition": "toujours",
+      "secteurs": ["epicerie"],
+      "cible": "aleatoire",
+      "choixParDefaut": "attendre",
+      "choix": [
+        {
+          "id": "retirer",
+          "libelle": "Retirer immédiatement les produits et afficher l’avis",
+          "explication": "La sécurité des clients d’abord.",
+          "effets": [
+            {
+              "type": "stockPerdu",
+              "proportion": 0.25,
+              "categorie": "fromages",
+              "libelle": "Produits rappelés (ACIA)"
+            },
+            {
+              "type": "image",
+              "valeur": 0.01
+            }
+          ]
+        },
+        {
+          "id": "lots",
+          "libelle": "Retirer seulement les lots visés après vérification",
+          "explication": "Précis, mais cela prend du temps.",
+          "effets": [
+            {
+              "type": "stockPerdu",
+              "proportion": 0.1,
+              "categorie": "fromages",
+              "libelle": "Produits rappelés (ACIA)"
+            },
+            {
+              "type": "heuresProprietaire",
+              "valeur": 2
+            }
+          ]
+        },
+        {
+          "id": "attendre",
+          "libelle": "Attendre la confirmation officielle",
+          "explication": "Si un client tombe malade, la responsabilité est lourde.",
+          "effets": [
+            {
+              "type": "risque",
+              "probabilite": 0.4,
+              "delaiMois": 1,
+              "code": "rappelIgnore",
+              "effets": [
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 3000,
+                  "libelle": "Infraction : vente d’un produit rappelé"
+                },
+                {
+                  "type": "image",
+                  "valeur": -0.08
+                },
+                {
+                  "type": "note",
+                  "valeur": -0.2
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "lecon": "Lors d'un rappel de l'Agence canadienne d'inspection des aliments (ACIA), les détaillants doivent retirer les produits visés sans délai. La traçabilité (numéros de lot) permet de cibler le retrait."
+    },
+    {
+      "id": "pannePlateforme",
+      "categorie": "operations",
+      "nature": "negatif",
+      "titre": "Panne du site pendant le Cyberlundi",
+      "description": "Ton site Web tombe en panne pendant la plus grosse journée de ventes de l’année.",
+      "condition": "toujours",
+      "secteurs": ["enLigne"],
+      "mois": [11, 12],
+      "cible": "aleatoire",
+      "choixParDefaut": "attendre",
+      "choix": [
+        {
+          "id": "developpeur",
+          "libelle": "Payer un développeur d’urgence (1 200 $)",
+          "explication": "Le site revient en quelques heures.",
+          "effets": [
+            {
+              "type": "depense",
+              "categorie": "honoraires",
+              "montant": 1200,
+              "libelle": "Développeur Web d’urgence"
+            },
+            {
+              "type": "demande",
+              "facteur": 0.97,
+              "mois": 1,
+              "libelle": "Panne du site"
+            }
+          ]
+        },
+        {
+          "id": "prolonger",
+          "libelle": "Prolonger la promotion de deux jours pour compenser",
+          "explication": "Tu récupères la plupart des ventes, avec moins de marge.",
+          "effets": [
+            {
+              "type": "promotion",
+              "taux": 0.1
+            }
+          ]
+        },
+        {
+          "id": "attendre",
+          "libelle": "Attendre que l’hébergeur règle le problème",
+          "explication": "Les clients pressés achètent ailleurs.",
+          "effets": [
+            {
+              "type": "demande",
+              "facteur": 0.88,
+              "mois": 1,
+              "libelle": "Panne du site"
+            },
+            {
+              "type": "note",
+              "valeur": -0.05
+            }
+          ]
+        }
+      ],
+      "lecon": "Pour un commerce en ligne, le site est la vitrine : sa fiabilité (hébergement, tests avant les pointes, plan de relève) est aussi importante que l'emplacement d'une boutique."
     }
   ]
 }

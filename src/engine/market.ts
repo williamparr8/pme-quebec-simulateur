@@ -46,8 +46,9 @@ export interface Offre {
   /** Bonus (ou malus) d'utilité lié à l'emplacement (achalandage). */
   bonusEmplacement?: number;
   /**
-   * Prix payé par le client / prix affiché : 1,14975 si le commerce perçoit la TPS et la TVQ,
-   * 1 pour un petit fournisseur non inscrit. Par défaut : taxes perçues.
+   * Prix payé par le client / prix affiché : environ 1,14975 si le commerce perçoit la TPS et
+   * la TVQ (moins si des produits sont détaxés), 1 pour un petit fournisseur non inscrit.
+   * Par défaut : taxes perçues.
    */
   facteurPrixClient?: number;
   /** Écoresponsabilité perçue (0 à 1, 0,3 = commerce ordinaire). */
@@ -79,12 +80,41 @@ export interface SegmentMarche {
 
 export interface OptionsMarche {
   segments?: SegmentMarche[];
+  /** Mois civil (1-12) : saisonnalité propre à chaque ligne. */
+  mois?: number;
+  /** Multiplicateur de la sensibilité au prix (revenu de la ville, conjoncture). */
+  sensibilitePrix?: number;
   /** Bassin des commandes livrées. */
   livraison?: { part: number; majoration: number; panier: Record<string, number> };
 }
 
 /** Facteur des taxes de vente au Québec (TPS 5 % + TVQ 9,975 %). */
 const FACTEUR_TAXES_MARCHE = 1.14975;
+
+/** Une ligne est taxable sauf si elle est détaxée (ex. produits alimentaires de base). */
+export function ligneTaxable(ligne: Pick<LigneProduit, 'taxable'>): boolean {
+  return ligne.taxable !== false;
+}
+
+/**
+ * Facteur moyen des taxes payées par les clients du secteur quand le commerce perçoit
+ * la TPS et la TVQ (1,14975 si tout est taxable, moins si certains produits sont détaxés).
+ */
+export function facteurTaxesSecteur(secteur: Secteur): number {
+  let poids = 0;
+  let taxable = 0;
+  for (const l of secteur.lignes) {
+    const w = l.tauxAchat * l.prixReference;
+    poids += w;
+    if (ligneTaxable(l)) taxable += w;
+  }
+  return 1 + (FACTEUR_TAXES_MARCHE - 1) * (poids > 0 ? taxable / poids : 1);
+}
+
+/** Saisonnalité d'une ligne pour un mois civil (1 si la ligne n'en a pas). */
+export function saisonLigne(ligne: Pick<LigneProduit, 'saisonnalite'>, mois?: number): number {
+  return mois && ligne.saisonnalite ? (ligne.saisonnalite[mois - 1] ?? 1) : 1;
+}
 /** Valeurs « neutres » de l'écoresponsabilité et de l'achat local. */
 export const ECO_NEUTRE = 0.3;
 export const LOCAL_NEUTRE = 0.4;
@@ -102,9 +132,10 @@ export function indicePrixClient(
   secteur: Secteur,
   indicePrix = 1,
 ): number {
+  const reference = facteurTaxesSecteur(secteur);
   return (
     indicePrixOffre(offre.prix, secteur, indicePrix) *
-    ((offre.facteurPrixClient ?? FACTEUR_TAXES_MARCHE) / FACTEUR_TAXES_MARCHE)
+    ((offre.facteurPrixClient ?? reference) / reference)
   );
 }
 
@@ -189,6 +220,7 @@ export function utiliteOffre(
   secteur: Secteur,
   indicePrix = 1,
   segment: SegmentMarche = SEGMENT_UNIQUE,
+  sensibilitePrix = 1,
 ): number {
   const s = secteur.sensibilites;
   const m = segment.sensibilites;
@@ -196,7 +228,7 @@ export function utiliteOffre(
   const heures = Math.max(1, offre.heuresOuverture) / secteur.heuresOuvertureReference;
   const marque = 1 - 0.3 * ((offre.image ?? 0.5) - 0.5);
   return (
-    -s.prix * m.prix * marque * (ip - 1) +
+    -s.prix * sensibilitePrix * m.prix * marque * (ip - 1) +
     s.qualite * m.qualite * (offre.qualite - 0.5) +
     s.service * m.service * (offre.service - 0.5) +
     s.ambiance * m.ambiance * (offre.ambiance - 0.5) +
@@ -211,11 +243,17 @@ export function utiliteOffre(
 }
 
 /** Utilité d'une offre pour les clients qui commandent par une plateforme de livraison. */
-function utiliteLivraison(offre: Offre, secteur: Secteur, indicePrix: number, majoration: number) {
+function utiliteLivraison(
+  offre: Offre,
+  secteur: Secteur,
+  indicePrix: number,
+  majoration: number,
+  sensibilitePrix = 1,
+) {
   const s = secteur.sensibilites;
   const ip = indicePrixClient(offre, secteur, indicePrix) * (1 + majoration);
   return (
-    -s.prix * (ip - 1) +
+    -s.prix * sensibilitePrix * (ip - 1) +
     s.qualite * (offre.qualite - 0.5) +
     s.note * (offre.note - 3.5) +
     (s.eco ?? 0) * ((offre.eco ?? ECO_NEUTRE) - ECO_NEUTRE) +
@@ -234,12 +272,17 @@ export function ventesParLigne(
   visites: number,
   indicePrix = 1,
   panier: (l: LigneOffre) => number = () => 1,
+  mois?: number,
 ): VenteLigne[] {
   return lignesDe(offre, secteur).map((lo) => {
     const prix = offre.prix[lo.ligne.id] ?? prixReference(lo.ligne, indicePrix);
     const unites = Math.round(
       visites *
-        tauxAchatLigne(lo.ligne, prix, lo.qualite ?? offre.qualite, indicePrix) *
+        Math.min(
+          1,
+          tauxAchatLigne(lo.ligne, prix, lo.qualite ?? offre.qualite, indicePrix) *
+            saisonLigne(lo.ligne, mois),
+        ) *
         (lo.facteur ?? 1) *
         panier(lo),
     );
@@ -286,10 +329,11 @@ export function simulerMarche(
   const segments =
     options.segments && options.segments.length > 0 ? options.segments : [SEGMENT_UNIQUE];
   const attraitAlternatif = Math.exp(secteur.utiliteAlternative);
+  const sensibilite = options.sensibilitePrix ?? 1;
 
   // 1. Bassins : un par segment en magasin, plus la livraison.
   const bassins: Bassin[] = segments.map((seg) => {
-    const utilites = offres.map((o) => utiliteOffre(o, secteur, indicePrix, seg));
+    const utilites = offres.map((o) => utiliteOffre(o, secteur, indicePrix, seg, sensibilite));
     return {
       id: seg.id,
       potentiel: potentiel * seg.part,
@@ -307,7 +351,9 @@ export function simulerMarche(
   });
   const liv = options.livraison;
   if (liv && liv.part > 0 && offres.some((o) => o.livraison)) {
-    const utilites = offres.map((o) => utiliteLivraison(o, secteur, indicePrix, liv.majoration));
+    const utilites = offres.map((o) =>
+      utiliteLivraison(o, secteur, indicePrix, liv.majoration, sensibilite),
+    );
     bassins.push({
       id: 'livraison',
       potentiel: potentiel * liv.part,
@@ -374,7 +420,7 @@ export function simulerMarche(
         k === bassins.length - 1 ? reste : Math.min(reste, Math.round(servies * partBassin));
       reste -= s;
       parSegment[b.id] = { demande: Math.round(demande * partBassin), servies: s };
-      const v = ventesParLigne(offre, secteur, s, indicePrix, b.panier);
+      const v = ventesParLigne(offre, secteur, s, indicePrix, b.panier, options.mois);
       if (b.livraison) ventesLivraison = v;
       ventes = additionner(ventes, v);
     }

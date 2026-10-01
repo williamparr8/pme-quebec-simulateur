@@ -2,6 +2,8 @@ import {
   CANAUX,
   FORMATIONS,
   PLATEFORMES,
+  SECTEURS,
+  VILLES,
   fournisseursCategorie,
   secteurParId,
   villeParId,
@@ -23,6 +25,7 @@ import {
   embaucher,
   embaucherCandidat,
   emplacementDe,
+  erreursSources,
   evaluerEmploye,
   formerEmploye,
   formerProprietaireHygiene,
@@ -48,6 +51,7 @@ import type {
   DureePartie,
   EtatPartie,
   FormeJuridique,
+  IdDemarche,
   ParametresDemarrage,
   PlanAffaires,
 } from '../src/engine/types';
@@ -99,14 +103,30 @@ export const DEMARRAGE_TEST: ParametresDemarrage = {
 };
 
 /** Plan d'affaires réaliste (ventes au niveau du repère des prêteurs). */
-export function planRealiste(): PlanAffaires {
-  const cafe = secteurParId('cafe');
-  const mtl = villeParId('montreal');
+export function planRealiste(
+  secteurId = 'cafe',
+  villeId = 'montreal',
+  emplacementId = 'rue',
+): PlanAffaires {
+  const secteur = secteurParId(secteurId);
+  const ville = villeParId(villeId);
+  const [min, max] = secteur.margeBruteCible;
   return {
-    ventesMensuelles: ventesReference(cafe, mtl, emplacementDe(mtl, 'rue')),
-    margeBrute: 0.67,
+    ventesMensuelles: ventesReference(secteur, ville, emplacementDe(ville, emplacementId)),
+    margeBrute: Math.round(((min + max) / 2) * 100) / 100,
     clienteleCible: 'professionnels',
     moisFondsRoulement: 4,
+  };
+}
+
+/** Paramètres de démarrage adaptés à un secteur (emplacement permis, permis du secteur). */
+export function demarrageSecteur(secteurId: string, base = DEMARRAGE_TEST): ParametresDemarrage {
+  const secteur = secteurParId(secteurId);
+  return {
+    ...base,
+    // Le premier emplacement permis est le choix typique du secteur (ex. local industriel pour un atelier).
+    emplacementId: secteur.emplacements[0],
+    demarches: [...new Set([...base.demarches, ...(secteur.permis as IdDemarche[])])],
   };
 }
 
@@ -114,8 +134,12 @@ export function nouvellePartie(
   graine: number,
   dureeMois: DureePartie = 36,
   secteurId = 'cafe',
+  villeId = 'montreal',
 ): EtatPartie {
-  return creerPartie(configTest(graine, dureeMois, secteurId), DEMARRAGE_TEST);
+  return creerPartie(
+    { ...configTest(graine, dureeMois, secteurId), villeId },
+    demarrageSecteur(secteurId),
+  );
 }
 
 const ETUDES: IdTypeEtude[] = [
@@ -148,9 +172,7 @@ export function tourAleatoire(etat: EtatPartie, rng: Rng): EtatPartie {
     remboursementAnticipe: rng.chance(0.05) ? rng.int(1000, 30000) : 0,
     promotion: rng.chance(0.2) ? rng.range(0, 0.3) : 0,
     programmeFidelite: rng.chance(0.4),
-    initiativesEco: ['emballages', 'tasse', 'compost', 'certification'].filter(() =>
-      rng.chance(0.3),
-    ),
+    initiativesEco: secteur.initiativesEco.filter(() => rng.chance(0.3)),
     panierBleu: rng.chance(0.5),
     livraison: rng.chance(0.4),
     reponseAvis: rng.pick(['ignorer', 'repondre', 'compenser'] as const),
@@ -284,22 +306,52 @@ export function demarrageVarie(graine: number): ParametresDemarrage {
   };
 }
 
+/** Ajuste le plan d'affaires au secteur, à la ville et à l'emplacement choisis. */
+function plan(secteurId: string, villeId: string, p: ParametresDemarrage): ParametresDemarrage {
+  const avecPlan = { ...p, planAffaires: planRealiste(secteurId, villeId, p.emplacementId) };
+  // Les sources qui ne respectent pas leurs conditions (ex. part maximale du projet) sont retirées.
+  const invalides = new Set<string>(
+    erreursSources(avecPlan, secteurParId(secteurId), villeParId(villeId)).map((e) => e.source),
+  );
+  const financements = Object.fromEntries(
+    Object.entries(avecPlan.financements).filter(([id]) => !invalides.has(id)),
+  );
+  return { ...avecPlan, financements };
+}
+
+/** Partie aléatoire : le secteur, la ville et la difficulté varient selon la graine. */
 export function jouerAleatoirement(graine: number, mois: DureePartie): EtatPartie {
   const rng = new Rng(graine * 7919 + 13);
-  let etat = creerPartie(configTest(graine, mois), demarrageVarie(graine));
+  const secteur = SECTEURS[graine % SECTEURS.length];
+  const ville = VILLES[Math.floor(graine / SECTEURS.length) % VILLES.length];
+  const difficultes = ['facile', 'realiste', 'expert'] as const;
+  let etat = creerPartie(
+    {
+      ...configTest(graine, mois, secteur.id),
+      villeId: ville.id,
+      difficulte: difficultes[graine % 3],
+    },
+    plan(secteur.id, ville.id, demarrageSecteur(secteur.id, demarrageVarie(graine))),
+  );
   while (!etat.terminee) etat = tourAleatoire(etat, rng);
   return etat;
 }
 
 /**
- * Gestion minimale entre deux mois : remplacer les employés partis (au moins 3 baristas)
- * et trancher les dilemmes avec le premier choix.
+ * Gestion minimale entre deux mois : remplacer les employés partis (garder l'équipe de
+ * départ du secteur) et trancher les événements avec le premier choix.
  */
 export function gererMinimalement(etat: EtatPartie): EtatPartie {
   let e = etat;
   const id = e.entreprises[0].id;
-  while (!e.terminee && e.entreprises[0].employes.filter((x) => x.posteId === 'barista').length < 3)
-    e = embaucher(e, id, 28, 'barista');
+  const secteur = secteurParId(e.config.secteurId);
+  for (const eq of secteur.equipeDepart) {
+    while (
+      !e.terminee &&
+      e.entreprises[0].employes.filter((x) => x.posteId === eq.posteId).length < eq.nombre
+    )
+      e = embaucher(e, id, undefined, eq.posteId);
+  }
   for (const d of e.entreprises[0].dilemmes)
     e = repondreDilemme(e, id, d.id, dilemmeParId(d.defId).choix[0].id);
   return e;

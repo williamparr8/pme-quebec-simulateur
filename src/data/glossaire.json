@@ -816,6 +816,216 @@
       "terme": "Incitatif à l'investissement accéléré",
       "categorie": "Fiscalité",
       "definition": "Mesure fiscale fédérale qui augmente la DPA de l'année d'acquisition (1,5 fois le taux normal pour les biens mis en service avant 2030) pour encourager les entreprises à investir."
+    },
+    {
+      "id": "cycleEconomique",
+      "terme": "Cycle économique",
+      "categorie": "Économie",
+      "definition": "Alternance de périodes d'expansion (croissance, chômage bas), de ralentissement, de récession (recul de l'activité) et de reprise.",
+      "exemple": "En récession, les ménages reportent l’achat d’un meuble neuf, mais continuent de se faire couper les cheveux."
+    },
+    {
+      "id": "recession",
+      "terme": "Récession",
+      "categorie": "Économie",
+      "definition": "Recul de l'activité économique pendant plusieurs mois : la production et l'emploi baissent, le chômage monte et la confiance des consommateurs chute.",
+      "exemple": "Pendant une récession, les ventes des secteurs cycliques peuvent baisser de 10 à 20 %."
+    },
+    {
+      "id": "tauxChomage",
+      "terme": "Taux de chômage",
+      "categorie": "Économie",
+      "definition": "Proportion des personnes actives (qui travaillent ou cherchent un emploi) qui sont sans emploi.",
+      "exemple": "Un chômage de 3 % (Estrie) rend le recrutement difficile; à 8,8 % (Montréal), les candidats sont plus nombreux."
+    },
+    {
+      "id": "penurieMainOeuvre",
+      "terme": "Pénurie de main-d’œuvre",
+      "categorie": "Ressources humaines",
+      "definition": "Situation où les employeurs ont du mal à pourvoir leurs postes : moins de candidats, attentes salariales plus élevées et départs plus fréquents.",
+      "exemple": "En pénurie, une affiche en vitrine ne reçoit souvent aucun candidat."
+    },
+    {
+      "id": "revenuMedian",
+      "terme": "Revenu médian",
+      "categorie": "Économie",
+      "definition": "Revenu qui sépare la population en deux moitiés égales : la moitié gagne moins, l'autre moitié gagne plus. Il est moins influencé par les très hauts revenus que la moyenne.",
+      "exemple": "Le revenu total médian des ménages était de 72 500 $ au Québec en 2020."
+    },
+    {
+      "id": "confianceConsommateurs",
+      "terme": "Confiance des consommateurs",
+      "categorie": "Économie",
+      "definition": "Indicateur de l'optimisme des ménages face à l'économie : quand elle baisse, ils épargnent davantage et dépensent moins.",
+      "exemple": "Une baisse de la confiance réduit d’abord les achats non essentiels."
+    },
+    {
+      "id": "secteurCyclique",
+      "terme": "Secteur cyclique",
+      "categorie": "Économie",
+      "definition": "Secteur dont les ventes suivent fortement la conjoncture (meubles, vêtements, restaurants haut de gamme), par opposition aux besoins courants (épicerie de base, coiffure).",
+      "exemple": "Un atelier de meubles souffre plus d’une récession qu’un salon de coiffure."
+    },
+    {
+      "id": "elasticiteRevenu",
+      "terme": "Élasticité-revenu",
+      "categorie": "Économie",
+      "definition": "Variation de la demande d'un produit quand le revenu des clients change. Les produits de luxe ont une élasticité-revenu élevée.",
+      "exemple": "Si les revenus baissent de 5 % et que les ventes de produits fins baissent de 10 %, l’élasticité-revenu est de 2."
+    },
+    {
+      "id": "fournitureExoneree",
+      "terme": "Fourniture exonérée",
+      "categorie": "Fiscalité",
+      "definition": "Vente sur laquelle on ne perçoit pas de TPS ni de TVQ et pour laquelle on ne peut pas récupérer les taxes payées sur les achats (ex. certains services de santé et services financiers). À ne pas confondre avec une fourniture détaxée.",
+      "exemple": "Une clinique médicale ne perçoit pas de taxes et ne réclame pas de CTI."
+    },
+    {
+      "id": "capitalRisque",
+      "terme": "Capital de risque",
+      "categorie": "Finance",
+      "definition": "Financement en actions accordé à une jeune entreprise à fort potentiel de croissance. L'investisseur accepte des pertes au début en espérant une forte croissance.",
+      "exemple": "Le « Nouveau joueur » perd de l’argent pendant des mois, financé par du capital de risque, pour gagner des parts de marché."
+    },
+    {
+      "id": "guerrePrix",
+      "terme": "Guerre de prix",
+      "categorie": "Marketing",
+      "definition": "Baisses de prix successives entre concurrents pour gagner des parts de marché. Elle réduit les marges de tout le monde et profite surtout aux entreprises qui ont les coûts les plus bas.",
+      "exemple": "Si tu baisses tes prix de 15 %, l’Agressif riposte, et vous perdez tous les deux de la marge."
+    },
+    {
+      "id": "barrieresEntree",
+      "terme": "Barrières à l’entrée",
+      "categorie": "Gestion",
+      "definition": "Obstacles qui rendent difficile l'arrivée d'un nouveau concurrent : investissement de départ, permis, réputation, fidélité des clients, économies d'échelle.",
+      "exemple": "Un permis d’alcool et une clientèle fidèle protègent une épicerie fine établie."
+    },
+    {
+      "id": "concentrationMarche",
+      "terme": "Concentration du marché",
+      "categorie": "Économie",
+      "definition": "Mesure de la part du marché détenue par quelques grandes entreprises. Les rachats de concurrents augmentent la concentration.",
+      "exemple": "Quand le Géant rachète un concurrent en difficulté, le marché se concentre."
+    },
+    {
+      "id": "avantageConcurrentiel",
+      "terme": "Avantage concurrentiel",
+      "categorie": "Gestion",
+      "definition": "Ce qui distingue durablement une entreprise de ses concurrents et que les clients valorisent : coûts plus bas, qualité, service, image, emplacement.",
+      "exemple": "Un service personnalisé est plus difficile à copier qu’une baisse de prix."
+    },
+    {
+      "id": "achalandageGoodwill",
+      "terme": "Achalandage (goodwill)",
+      "categorie": "Comptabilité",
+      "definition": "Valeur d'une entreprise au-delà de ses actifs tangibles : clientèle, réputation, emplacement. On le paie quand on achète une entreprise plus cher que la valeur de ses actifs nets.",
+      "exemple": "Racheter la liste de clients d’un concurrent, c’est payer pour son achalandage."
+    },
+    {
+      "id": "capaciteProduction",
+      "terme": "Capacité de production",
+      "categorie": "Opérations",
+      "definition": "Quantité maximale de produits ou de services qu'une équipe peut livrer en un mois : nombre d'employés × heures × productivité, divisé par le temps nécessaire par unité.",
+      "exemple": "Une coloration prend environ 2 h 30 de travail : 3 coiffeurs à temps plein ne peuvent pas en faire 300 par mois."
+    },
+    {
+      "id": "miseAPied",
+      "terme": "Mise à pied",
+      "categorie": "Ressources humaines",
+      "definition": "Arrêt temporaire du travail d'un employé, souvent pour une raison saisonnière ou économique. Au-delà de 6 mois, la Loi sur les normes du travail exige un préavis.",
+      "exemple": "Un paysagiste met à pied une partie de son équipe en novembre et la rappelle au printemps."
+    },
+    {
+      "id": "travailleurAutonome",
+      "terme": "Travailleur autonome",
+      "categorie": "Juridique",
+      "definition": "Personne en affaires pour son propre compte : elle choisit ses méthodes, ses horaires et fournit ses outils. Si l'entreprise contrôle son travail comme celui d'un salarié, il peut être requalifié en salarié.",
+      "exemple": "Un coiffeur qui loue une chaise et gère sa propre clientèle peut être un travailleur autonome."
+    },
+    {
+      "id": "planContinuite",
+      "terme": "Plan de continuité des affaires",
+      "categorie": "Gestion",
+      "definition": "Plan qui prévoit comment l'entreprise continue de fonctionner après un sinistre ou une panne : sauvegardes, génératrice, fournisseurs de rechange, communication.",
+      "exemple": "Une copie de sauvegarde hors ligne permet de repartir rapidement après un rançongiciel."
+    },
+    {
+      "id": "franchiseAssurance",
+      "terme": "Franchise (assurance)",
+      "categorie": "Finance",
+      "definition": "Montant d'une réclamation qui reste à la charge de l'assuré. Une franchise plus élevée réduit la prime d'assurance.",
+      "exemple": "Avec une franchise de 1 000 $, un dégât d’eau de 9 000 $ coûte 1 000 $ à l’entreprise."
+    },
+    {
+      "id": "interruptionAffaires",
+      "terme": "Assurance interruption des affaires",
+      "categorie": "Finance",
+      "definition": "Assurance qui compense le bénéfice perdu et certaines dépenses quand l'entreprise doit fermer à la suite d'un sinistre couvert.",
+      "exemple": "Après un incendie, elle paie une partie du loyer et des salaires pendant les réparations."
+    },
+    {
+      "id": "miseEnDemeure",
+      "terme": "Mise en demeure",
+      "categorie": "Juridique",
+      "definition": "Lettre officielle qui exige qu'une personne respecte une obligation (payer, réparer) dans un délai, avant un recours en justice.",
+      "exemple": "Un client mécontent envoie une mise en demeure avant de poursuivre aux petites créances."
+    },
+    {
+      "id": "petitesCreances",
+      "terme": "Petites créances",
+      "categorie": "Juridique",
+      "definition": "Division de la Cour du Québec qui entend les réclamations de 15 000 $ ou moins, sans avocat.",
+      "exemple": "Une entreprise peut y réclamer une facture impayée de 5 000 $."
+    },
+    {
+      "id": "evasionFiscale",
+      "terme": "Évasion fiscale",
+      "categorie": "Fiscalité",
+      "definition": "Moyen illégal de réduire ses impôts : ventes non déclarées, dépenses personnelles passées dans l'entreprise, fausses factures. À distinguer de la planification fiscale, qui est légale.",
+      "exemple": "Ne pas déclarer des ventes au comptant entraîne des pénalités de 50 %, des intérêts et parfois des poursuites."
+    },
+    {
+      "id": "demarqueInconnue",
+      "terme": "Démarque inconnue",
+      "categorie": "Opérations",
+      "definition": "Écart entre le stock prévu et le stock réel, causé par le vol, la casse ou les erreurs. On la découvre en faisant l'inventaire.",
+      "exemple": "Dans le commerce de détail, la démarque inconnue représente souvent 1,5 à 2 % des ventes."
+    },
+    {
+      "id": "risqueChange",
+      "terme": "Risque de change",
+      "categorie": "Finance",
+      "definition": "Risque de perte causé par la variation du taux de change quand on achète ou vend dans une autre devise.",
+      "exemple": "Si le dollar canadien baisse, un produit payé 100 $ US coûte plus cher en dollars canadiens."
+    },
+    {
+      "id": "rappelProduit",
+      "terme": "Rappel de produit",
+      "categorie": "Opérations",
+      "definition": "Retrait du marché d'un produit dangereux ou non conforme, souvent ordonné par l'Agence canadienne d'inspection des aliments (ACIA) pour les aliments.",
+      "exemple": "L’épicerie retire un fromage rappelé grâce à son numéro de lot."
+    },
+    {
+      "id": "loi25",
+      "terme": "Loi 25",
+      "categorie": "Juridique",
+      "definition": "Loi québécoise qui modernise la protection des renseignements personnels : responsable désigné, politique de confidentialité, registre et déclaration des incidents.",
+      "exemple": "Un commerce en ligne doit publier une politique de confidentialité claire."
+    },
+    {
+      "id": "evaluationEntreprise",
+      "terme": "Évaluation d’une entreprise",
+      "categorie": "Finance",
+      "definition": "Estimation de la valeur d'une entreprise, souvent par un multiple de son BAIIA, ajustée selon le risque, la croissance et la valeur des actifs.",
+      "exemple": "Une PME qui génère 100 000 $ de BAIIA peut valoir de 300 000 $ à 500 000 $."
+    },
+    {
+      "id": "tendanceConsommation",
+      "terme": "Tendance de consommation",
+      "categorie": "Marketing",
+      "definition": "Changement durable dans ce que les clients valorisent (achat local, écoresponsabilité, commande en ligne). Il modifie l'attrait des offres sur le marché.",
+      "exemple": "La vogue de l’achat local favorise les commerces qui affichent l’origine de leurs produits."
     }
   ]
 }

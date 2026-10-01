@@ -128,7 +128,7 @@ export function stockVide(): StockLigne {
 export interface ParamsLigneStock {
   /** Unités demandées ce mois-ci. */
   demande: number;
-  /** Unités qu'on peut préparer ce mois-ci (cuisine); Infinity si sans limite. */
+  /** Unités qu'on peut préparer ce mois-ci (production); Infinity si sans limite. */
   capacitePreparation: number;
   /** Proportion des produits ratés à refaire (consomment du stock sans vente). */
   tauxDefauts: number;
@@ -156,7 +156,7 @@ export interface ResultatStockLigne {
   vendues: number;
   /** Unités non vendues faute de stock. */
   perdues: number;
-  /** Unités non vendues faute de personnel en cuisine. */
+  /** Unités non vendues faute de personnel en production. */
   perduesPreparation: number;
   perimees: number;
   refaites: number;
@@ -235,6 +235,7 @@ export function simulerStockLigne(
   let quantiteCommande = Math.max(1, Math.round(p.quantite));
   let estimationJour = (stock.demandeRecente || p.demande) / JOURS_PAR_MOIS;
   let vouluesSemaine = 0;
+  let capaciteRestante = 0;
   const cmp = p.methode === 'coutMoyen';
 
   const sortirCout = (q: number): { quantite: number; cout: number } => {
@@ -262,10 +263,14 @@ export function simulerStockLigne(
     }
     stock.commandes = stock.commandes.filter((x) => x.jours > 0);
 
-    // 2. Ventes de la journée (limitées par la préparation en cuisine, puis par le stock)
+    // 2. Ventes de la journée (limitées par la capacité de production, puis par le stock).
+    // Les heures de production non utilisées un jour servent les jours suivants (on prend
+    // de l'avance ou on rattrape les commandes en attente).
     const voulues = demandeJours[jour];
     vouluesSemaine += voulues;
-    const preparables = capaciteJours ? Math.min(voulues, capaciteJours[jour]) : voulues;
+    if (capaciteJours) capaciteRestante += capaciteJours[jour];
+    const preparables = capaciteJours ? Math.min(voulues, capaciteRestante) : voulues;
+    capaciteRestante -= capaciteJours ? preparables : 0;
     r.perduesPreparation += voulues - preparables;
     const vente = sortirCout(preparables);
     r.vendues += vente.quantite;

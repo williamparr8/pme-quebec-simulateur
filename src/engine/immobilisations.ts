@@ -74,7 +74,11 @@ export function usureEquipement(ent: Entreprise): number {
 
 export interface EffetsCumules {
   capaciteService: number;
+  capaciteProduction: number;
   ambiance: number;
+  eco: number;
+  /** Multiplicateur des frais variables par client (expédition, carburant). */
+  fraisParVisite: number;
   qualiteLignes: Record<string, number>;
   coutLignes: Record<string, number>;
   demandeEte: number;
@@ -87,7 +91,10 @@ export interface EffetsCumules {
 export function effetsInvestissements(ent: Entreprise, secteur: Secteur): EffetsCumules {
   const r: EffetsCumules = {
     capaciteService: 0,
+    capaciteProduction: 0,
     ambiance: 0,
+    eco: 0,
+    fraisParVisite: 1,
     qualiteLignes: {},
     coutLignes: {},
     demandeEte: 0,
@@ -99,6 +106,9 @@ export function effetsInvestissements(ent: Entreprise, secteur: Secteur): Effets
     if (!immo.investissementId) continue;
     const e: EffetsInvestissement = investissementDef(secteur, immo.investissementId).effets;
     r.capaciteService += e.capaciteService ?? 0;
+    r.capaciteProduction += e.capaciteProduction ?? 0;
+    r.eco += e.eco ?? 0;
+    if (e.fraisParVisite !== undefined) r.fraisParVisite *= e.fraisParVisite;
     r.ambiance += e.ambiance ?? 0;
     r.demandeEte += e.demandeEte ?? 0;
     r.commandeEnLigne += e.commandeEnLigne ?? 0;

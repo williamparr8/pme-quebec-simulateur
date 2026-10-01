@@ -241,7 +241,7 @@ describe('marketing', () => {
     expect(sondage?.prixAcceptable?.boissons.valeur).toBeGreaterThan(0);
     expect(
       ent.marketing.etudes.find((x) => x.typeId === 'analyseConcurrence')?.concurrents,
-    ).toHaveLength(2);
+    ).toHaveLength(e.concurrents.filter((c) => c.actif).length);
     expect(
       ent.marketing.etudes.find((x) => x.typeId === 'groupeDiscussion')?.produitsPrometteurs
         ?.length,

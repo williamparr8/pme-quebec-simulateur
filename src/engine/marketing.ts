@@ -72,16 +72,23 @@ export function gainCanal(
   budget: number,
   segmentId: string,
   bonusConversion = 0,
+  efficaciteSecteur = 1,
 ): number {
   return borner(
     porteeCanal(canal, budget) *
       canal.couverture *
       canal.conversion *
+      efficaciteSecteur *
       (1 + bonusConversion) *
       (canal.affinites[segmentId] ?? 1),
     0,
     0.6,
   );
+}
+
+/** Efficacité d'un canal dans un secteur (ex. Google pour un commerce en ligne, circulaires pour le paysagement). */
+export function efficaciteCanal(secteur: Secteur, canalId: string): number {
+  return secteur.canaux?.[canalId] ?? 1;
 }
 
 /** Combine des gains indépendants : 1 − Π(1 − g). */
@@ -107,7 +114,16 @@ export function resumeCanaux(
   return CANAUX.map((canal) => {
     const budget = publicite[canal.id] ?? 0;
     const gainMoyen = secteur.segments.reduce(
-      (a, s) => a + s.part * gainCanal(canal, budget, s.personaId, bonusConversion),
+      (a, s) =>
+        a +
+        s.part *
+          gainCanal(
+            canal,
+            budget,
+            s.personaId,
+            bonusConversion,
+            efficaciteCanal(secteur, canal.id),
+          ),
       0,
     );
     return {
@@ -142,7 +158,14 @@ export function planifierEffetsPublicite(
         m.effetsDifferes.push(entree);
       }
       for (const s of secteur.segments) {
-        const g = gainCanal(canal, budget, s.personaId, bonusConversion) / canal.dureeEffetMois;
+        const g =
+          gainCanal(
+            canal,
+            budget,
+            s.personaId,
+            bonusConversion,
+            efficaciteCanal(secteur, canal.id),
+          ) / canal.dureeEffetMois;
         entree.gains[s.personaId] = combinerGains([entree.gains[s.personaId] ?? 0, g]);
       }
     }
@@ -164,13 +187,16 @@ export function totalPublicite(publicite: Record<string, number>): number {
 // Positionnement : écoresponsabilité, achat local, image
 // ---------------------------------------------------------------------------
 
-/** Écoresponsabilité perçue (0 à 1). */
-export function scoreEco(d: Pick<Decisions, 'initiativesEco' | 'qualiteId'>): number {
+/**
+ * Écoresponsabilité perçue (0 à 1).
+ * @param bonus gain apporté par les investissements (ex. outils électriques)
+ */
+export function scoreEco(d: Pick<Decisions, 'initiativesEco' | 'qualiteId'>, bonus = 0): number {
   const initiatives = INITIATIVES_ECO.filter((i) => d.initiativesEco.includes(i.id)).reduce(
     (a, i) => a + i.score,
     0,
   );
-  return borner(0.25 + initiatives + (d.qualiteId === 'artisanale' ? 0.1 : 0), 0, 1);
+  return borner(0.25 + initiatives + bonus + (d.qualiteId === 'artisanale' ? 0.1 : 0), 0, 1);
 }
 
 /** Achat local perçu (0 à 1) selon les fournisseurs des lignes de base et le Panier Bleu. */
@@ -306,7 +332,7 @@ export function etatMarketingInitial(secteur: Secteur, notoriete: number): EtatM
   };
 }
 
-/** Répartition par défaut du budget de publicité. */
-export function publiciteParDefaut(): Record<string, number> {
-  return { meta: 800, google: 500, flyers: 200 };
+/** Répartition par défaut du budget de publicité du secteur. */
+export function publiciteParDefaut(secteur?: Secteur): Record<string, number> {
+  return { ...(secteur?.publiciteDefaut ?? { meta: 800, google: 500, flyers: 200 }) };
 }

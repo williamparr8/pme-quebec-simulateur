@@ -6,6 +6,9 @@
 import {
   dilemmeParId,
   formationParId,
+  formationsSecteur,
+  fournisseurParId,
+  fournisseursCategorie,
   FORMATION_GESTIONNAIRE_HYGIENE,
   INITIATIVES_ECO,
   plateformeParId,
@@ -14,11 +17,13 @@ import {
   typeEtudeParId,
   villeParId,
 } from '../data';
-import { ecritureSimple, type CompteId, type FluxId } from './accounting';
+import { ecritureSimple, passerEcriture, type CompteId, type FluxId } from './accounting';
+import { fermerConcurrent } from './ai-competitors';
 import { ajouterAcquisition } from './annuel';
 import {
   coutDemarche,
   demarche,
+  estApplicable,
   estSocieteActions,
   fraisMiseAJourAnnuelle,
   immatriculationObligatoire,
@@ -31,18 +36,27 @@ import {
   parId,
   politiqueParDefaut,
   validerDecisions,
+  visitesEstimees,
 } from './creation';
-import type { IdTypeEtude } from './data-types';
-import { tauxPreferentiel } from './economy';
+import type { IdTypeEtude, LigneProduit } from './data-types';
+import { chomageVille, conjonctureInitiale, tauxPreferentiel } from './economy';
 import { payer } from './ecritures';
 import { realiserEtude } from './etudes';
-import { appliquerEffets, type CategorieDepense, type ContexteEffets } from './events';
+import {
+  CONDITIONS,
+  appliquerEffets,
+  modificateur,
+  type CategorieDepense,
+  type CategorieEncaissement,
+  type ContexteEffets,
+} from './events';
 import { evaluerCredit, limiteMargeMax, tauxPlacement, typePlacement } from './financement';
 import {
   COUT_RECRUTEMENT,
   employeDepuisCandidat,
   genererCandidat,
   genererEmploye,
+  conformeHygiene,
   nombreCandidats,
   penurieDuMois,
   probabiliteAcceptation,
@@ -56,10 +70,18 @@ import {
   effetsInvestissements,
 } from './immobilisations';
 import { creerPret, rembourserPartiellement } from './loans';
-import { nouveauProduit, lignesVente } from './produits';
+import { lignesStock, lignesVente, nouveauProduit } from './produits';
 import { Rng } from './rng';
 import { bilan } from './statements';
-import type { Entreprise, EtatPartie, Decisions, FrequenceTaxes, IdDemarche } from './types';
+import type {
+  Decisions,
+  DilemmeEnCours,
+  Entreprise,
+  EtatPartie,
+  FrequenceTaxes,
+  IdDemarche,
+  Message,
+} from './types';
 import { borner, versCents, versDollars } from './util';
 
 // ---------------------------------------------------------------------------
@@ -100,6 +122,15 @@ const COMPTES_DEPENSES: Record<
   amendes: { compte: 'amendes', flux: 'droitsEtAmendes', taxable: false },
   recrutement: { compte: 'recrutement', flux: 'publicite', taxable: true },
   sinistres: { compte: 'sinistres', flux: 'droitsEtAmendes', taxable: false },
+  honoraires: { compte: 'honoraires', flux: 'loyerEtFrais', taxable: true },
+  publicite: { compte: 'publicite', flux: 'publicite', taxable: true },
+  divers: { compte: 'fraisDivers', flux: 'loyerEtFrais', taxable: false },
+};
+
+const COMPTES_ENCAISSEMENTS: Record<CategorieEncaissement, { compte: CompteId; flux: FluxId }> = {
+  subvention: { compte: 'subventions', flux: 'subventionsRecues' },
+  assurance: { compte: 'autresRevenus', flux: 'autresEncaissements' },
+  autre: { compte: 'autresRevenus', flux: 'autresEncaissements' },
 };
 
 /** Fin d'emploi : départ immédiat et indemnité tenant lieu de préavis (versée avec la paie). */
@@ -114,24 +145,252 @@ export function terminerEmploi(ent: Entreprise, employeId: string, index: number
   ent.rh.departs.push({ index, type: 'finEmploi' });
 }
 
-/** Contexte d'application des effets d'un dilemme (dépenses et fins d'emploi). */
+/** Perte d'une partie du stock (panne de courant, vol, rappel de produit) : écriture et lots (mutation). */
+function perdreStock(
+  ent: Entreprise,
+  lignes: readonly LigneProduit[],
+  proportion: number,
+  libelle: string,
+): number {
+  let total = 0;
+  for (const l of lignes) {
+    const s = ent.operations.stocks[l.id];
+    if (!s) continue;
+    for (const lot of s.lots) {
+      const q = Math.floor(lot.quantite * proportion);
+      total += q * lot.cout;
+      lot.quantite -= q;
+    }
+    s.lots = s.lots.filter((x) => x.quantite > 0);
+  }
+  const cents = Math.min(ent.livre.soldes.stocks, versCents(total));
+  if (cents > 0) ecritureSimple(ent.livre, libelle, 'pertesStocks', 'stocks', cents);
+  return versDollars(cents);
+}
+
+/** Factures ouvertes du client qui doit le plus (cents). */
+function plusGrosDebiteur(ent: Entreprise): string | null {
+  const parClient = new Map<string, number>();
+  for (const f of ent.b2b.factures)
+    if (f.statut === 'ouverte')
+      parClient.set(f.client, (parClient.get(f.client) ?? 0) + f.ht + f.tps + f.tvq);
+  let meilleur: string | null = null;
+  let max = 0;
+  for (const [client, montant] of parClient)
+    if (montant > max) {
+      max = montant;
+      meilleur = client;
+    }
+  return meilleur;
+}
+
+/**
+ * Règle les factures d'un client : une partie est encaissée (agence de recouvrement), le
+ * reste est radié comme créance irrécouvrable (la TPS et la TVQ correspondantes sont récupérées).
+ */
+export function reglerCreanceClient(
+  ent: Entreprise,
+  client: string,
+  partEncaissee: number,
+): { total: number; encaisse: number; perte: number } {
+  const ouvertes = ent.b2b.factures.filter((x) => x.client === client && x.statut === 'ouverte');
+  const ht = ouvertes.reduce((a, x) => a + x.ht, 0);
+  const tps = ouvertes.reduce((a, x) => a + x.tps, 0);
+  const tvq = ouvertes.reduce((a, x) => a + x.tvq, 0);
+  const total = ht + tps + tvq;
+  if (total <= 0) return { total: 0, encaisse: 0, perte: 0 };
+  const part = borner(partEncaissee, 0, 1);
+  const encaisse = Math.round(total * part);
+  const tpsRecuperee = Math.round(tps * (1 - part));
+  const tvqRecuperee = Math.round(tvq * (1 - part));
+  const perte = total - encaisse - tpsRecuperee - tvqRecuperee;
+  passerEcriture(ent.livre, {
+    libelle:
+      part > 0
+        ? `Recouvrement des factures de ${client} (agence : ${Math.round((1 - part) * 100)} % perdu)`
+        : `Radiation des factures de ${client} (créance irrécouvrable; taxes récupérées)`,
+    flux: encaisse > 0 ? 'encaissementsClients' : undefined,
+    lignes: [
+      { compte: 'encaisse', debit: encaisse },
+      { compte: 'creancesIrrecouvrables', debit: perte },
+      { compte: 'tpsAPayer', debit: tpsRecuperee },
+      { compte: 'tvqAPayer', debit: tvqRecuperee },
+      { compte: 'comptesClients', credit: total },
+    ],
+  });
+  for (const x of ouvertes) x.statut = part > 0 ? 'payee' : 'radiee';
+  ent.b2b.contrats = ent.b2b.contrats.filter((c) => c.client !== client);
+  return { total: versDollars(total), encaisse: versDollars(encaisse), perte: versDollars(perte) };
+}
+
+export interface OptionsEffets {
+  /** État de la partie (concurrents, conjoncture) pour les effets qui le touchent. */
+  etat?: EtatPartie;
+  dilemme?: DilemmeEnCours;
+}
+
+/** Contexte d'application des effets d'un événement (dépenses, stocks, fournisseurs, concurrents…). */
 export function contexteEffets(
   ent: Entreprise,
   employeId: string | null,
   index: number,
   rng: Rng,
+  options: OptionsEffets = {},
 ): ContexteEffets {
+  const { etat, dilemme } = options;
+  const secteur = etat ? secteurParId(etat.config.secteurId) : null;
+  const ville = etat ? villeParId(etat.config.villeId) : null;
+  const messages: Message[] = [];
+  const politique = (ligne: LigneProduit, fournisseurId: string) =>
+    politiqueParDefaut(
+      ligne,
+      fournisseurId,
+      ent.operations.stocks[ligne.id]?.demandeRecente ?? 0,
+      etat?.conjoncture ?? conjonctureInitiale(),
+    );
   return {
     ent,
     employeId,
     index,
     rng,
-    messages: [],
+    dilemme,
+    messages,
     depense: (categorie, montant, libelle) => {
       const c = COMPTES_DEPENSES[categorie];
       payer(ent.livre, ent, libelle, c.compte, montant, c.taxable, c.flux);
     },
+    encaisser: (montant, categorie, libelle) => {
+      const c = COMPTES_ENCAISSEMENTS[categorie];
+      ecritureSimple(ent.livre, libelle, 'encaisse', c.compte, versCents(montant), c.flux);
+    },
     congedier: (id) => terminerEmploi(ent, id, index),
+    perdreStock: (proportion, perissables, categorie, libelle) => {
+      if (!secteur) return;
+      const lignes = lignesStock(ent, secteur).filter(
+        (l) =>
+          (!perissables || l.perissable) &&
+          (!categorie || l.categorieAppro === categorie || l.id === categorie),
+      );
+      const montant = perdreStock(ent, lignes, proportion, libelle);
+      if (montant > 0) messages.push({ code: 'stockPerdu', niveau: 'alerte', params: { montant } });
+    },
+    fournisseurFaillite: (mode) => {
+      if (!secteur) return;
+      const lignes = lignesStock(ent, secteur);
+      const usage = new Map<string, number>();
+      for (const l of lignes) {
+        const id =
+          ent.decisions.approvisionnement[l.id]?.fournisseurId ??
+          secteur.fournisseursDefaut[l.categorieAppro];
+        usage.set(id, (usage.get(id) ?? 0) + Math.max(1, l.tauxAchat * l.prixReference));
+      }
+      const failli = [...usage.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+      if (!failli) return;
+      const fermes = (ent.operations.fournisseursFermes ??= []);
+      if (!fermes.includes(failli)) fermes.push(failli);
+      let remplacant = '';
+      for (const l of lignes) {
+        if ((ent.decisions.approvisionnement[l.id]?.fournisseurId ?? '') !== failli) continue;
+        const choix = fournisseursCategorie(l.categorieAppro)
+          .filter((f) => !fermes.includes(f.id))
+          .sort((a, b) =>
+            mode === 'fiable' ? b.fiabilite - a.fiabilite : a.indicePrix - b.indicePrix,
+          )[0];
+        if (!choix) continue;
+        ent.decisions.approvisionnement[l.id] = politique(l, choix.id);
+        remplacant = choix.nom;
+      }
+      messages.push({
+        code: 'fournisseurFaillite',
+        niveau: 'danger',
+        params: { nom: fournisseurParId(failli).nom, remplacant },
+      });
+    },
+    fournisseursCanadiens: () => {
+      if (!secteur) return;
+      for (const l of lignesStock(ent, secteur)) {
+        const actuel = ent.decisions.approvisionnement[l.id]?.fournisseurId;
+        if (!actuel || fournisseurParId(actuel).devise !== 'USD') continue;
+        const choix = fournisseursCategorie(l.categorieAppro)
+          .filter(
+            (f) => f.devise === 'CAD' && !(ent.operations.fournisseursFermes ?? []).includes(f.id),
+          )
+          .sort((a, b) => a.indicePrix - b.indicePrix)[0];
+        if (choix) ent.decisions.approvisionnement[l.id] = politique(l, choix.id);
+      }
+    },
+    embaucher: (posteId, competence, majoration) => {
+      if (!secteur || !ville || !etat) return;
+      const poste = posteParId(posteId ?? secteur.postes[0]);
+      const salaire = Math.max(
+        etat.salaireMinimum,
+        salaireMarchePoste(poste, ville.indiceSalaires, etat.conjoncture.indicePrix) *
+          (1 + majoration),
+      );
+      const employe = genererEmploye(
+        nouvelId(ent, 'emp'),
+        poste,
+        poste.heuresSemaineDefaut,
+        salaire,
+        rng,
+      );
+      employe.competence = Math.round(borner(competence, 0.5, 1.4) * 100) / 100;
+      employe.moral = 72;
+      ent.employes.push(employe);
+      messages.push({
+        code: 'embaucheEvenement',
+        niveau: 'info',
+        params: { nom: `${employe.prenom} ${employe.nom}`, poste: poste.nom },
+      });
+    },
+    creanceClient: (mode, part) => {
+      const client = plusGrosDebiteur(ent);
+      if (!client) return;
+      const r = reglerCreanceClient(ent, client, mode === 'recouvrer' ? part : 0);
+      messages.push(
+        mode === 'recouvrer'
+          ? {
+              code: 'recouvrement',
+              niveau: 'alerte',
+              params: { client, recu: r.encaisse, perte: r.perte },
+            }
+          : {
+              code: 'creanceIrrecouvrable',
+              niveau: 'danger',
+              params: { client, montant: r.total },
+            },
+      );
+    },
+    concurrent: (quoi) => {
+      if (!etat) return;
+      const designe = etat.concurrents.find((c) => c.id === dilemme?.params?.concurrentId);
+      const vise =
+        quoi === 'arrivee'
+          ? designe?.statut === 'aVenir'
+            ? designe
+            : etat.concurrents.find((c) => c.statut === 'aVenir')
+          : designe;
+      if (!vise) return;
+      if (quoi === 'arrivee' && vise.statut === 'aVenir') vise.arrivee = index;
+      if (quoi === 'fermer' && vise.actif) {
+        fermerConcurrent(vise, index);
+        messages.push({ code: 'concurrentClientele', niveau: 'succes', params: { nom: vise.nom } });
+      }
+    },
+    vendre: (facteur) => {
+      const base = dilemme?.params?.prix ?? valorisationEnCours(ent);
+      const prix = Math.round((base * facteur) / 1000) * 1000;
+      ent.vente = { prix, index, acheteur: dilemme?.params?.concurrent ?? 'Un concurrent' };
+      messages.push({ code: 'venteEntreprise', niveau: 'succes', params: { prix } });
+    },
+    condition: (nom) =>
+      (CONDITIONS[nom] ?? (() => false))(ent, {
+        mois: (index % 12) + 1,
+        derniere: ent.archives.at(-1),
+        index,
+        secteur: secteur ?? undefined,
+        hygieneConforme: conformeHygiene(ent),
+      }),
   };
 }
 
@@ -173,6 +432,8 @@ export function changerFournisseur(
     const secteur = secteurParId(e.config.secteurId);
     const ligne = [...secteur.lignes, ...secteur.nouveauxProduits].find((l) => l.id === ligneId);
     if (!ligne) return;
+    if ((ent.operations.fournisseursFermes ?? []).includes(fournisseurId)) return;
+    if (fournisseurParId(fournisseurId).categorie !== ligne.categorieAppro) return;
     const demande = ent.operations.stocks[ligneId]?.demandeRecente ?? 0;
     const actuelle = ent.decisions.approvisionnement[ligneId];
     const nouvelle = politiqueParDefaut(ligne, fournisseurId, demande, e.conjoncture);
@@ -270,7 +531,11 @@ export function genererCandidatsAffichage(
   const poste = posteParId(posteId);
   const rng = new Rng(e.rngState);
   const { mois } = dateDuMois(e.config, index);
-  const penurie = penurieDuMois(ville.penurieMainOeuvre, e.conjoncture.phase, mois);
+  const penurie = penurieDuMois(
+    chomageVille(ville.chomage, e.conjoncture),
+    mois,
+    modificateur(ent, 'penurie'),
+  );
   const n = nombreCandidats(plateformeId, penurie, rng);
   for (let i = 0; i < n; i++) {
     ent.rh.candidats.push(
@@ -348,7 +613,10 @@ export function retirerCandidat(
 
 /** Fin d'emploi : l'employé part tout de suite et reçoit une indemnité tenant lieu de préavis. */
 export function congedier(etat: EtatPartie, entrepriseId: string, employeId: string): EtatPartie {
-  return action(etat, entrepriseId, (ent, e) => terminerEmploi(ent, employeId, indexCourant(e)));
+  return action(etat, entrepriseId, (ent, e) => {
+    if (ent.employes.some((x) => x.id === employeId))
+      terminerEmploi(ent, employeId, indexCourant(e));
+  });
 }
 
 export function modifierHeuresEmploye(
@@ -411,9 +679,10 @@ export function formerEmploye(
   employeId: string,
   formationId: string,
 ): EtatPartie {
-  return action(etat, entrepriseId, (ent) => {
+  return action(etat, entrepriseId, (ent, e) => {
     const employe = parId(ent.employes, employeId);
     const f = formationParId(formationId);
+    if (!formationsSecteur(secteurParId(e.config.secteurId)).some((x) => x.id === f.id)) return;
     if (employe.formations.includes(f.id)) return;
     if (f.postes && !f.postes.includes(employe.posteId)) return;
     payer(
@@ -478,9 +747,17 @@ export function repondreDilemme(
     const choix = def.choix.find((c) => c.id === choixId);
     if (!choix) return;
     const rng = new Rng(e.rngState);
-    appliquerEffets(choix.effets, contexteEffets(ent, d.employeId, indexCourant(e), rng));
+    appliquerEffets(
+      choix.effets,
+      contexteEffets(ent, d.employeId, indexCourant(e), rng, { etat: e, dilemme: d }),
+    );
     ent.dilemmes = ent.dilemmes.filter((x) => x.id !== dilemmeId);
     e.rngState = rng.state;
+    // Vente de l'entreprise : la partie se termine pour ce joueur.
+    if (ent.vente && e.entreprises.every((x) => x.enFaillite || x.vente)) {
+      e.terminee = true;
+      e.raisonFin = 'vente';
+    }
   });
 }
 
@@ -574,7 +851,9 @@ export function lancerProduit(
       ent.decisions.approvisionnement[p.id] = politiqueParDefaut(
         p,
         secteur.fournisseursDefaut[p.categorieAppro],
-        p.b2b ? 100 : 3000 * p.tauxAchat,
+        p.b2b
+          ? (p.b2b.quantiteMin + p.b2b.quantiteMax) / 2
+          : visitesEstimees(secteur, villeParId(e.config.villeId)) * 2 * p.tauxAchat,
         e.conjoncture,
       );
     }
@@ -587,12 +866,15 @@ export function retirerProduit(
   entrepriseId: string,
   produitId: string,
 ): EtatPartie {
-  return action(etat, entrepriseId, (ent) => {
+  return action(etat, entrepriseId, (ent, e) => {
     const p = ent.marketing.produits.find((x) => x.ligneId === produitId);
     if (!p || p.statut === 'retire') return;
     p.statut = 'retire';
-    if (ent.b2b.contrats.length > 0 && produitId === 'traiteur') ent.b2b.contrats = [];
-    ent.b2b.appels = produitId === 'traiteur' ? [] : ent.b2b.appels;
+    const def = nouveauProduit(secteurParId(e.config.secteurId), produitId);
+    if (def.b2b) {
+      ent.b2b.contrats = [];
+      ent.b2b.appels = [];
+    }
   });
 }
 
@@ -609,7 +891,7 @@ export function soumettre(
   return action(etat, entrepriseId, (ent) => {
     const a = ent.b2b.appels.find((x) => x.id === appelId);
     if (!a) return;
-    a.soumission = prix === null ? null : Math.round(borner(prix, 1, 200) * 100) / 100;
+    a.soumission = prix === null ? null : Math.round(borner(prix, 1, 20_000) * 100) / 100;
   });
 }
 
@@ -877,8 +1159,8 @@ export function regulariserDemarche(
   entrepriseId: string,
   id: IdDemarche,
 ): EtatPartie {
-  return action(etat, entrepriseId, (ent) => {
-    if (ent.demarches[id]) return;
+  return action(etat, entrepriseId, (ent, e) => {
+    if (ent.demarches[id] || !estApplicable(id, secteurParId(e.config.secteurId))) return;
     ent.demarches[id] = true;
     if (id === 'mapaq') ent.rh.gestionnaireHygiene = true;
     const cout = coutDemarche(id, ent.formeJuridique);

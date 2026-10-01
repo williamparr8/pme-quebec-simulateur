@@ -8,6 +8,7 @@ import type { Message } from '../engine/types';
 import { argent, argentRond, decimal, nombre, pourcentage } from './format';
 import { MESSAGES_JALON2 } from './messages-jalon2';
 import { MESSAGES_JALON3 } from './messages-jalon3';
+import { MESSAGES_JALON4 } from './messages-jalon4';
 
 export interface TexteMessage {
   titre: string;
@@ -23,7 +24,7 @@ const CAUSES: Record<CauseVariation, { hausse: string; baisse: string }> = {
   saison: {
     hausse: 'La saison est favorable : les clients sortent davantage ce mois-ci (saisonnalité).',
     baisse:
-      'C’est surtout la saison : en juillet, par exemple, les vacances de la construction et le départ des étudiants vident les quartiers. Prévois ta trésorerie en conséquence.',
+      'C’est surtout la saison : chaque secteur a ses mois forts et ses mois creux (juillet pour un café, janvier pour une boutique, la fin de l’automne pour un paysagiste). Prévois ta trésorerie en conséquence.',
   },
   notoriete: {
     hausse:
@@ -226,7 +227,11 @@ const MESSAGES: Record<string, (p: Params) => TexteMessage> = {
 };
 
 export function texteMessage(m: Message): TexteMessage {
-  const f = MESSAGES[m.code] ?? MESSAGES_JALON2[m.code] ?? MESSAGES_JALON3[m.code];
+  const f =
+    MESSAGES[m.code] ??
+    MESSAGES_JALON2[m.code] ??
+    MESSAGES_JALON3[m.code] ??
+    MESSAGES_JALON4[m.code];
   return f ? f(m.params ?? {}) : { titre: m.code, texte: '' };
 }
 
@@ -240,14 +245,17 @@ export const ORDRE_NIVEAUX: Record<Message['niveau'], number> = {
 export const DIFFICULTES_TEXTE = {
   facile: {
     nom: 'Facile',
-    description: 'Marché plus grand, concurrents moins agressifs, marge de crédit plus généreuse.',
+    description:
+      'Marché plus grand, concurrents moins agressifs, marge de crédit plus généreuse, moins d’événements négatifs et de récessions.',
   },
   realiste: {
     nom: 'Réaliste',
-    description: 'Des conditions proches de la réalité d’une PME québécoise.',
+    description:
+      'Des conditions proches de la réalité d’une PME québécoise : événements fréquents, cycles économiques normaux.',
   },
   expert: {
     nom: 'Expert',
-    description: 'Marché plus petit, concurrents agressifs, banque prudente.',
+    description:
+      'Marché plus petit, concurrents agressifs qui arrivent plus tôt, banque prudente, plus d’événements négatifs, de récessions et de vérifications fiscales.',
   },
 } as const;

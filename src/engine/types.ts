@@ -12,8 +12,8 @@ export type Difficulte = 'facile' | 'realiste' | 'expert';
 export const DUREES_PARTIE = [12, 24, 36, 60] as const;
 export type DureePartie = (typeof DUREES_PARTIE)[number];
 
-/** Version du format de sauvegarde (2 : Jalon 3). */
-export const VERSION_ETAT = 2;
+/** Version du format de sauvegarde (3 : Jalon 4). */
+export const VERSION_ETAT = 3;
 
 export interface ConfigPartie {
   graine: number;
@@ -88,7 +88,10 @@ export type IdDemarche =
   | 'mapaq'
   | 'assurances'
   | 'compteBancaire'
-  | 'francisation';
+  | 'francisation'
+  | 'racj'
+  | 'pesticides'
+  | 'confidentialite';
 
 export type FrequenceTaxes = 'mensuelle' | 'trimestrielle' | 'annuelle';
 
@@ -390,6 +393,8 @@ export interface StockLigne {
 export interface EtatOperations {
   stocks: Record<string, StockLigne>;
   tauxDefauts: number;
+  /** Fournisseurs qui ont fermé leurs portes (faillite). */
+  fournisseursFermes?: string[];
 }
 
 export interface Immobilisation {
@@ -430,7 +435,7 @@ export interface AppelOffres {
   id: string;
   client: string;
   typeClient: string;
-  repasParMois: number;
+  quantiteParMois: number;
   dureeMois: number;
   delaiPaiementJours: 30 | 45 | 60;
   cote: 'A' | 'B' | 'C';
@@ -445,7 +450,7 @@ export interface Contrat {
   id: string;
   client: string;
   cote: 'A' | 'B' | 'C';
-  repasParMois: number;
+  quantiteParMois: number;
   prixUnitaire: number;
   moisRestants: number;
   delaiPaiementJours: 30 | 45 | 60;
@@ -480,6 +485,19 @@ export interface DilemmeEnCours {
   employeId: string | null;
   nomEmploye: string;
   index: number;
+  /** Valeurs propres à cet événement (ex. concurrent visé, montant d'une offre). */
+  params?: { concurrentId?: string; concurrent?: string; prix?: number };
+}
+
+/** Effet temporaire d'un événement (dure quelques mois). */
+export interface Modificateur {
+  type: 'demande' | 'couts' | 'capacite' | 'penurie' | 'fraisParVisite' | 'delais';
+  /** Multiplicateur (demande, coûts, capacité, frais) ou valeur ajoutée (pénurie, jours de délai). */
+  valeur: number;
+  moisRestants: number;
+  libelle: string;
+  /** Délais : le calcul automatique des commandes en tient compte. */
+  anticipation?: boolean;
 }
 
 export interface RisqueDiffere {
@@ -495,7 +513,11 @@ export interface EffetsMois {
   heuresProprietaire: number;
   /** Primes à verser avec la prochaine paie ($ bruts au total). */
   primes: number;
+  /** Jours de fermeture causés par un événement (sinistre, tournage…). */
+  joursFermeture: number;
   pertesRecurrentes: { montant: number; moisRestants: number; libelle: string }[];
+  /** Revenus récurrents (ex. location d'une chaise à un travailleur autonome). */
+  revenusRecurrents: { montant: number; moisRestants: number; libelle: string }[];
 }
 
 export interface Indicateurs {
@@ -504,8 +526,8 @@ export interface Indicateurs {
   servies: number;
   perduesCapacite: number;
   perduesRupture: number;
-  /** Unités non vendues faute de personnel en cuisine. */
-  perduesCuisine: number;
+  /** Unités non vendues faute de capacité de production (cuisine, atelier, équipes). */
+  perduesProduction: number;
   partMarche: number;
   ventesParLigne: VenteLigne[];
   chiffreAffaires: number;
@@ -547,11 +569,15 @@ export interface Indicateurs {
   absenteisme: number;
   heuresOuvertureEffectives: number;
   capacite: number;
-  capaciteCuisine: number;
+  /** Heures de production disponibles et demandées ce mois-ci. */
+  capaciteProduction: number;
+  demandeProduction: number;
   utilisation: number;
   tauxDirecteur: number;
   tauxPreferentiel: number;
   inflation: number;
+  /** Taux de chômage de la région. */
+  chomage: number;
   tauxChange: number;
   salaireMinimum: number;
   /** Indice de prix de l'entreprise par rapport au marché (1 = prix du marché). */
@@ -659,8 +685,12 @@ export interface Entreprise {
   enFaillite: boolean;
   /** Compteur d'identifiants (employés, candidats, contrats, factures…). */
   prochainId: number;
-  /** Jours de fermeture forcée ce mois-ci (inspection, ordonnance). */
+  /** Jours de fermeture forcée ce mois-ci (inspection, ordonnance, sinistre). */
   joursFermeture: number;
+  /** Effets temporaires des événements. */
+  modificateurs: Modificateur[];
+  /** Vente de l'entreprise (fin de partie) : prix reçu et mois de la vente. */
+  vente: { prix: number; index: number; acheteur: string } | null;
 }
 
 export interface EtatPartie {
@@ -674,5 +704,5 @@ export interface EtatPartie {
   entreprises: Entreprise[];
   concurrents: Concurrent[];
   terminee: boolean;
-  raisonFin?: 'duree' | 'faillite';
+  raisonFin?: 'duree' | 'faillite' | 'vente';
 }

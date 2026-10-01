@@ -140,16 +140,18 @@ export function realiserEtude(
   }
 
   if (typeId === 'analyseConcurrence') {
-    etude.concurrents = c.concurrents.map((x) => ({
-      id: x.id,
-      part: {
-        valeur: arrondi(borner(x.partMarche + rng.normal(0, 0.015), 0, 1)),
-        marge: 0.03,
-      },
-      budgetPublicite: Math.round((x.budgetPublicite * (1 + rng.normal(0, 0.08))) / 50) * 50,
-      qualite: arrondi(borner(x.qualite + rng.normal(0, 0.03), 0, 1), 2),
-      ventesMensuelles: Math.round((x.ventesMois * (1 + rng.normal(0, 0.08))) / 100) * 100,
-    }));
+    etude.concurrents = c.concurrents
+      .filter((x) => x.actif)
+      .map((x) => ({
+        id: x.id,
+        part: {
+          valeur: arrondi(borner(x.partMarche + rng.normal(0, 0.015), 0, 1)),
+          marge: 0.03,
+        },
+        budgetPublicite: Math.round((x.budgetPublicite * (1 + rng.normal(0, 0.08))) / 50) * 50,
+        qualite: arrondi(borner(x.qualite + rng.normal(0, 0.03), 0, 1), 2),
+        ventesMensuelles: Math.round((x.ventesMois * (1 + rng.normal(0, 0.08))) / 100) * 100,
+      }));
   }
   return etude;
 }

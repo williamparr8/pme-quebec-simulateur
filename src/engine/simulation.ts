@@ -16,6 +16,7 @@ import {
 } from '../data/fiscalite';
 import {
   DILEMMES,
+  FORMATIONS,
   INITIATIVES_ECO,
   PARAMETRES_MARKETING,
   dilemmeParId,
@@ -36,10 +37,16 @@ import {
   passerEcriture,
   type CompteId,
 } from './accounting';
-import { contexteEffets, majAnnuelleExigee } from './actions';
+import {
+  contexteEffets,
+  majAnnuelleExigee,
+  reglerCreanceClient,
+  valorisationEnCours,
+} from './actions';
 import {
   ajusterPrixConcurrent,
   deciderConcurrent,
+  evoluerStatutsConcurrents,
   majConcurrentApresMarche,
   offreConcurrent,
   type ObservationMarche,
@@ -78,12 +85,26 @@ import {
   validerDecisions,
 } from './creation';
 import { noteCible, noteDuMois, nouvelleNote, satisfactionClients } from './customers';
-import type { FraisFixesMensuels, Secteur, Ville } from './data-types';
-import { evoluerConjoncture, tauxPreferentiel, type Conjoncture } from './economy';
+import type { FraisFixesMensuels, LigneProduit, Secteur, Ville } from './data-types';
+import {
+  chomageVille,
+  evoluerConjoncture,
+  facteurConjoncture,
+  sensibilitePrixConjoncture,
+  tauxPreferentiel,
+  type Conjoncture,
+} from './economy';
 import { acheterMarchandises, payer, solderComptes } from './ecritures';
-import { appliquerEffets, montantEffets, tirerDilemme } from './events';
+import {
+  appliquerEffets,
+  modificateur,
+  montantEffets,
+  tirerDilemme,
+  vieillirModificateurs,
+} from './events';
 import {
   JOURS_FERIES_PAR_MOIS,
+  conformeHygiene,
   effetsAvantages,
   evoluerMoral,
   facteurIntegration,
@@ -123,8 +144,10 @@ import {
 } from './loans';
 import {
   evoluerNotoriete,
+  facteurTaxesSecteur,
   indicePrixClient,
   indicePrixOffre,
+  ligneTaxable,
   prixReference,
   simulerMarche,
   type Offre,
@@ -150,10 +173,16 @@ import {
   valeurVieClient,
 } from './marketing';
 import { cotisationsEmployeur, salaireMensuel } from './payroll';
-import { bonusGamme, lignesOffre, lignesStock, produitActif, resoudreLancements } from './produits';
+import {
+  bonusGamme,
+  lignesOffre,
+  lignesStock,
+  produitB2BActif,
+  resoudreLancements,
+} from './produits';
 import { Rng } from './rng';
 import { cumulerMouvements, etatResultats } from './statements';
-import { FACTEUR_TAXES, depasseSeuilPetitFournisseur, retenuesEmploye, taxesSur } from './tax';
+import { depasseSeuilPetitFournisseur, retenuesEmploye, taxesSur } from './tax';
 import type {
   ConfigPartie,
   CumulPaie,
@@ -169,6 +198,7 @@ import { SEMAINES_PAR_MOIS, borner, lisser, versCents, versDollars } from './uti
 
 export * from './creation';
 export * from './actions';
+export { conformeHygiene } from './hr';
 
 // ---------------------------------------------------------------------------
 // Règles
@@ -176,6 +206,8 @@ export * from './actions';
 
 /** Proportion des ventes en magasin payées par carte (débit ou crédit). */
 const PART_VENTES_CARTES = 0.85;
+/** Revenu total médian des ménages au Québec en 2020 (Recensement 2021). */
+const REVENU_MEDIAN_QUEBEC = 72_500;
 /** Proportion des clients servis qui laissent un avis en ligne. */
 const TAUX_AVIS = 0.008;
 /** Probabilité mensuelle qu'un défaut d'inscription aux taxes soit découvert. */
@@ -227,13 +259,17 @@ interface ContexteMois {
   messagesCommuns: Message[];
   config: ConfigPartie;
   segments: SegmentMarche[];
+  etat: EtatPartie;
+  /** Taux de chômage de la région ce mois-ci. */
+  chomage: number;
 }
 
 interface Preparation {
   offre: Offre;
   capacite: number;
-  capaciteCuisine: number;
-  sansCuisinier: boolean;
+  /** Minutes de production disponibles ce mois-ci. */
+  minutesProduction: number;
+  sansProducteur: boolean;
   heuresPersonnel: number;
   heuresEffectives: number;
   heuresProprietaire: number;
@@ -264,13 +300,6 @@ function heuresPoste(ent: Entreprise, role: string): number {
     .reduce((a, e) => a + e.heuresSemaine, 0);
 }
 
-/** Conformité en hygiène et salubrité : gestionnaire formé ou au moins 10 % du personnel formé. */
-export function conformeHygiene(ent: Entreprise): boolean {
-  if (ent.rh.gestionnaireHygiene) return true;
-  const formes = ent.employes.filter((e) => e.formations.includes('manipulateur')).length;
-  return formes >= Math.max(1, Math.ceil(ent.employes.length * 0.1));
-}
-
 // ---------------------------------------------------------------------------
 // Début du mois
 // ---------------------------------------------------------------------------
@@ -285,7 +314,7 @@ function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
   const f = ent.fiscal;
   const m: Message[] = [];
   const { rng, secteur } = ctx;
-  ent.joursFermeture = 0;
+  ent.joursFermeture = ent.effetsMois.joursFermeture ?? 0;
 
   // Incorporation planifiée : elle prend effet le 1er janvier.
   if (ctx.mois === 1 && f.incorporationPrevue && ent.formeJuridique === 'individuelle') {
@@ -315,7 +344,7 @@ function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
   for (const d of ent.dilemmes) {
     const def = dilemmeParId(d.defId);
     const choix = def.choix.find((c) => c.id === def.choixParDefaut) ?? def.choix[0];
-    const c = contexteEffets(ent, d.employeId, ctx.index, rng);
+    const c = contexteEffets(ent, d.employeId, ctx.index, rng, { etat: ctx.etat, dilemme: d });
     appliquerEffets(choix.effets, c);
     m.push(...c.messages);
     m.push({
@@ -332,7 +361,7 @@ function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
   for (const r of echus) {
     if (!rng.chance(r.probabilite)) continue;
     const montant = montantEffets(r.effets, ent.employes.length);
-    const c = contexteEffets(ent, null, ctx.index, rng);
+    const c = contexteEffets(ent, null, ctx.index, rng, { etat: ctx.etat });
     appliquerEffets(r.effets, c);
     m.push(...c.messages);
     m.push({ code: r.code, niveau: 'danger', params: { montant } });
@@ -494,6 +523,18 @@ function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
     ecritureSimple(L, p.libelle, 'sinistres', 'encaisse', versCents(p.montant), 'droitsEtAmendes');
     p.moisRestants -= 1;
   }
+  // Revenus récurrents (ex. location d'une chaise à un travailleur autonome).
+  for (const p of ent.effetsMois.revenusRecurrents ?? []) {
+    ecritureSimple(
+      L,
+      p.libelle,
+      'encaisse',
+      'autresRevenus',
+      versCents(p.montant),
+      'autresEncaissements',
+    );
+    p.moisRestants -= 1;
+  }
 
   // Nouveaux produits : fin du développement.
   m.push(
@@ -538,6 +579,28 @@ function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
 // Offre de l'entreprise
 // ---------------------------------------------------------------------------
 
+/** Bonus de qualité d'une ligne grâce aux employés formés (+0,02 par employé, max +0,04 par formation). */
+function bonusFormations(ent: Entreprise, ligne: LigneProduit): number {
+  let bonus = 0;
+  for (const f of FORMATIONS) {
+    const q = f.qualite;
+    if (!q) continue;
+    const vise =
+      (q.categories?.includes(ligne.categorieAppro) ?? false) ||
+      (q.lignes?.includes(ligne.id) ?? false) ||
+      (q.production === true && ligne.production);
+    if (!vise) continue;
+    const formes = ent.employes.filter((e) => e.formations.includes(f.id)).length;
+    bonus += Math.min(0.04, 0.02 * formes);
+  }
+  return bonus;
+}
+
+/** Minutes de production nécessaires pour une unité d'une ligne. */
+export function minutesLigne(ligne: LigneProduit, secteur: Secteur): number {
+  return ligne.production ? (ligne.minutesProduction ?? secteur.minutesProductionDefaut) : 0;
+}
+
 function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]): Preparation {
   const d = ent.decisions;
   const { secteur, conj } = ctx;
@@ -547,7 +610,7 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
   const qualite = qualiteDe(secteur, d.qualiteId);
   const effets = effetsInvestissements(ent, secteur);
   const ouvert = 1 - borner(ent.joursFermeture / 30, 0, 1);
-  const facteurMois = ent.effetsMois.capacite;
+  const facteurMois = ent.effetsMois.capacite * modificateur(ent, 'capacite');
   const gerant = heuresPoste(ent, 'gestion') > 0;
   const capaciteAvantages =
     ent.employes.length > 0
@@ -564,42 +627,47 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
       ent.effetsMois.heuresProprietaire -
       (d.reponseAvis === 'ignorer' ? 0 : 1),
   );
-  let service = 0;
-  let cuisine = 0;
+  // Dans certains secteurs, le propriétaire produit lui-même (coiffeur, ébéniste, paysagiste).
+  const partProduction = secteur.productionProprietaire;
+  let service = heuresProprietaire * (1 - partProduction);
+  let production = 0;
   let heuresService = heuresProprietaire;
-  let heuresCuisine = 0;
+  let producteurs = 0;
   for (const e of ent.employes) {
     const poste = posteParId(e.posteId);
     const h = e.heuresSemaine * (1 - e.absenteisme);
     const prod = h * e.competence * facteurMoral(e.moral) * facteurIntegration(e.moisAnciennete);
     service += prod * poste.productiviteService;
-    cuisine += prod * poste.productiviteCuisine;
+    production += prod * poste.productiviteProduction;
     if (poste.productiviteService >= 0.25) heuresService += e.heuresSemaine;
-    if (poste.productiviteCuisine > 0) heuresCuisine += h;
+    if (poste.role === 'production' && poste.productiviteProduction > 0) producteurs += 1;
   }
-  service += heuresProprietaire;
+  const sansProducteur = producteurs === 0;
+  // Sans employé de production, l'équipe de service dépanne un peu (ex. sandwichs au comptoir).
+  if (sansProducteur) production += service * secteur.productionSansPersonnel;
+  production += heuresProprietaire * partProduction;
   const multiplicateur =
     ouvert * facteurMois * (1 + effets.capaciteService + capaciteAvantages + (gerant ? 0.04 : 0));
   const capacite = Math.floor(
     service * SEMAINES_PAR_MOIS * secteur.transactionsParHeureEmploye * multiplicateur,
   );
-  const sansCuisinier = heuresCuisine <= 0;
-  const capaciteCuisine = Math.floor(
-    (sansCuisinier ? service * 0.12 : cuisine) *
+  const minutesProduction = Math.floor(
+    production *
       SEMAINES_PAR_MOIS *
-      secteur.unitesCuisineParHeure *
+      60 *
       ouvert *
-      facteurMois,
+      facteurMois *
+      (1 + effets.capaciteProduction + (equipement.bonusProduction ?? 0) + (gerant ? 0.02 : 0)),
   );
   const heuresPersonnel =
     ent.employes.reduce((a, x) => a + x.heuresSemaine, 0) + heuresProprietaire;
   const heuresEffectives = Math.min(d.heuresOuverture, heuresService);
 
   // Qualité et coût de chaque ligne (qualité choisie, fournisseur, formation, investissements).
-  const formesBarista = ent.employes.filter((e) => e.formations.includes('barista')).length;
-  const formesCuisine = ent.employes.filter((e) => e.formations.includes('cuisine')).length;
+  const proprietaireProduit = secteur.productionProprietaire >= 0.5 && heuresProprietaire > 0;
   const qualiteLignes: Record<string, number> = {};
   const coutLignes: Record<string, number> = {};
+  const facteurCouts = modificateur(ent, 'couts');
   for (const ligne of lignesStock(ent, secteur)) {
     const politique = d.approvisionnement[ligne.id];
     const fournisseurId =
@@ -609,16 +677,16 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
       qualite.score +
       equipement.bonusQualite +
       f.bonusQualite +
-      (effets.qualiteLignes[ligne.id] ?? 0);
-    if (ligne.categorieAppro === 'boissons') q += Math.min(0.04, 0.02 * formesBarista);
-    if (ligne.cuisine) q += sansCuisinier ? -0.06 : Math.min(0.04, 0.02 * formesCuisine);
+      (effets.qualiteLignes[ligne.id] ?? 0) +
+      bonusFormations(ent, ligne);
+    if (ligne.production && sansProducteur && !proprietaireProduit) q -= 0.06;
     qualiteLignes[ligne.id] = borner(q, 0.05, 1);
     coutLignes[ligne.id] = coutUnitaireLigne(
       ligne,
       fournisseurId,
       qualite,
       conj,
-      effets.coutLignes[ligne.id] ?? 1,
+      (effets.coutLignes[ligne.id] ?? 1) * facteurCouts,
     );
   }
   let poids = 0;
@@ -652,7 +720,7 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
 
   // Positionnement et marketing.
   const ambiance = Math.min(0.95, amenagement.ambiance + effets.ambiance);
-  const eco = scoreEco(d);
+  const eco = scoreEco(d, effets.eco);
   const local = scoreLocal(d, secteur);
   const recentes = promotionsRecentes(ent.marketing, ctx.index);
   const prix: Record<string, number> = {};
@@ -674,8 +742,8 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
 
   return {
     capacite,
-    capaciteCuisine,
-    sansCuisinier,
+    minutesProduction,
+    sansProducteur,
     heuresPersonnel,
     heuresEffectives,
     heuresProprietaire,
@@ -703,8 +771,9 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
       note: ent.clientele.note,
       heuresOuverture: heuresEffectives,
       capaciteVisites: capacite,
-      bonusEmplacement: Math.log(emplacement.achalandage),
-      facteurPrixClient: ent.fiscal.inscritTaxes ? FACTEUR_TAXES : 1,
+      // L'achalandage compte beaucoup pour une boutique, presque pas pour un paysagiste.
+      bonusEmplacement: secteur.importanceEmplacement * Math.log(emplacement.achalandage),
+      facteurPrixClient: ent.fiscal.inscritTaxes ? facteurTaxesSecteur(secteur) : 1,
       eco,
       local,
       livraison: d.livraison,
@@ -717,7 +786,9 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
       image: ent.marketing.image,
       // Les membres du programme de fidélité viennent environ 25 % plus souvent.
       facteurDemande:
-        (1 + (ete ? effets.demandeEte : 0)) * (1 + 0.25 * ent.marketing.adhesionFidelite),
+        (1 + (ete ? effets.demandeEte : 0)) *
+        (1 + 0.25 * ent.marketing.adhesionFidelite) *
+        modificateur(ent, 'demande'),
     },
   };
 }
@@ -896,20 +967,26 @@ function simulerEntreprise(
   if (ent.prets.some((p) => ajusterTauxVariable(p, prime)))
     messages.push({ code: 'tauxVariableAjuste', niveau: 'info', params: { prime } });
 
-  // f) Approvisionnement, cuisine et ventes réelles (au jour le jour)
+  // f) Approvisionnement, production et ventes réelles (au jour le jour)
   const lignes = lignesStock(ent, secteur);
   const demandeMarche = new Map(r.ventes.map((v) => [v.ligneId, v.unites]));
   const demandeLivraison = new Map(r.ventesLivraison.map((v) => [v.ligneId, v.unites]));
-  const traiteurActif = produitActif(ent, 'traiteur');
-  if (!traiteurActif) ent.b2b.contrats = [];
-  const demandeB2B = ent.b2b.contrats.reduce((a, c) => a + c.repasParMois, 0);
+  const produitB2B = produitB2BActif(ent, secteur);
+  const idB2B = produitB2B?.id ?? null;
+  if (!produitB2B) ent.b2b.contrats = [];
+  const demandeB2B = ent.b2b.contrats.reduce((a, c) => a + c.quantiteParMois, 0);
   const demandeLigne = (id: string) =>
-    (demandeMarche.get(id) ?? 0) + (id === 'traiteur' ? demandeB2B : 0);
-  const demandeCuisine = lignes
-    .filter((l) => l.cuisine)
-    .reduce((a, l) => a + demandeLigne(l.id), 0);
-  const ratioCuisine =
-    demandeCuisine > prep.capaciteCuisine ? prep.capaciteCuisine / demandeCuisine : 1;
+    (demandeMarche.get(id) ?? 0) + (id === idB2B ? demandeB2B : 0);
+  // Capacité de production (minutes) partagée entre les lignes produites sur place.
+  const minutesDemandees = lignes.reduce(
+    (a, l) => a + demandeLigne(l.id) * minutesLigne(l, secteur),
+    0,
+  );
+  const ratioProduction =
+    minutesDemandees > prep.minutesProduction ? prep.minutesProduction / minutesDemandees : 1;
+  // Événements : délais de livraison plus longs (grève, port bloqué).
+  const delaisSupplementaires = modificateur(ent, 'delais');
+  const anticipation = (ent.modificateurs ?? []).some((m) => m.type === 'delais' && m.anticipation);
   const utilisation = prep.capacite > 0 ? r.demande / prep.capacite : r.demande > 0 ? 2 : 0;
   const tauxDefauts = borner(
     0.015 +
@@ -938,17 +1015,25 @@ function simulerEntreprise(
       );
       d.approvisionnement[ligne.id] = politique;
     }
-    const fournisseur = fournisseurParId(politique.fournisseurId);
+    const base = fournisseurParId(politique.fournisseurId);
+    const fournisseur =
+      delaisSupplementaires > 0
+        ? {
+            ...base,
+            delaiJours: base.delaiJours + delaisSupplementaires,
+            fiabilite: base.fiabilite * 0.9,
+          }
+        : base;
     const cout = prep.coutLignes[ligne.id];
     const conservation = fournisseur.conservationJours ?? ligne.conservationJours;
     const demande = demandeLigne(ligne.id);
     // Ventes aux entreprises : la demande du mois est connue d'avance (contrats).
-    if (ligne.id === 'traiteur') stock.demandeRecente = demande;
+    if (ligne.id === idB2B) stock.demandeRecente = demande;
     if (politique.auto) {
       const calcul = politiqueRecommandee(
         stock.demandeRecente || demande,
         cout,
-        fournisseur,
+        anticipation ? fournisseur : base,
         conservation,
         precision,
       );
@@ -959,7 +1044,7 @@ function simulerEntreprise(
       stock,
       {
         demande,
-        capacitePreparation: ligne.cuisine ? Math.floor(demande * ratioCuisine) : Infinity,
+        capacitePreparation: ligne.production ? Math.floor(demande * ratioProduction) : Infinity,
         tauxDefauts,
         coutUnitaire: cout,
         fournisseur,
@@ -1002,8 +1087,9 @@ function simulerEntreprise(
 
   // Ventes réelles par canal (magasin, livraison, entreprises).
   let ventesBrutes = 0;
+  let ventesTaxablesBrutes = 0;
   let ventesLivraisonBrutes = 0;
-  let perduesCuisine = 0;
+  let perduesProduction = 0;
   let perduesStockVisites = 0;
   let unitesB2B = 0;
   const ventesParLigne: { ligneId: string; unites: number; chiffreAffaires: number }[] = [];
@@ -1019,16 +1105,17 @@ function simulerEntreprise(
     const marche = demandeMarche.get(ligne.id) ?? 0;
     const magasinEtLivraison = Math.min(res.vendues, Math.round(marche * part));
     const livraison = Math.round((demandeLivraison.get(ligne.id) ?? 0) * part);
-    if (ligne.id === 'traiteur') unitesB2B = res.vendues - magasinEtLivraison;
+    if (ligne.id === idB2B) unitesB2B = res.vendues - magasinEtLivraison;
     const prix = d.prix[ligne.id] ?? prixReference(ligne, conj.indicePrix);
     ventesBrutes += magasinEtLivraison * prix;
+    if (ligneTaxable(ligne)) ventesTaxablesBrutes += magasinEtLivraison * prix;
     ventesLivraisonBrutes += livraison * prix;
     ventesParLigne.push({
       ligneId: ligne.id,
       unites: magasinEtLivraison,
       chiffreAffaires: Math.round(magasinEtLivraison * prix * 100) / 100,
     });
-    perduesCuisine += res.perduesPreparation;
+    perduesProduction += res.perduesPreparation;
     perduesStockVisites += res.perdues * (ligne.id === ligneCle.id ? 1 : 0.3);
   }
   ventesBrutes = Math.round(ventesBrutes * 100) / 100;
@@ -1043,25 +1130,32 @@ function simulerEntreprise(
   const rabaisFidelite = d.programmeFidelite
     ? (apresPromo - ventesLivraisonBrutes) * ent.marketing.adhesionFidelite * fid.rabais
     : 0;
-  const tasse = INITIATIVES_ECO.find((i) => i.id === 'tasse');
-  const rabaisTasse =
-    d.initiativesEco.includes('tasse') && tasse ? servies * tasse.coutParVisite : 0;
+  // Remises aux clients liées aux initiatives écoresponsables (ex. tasse réutilisable).
+  const rabaisEco = INITIATIVES_ECO.filter(
+    (i) => i.rabaisClient && d.initiativesEco.includes(i.id),
+  ).reduce((a, i) => a + servies * i.coutParVisite, 0);
   const compensations = d.reponseAvis === 'compenser' ? apresPromo * 0.008 : 0;
   const rabais =
     Math.round(
       Math.max(
         0,
-        Math.min(ventesBrutes, rabaisPromo + rabaisFidelite + rabaisTasse + compensations),
+        Math.min(ventesBrutes, rabaisPromo + rabaisFidelite + rabaisEco + compensations),
       ) * 100,
     ) / 100;
   const ventesNettes = Math.round((ventesBrutes - rabais) * 100) / 100;
+  // Les rabais se répartissent entre les ventes taxables et les ventes détaxées.
+  const partTaxable = ventesBrutes > 0 ? Math.min(1, ventesTaxablesBrutes / ventesBrutes) : 1;
+  const ventesNettesTaxables = Math.round(ventesNettes * partTaxable * 100) / 100;
 
   // g) Ventes au détail (avec TPS et TVQ si l'entreprise est inscrite) et frais de cartes
   let encaissement = ventesNettes;
   if (f.inscritTaxes) {
-    const t = taxesSur(ventesNettes);
+    const t = taxesSur(ventesNettesTaxables);
     passerEcriture(L, {
-      libelle: 'Ventes du mois (TPS et TVQ perçues sur le prix après rabais)',
+      libelle:
+        partTaxable < 1
+          ? 'Ventes du mois (TPS et TVQ perçues sur les produits taxables; produits détaxés à 0 %)'
+          : 'Ventes du mois (TPS et TVQ perçues sur le prix après rabais)',
       flux: 'encaissementsClients',
       lignes: [
         {
@@ -1089,14 +1183,36 @@ function simulerEntreprise(
     });
   }
   const partMagasin = ventesBrutes > 0 ? 1 - ventesLivraisonBrutes / ventesBrutes : 1;
+  const paiements = secteur.paiements ?? {
+    partCartes: PART_VENTES_CARTES,
+    taux: FRAIS_TRAITEMENT_CARTES.taux,
+  };
   ecritureSimple(
     L,
-    'Frais de traitement des cartes de débit et de crédit',
+    secteur.paiements
+      ? 'Frais de la passerelle de paiement en ligne'
+      : 'Frais de traitement des cartes de débit et de crédit',
     'fraisCartes',
     'encaisse',
-    versCents(encaissement * partMagasin * PART_VENTES_CARTES * FRAIS_TRAITEMENT_CARTES.taux),
+    versCents(encaissement * partMagasin * paiements.partCartes * paiements.taux),
     'fraisBancaires',
   );
+  // Frais variables par client servi (expédition des colis, carburant des équipes).
+  if (secteur.fraisParVisite && servies > 0) {
+    payer(
+      L,
+      ent,
+      secteur.fraisParVisite.libelle,
+      'fraisExpedition',
+      servies *
+        secteur.fraisParVisite.montant *
+        conj.indicePrix *
+        prep.effets.fraisParVisite *
+        modificateur(ent, 'fraisParVisite'),
+      true,
+      'commissionsLivraison',
+    );
+  }
   if (ventesLivraisonBrutes > 0) {
     payer(
       L,
@@ -1113,10 +1229,13 @@ function simulerEntreprise(
   let ventesB2B = 0;
   const ratioB2B = demandeB2B > 0 ? Math.max(0, unitesB2B) / demandeB2B : 0;
   for (const c of ent.b2b.contrats) {
-    const livres = Math.round(c.repasParMois * ratioB2B);
+    const livres = Math.round(c.quantiteParMois * ratioB2B);
     const ht = Math.round(livres * c.prixUnitaire * 100) / 100;
     if (ht > 0) {
-      const t = f.inscritTaxes ? taxesSur(ht) : { tps: 0, tvq: 0, total: 0 };
+      const t =
+        f.inscritTaxes && (!produitB2B || ligneTaxable(produitB2B))
+          ? taxesSur(ht)
+          : { tps: 0, tvq: 0, total: 0 };
       const facture = {
         id: nouvelId(ent, 'fact'),
         contratId: c.id,
@@ -1130,7 +1249,7 @@ function simulerEntreprise(
         statut: 'ouverte' as const,
       };
       passerEcriture(L, {
-        libelle: `Facture à ${c.client} (${livres} repas, ${c.delaiPaiementJours} jours)`,
+        libelle: `Facture à ${c.client} (${livres} × ${produitB2B?.unite ?? 'unité'}, ${c.delaiPaiementJours} jours)`,
         lignes: [
           { compte: 'comptesClients', debit: facture.ht + facture.tps + facture.tvq },
           { compte: 'ventes', credit: facture.ht },
@@ -1145,12 +1264,16 @@ function simulerEntreprise(
       ent.b2b.factures.push(facture);
       ventesB2B += ht;
     }
-    const ratio = c.repasParMois > 0 ? livres / c.repasParMois : 1;
+    const ratio = c.quantiteParMois > 0 ? livres / c.quantiteParMois : 1;
     c.satisfaction =
       ratio < 0.95
         ? borner(c.satisfaction - 0.6 * (1 - ratio), 0, 1)
         : borner(
-            lisser(c.satisfaction, 0.85 + 0.2 * ((prep.qualiteLignes.traiteur ?? 0.5) - 0.5), 0.3),
+            lisser(
+              c.satisfaction,
+              0.85 + 0.2 * ((idB2B ? (prep.qualiteLignes[idB2B] ?? 0.5) : 0.5) - 0.5),
+              0.3,
+            ),
             0,
             1,
           );
@@ -1163,11 +1286,11 @@ function simulerEntreprise(
       messages.push({ code: 'contratTermine', niveau: 'info', params: { client: c.client } });
   }
   ent.b2b.contrats = ent.b2b.contrats.filter((c) => c.satisfaction >= 0.45 && c.moisRestants > 0);
-  if (ventesB2B > 0 && !prep.effets.livraisonPropre) {
+  if (ventesB2B > 0 && produitB2B?.b2b?.coursier && !prep.effets.livraisonPropre) {
     payer(
       L,
       ent,
-      'Livraisons du traiteur par coursier',
+      'Livraisons aux clients d’affaires par coursier',
       'commissions',
       ventesB2B * FRAIS_COURSIER,
       true,
@@ -1520,25 +1643,11 @@ function simulerEntreprise(
       messages.push({ code: 'clientEnRetard', niveau: 'alerte', params: { client } });
   }
   for (const client of clientsEnDefaut) {
-    const ouvertes = ent.b2b.factures.filter((x) => x.client === client && x.statut === 'ouverte');
-    const ht = ouvertes.reduce((a, x) => a + x.ht, 0);
-    const tps = ouvertes.reduce((a, x) => a + x.tps, 0);
-    const tvq = ouvertes.reduce((a, x) => a + x.tvq, 0);
-    passerEcriture(L, {
-      libelle: `Radiation des factures de ${client} (créance irrécouvrable; taxes récupérées)`,
-      lignes: [
-        { compte: 'creancesIrrecouvrables', debit: ht },
-        { compte: 'tpsAPayer', debit: tps },
-        { compte: 'tvqAPayer', debit: tvq },
-        { compte: 'comptesClients', credit: ht + tps + tvq },
-      ],
-    });
-    for (const x of ouvertes) x.statut = 'radiee';
-    ent.b2b.contrats = ent.b2b.contrats.filter((c) => c.client !== client);
+    const { total } = reglerCreanceClient(ent, client, 0);
     messages.push({
       code: 'creanceIrrecouvrable',
       niveau: 'danger',
-      params: { client, montant: versDollars(ht + tps + tvq) },
+      params: { client, montant: total },
     });
   }
   ent.b2b.factures = ent.b2b.factures.filter(
@@ -1633,7 +1742,7 @@ function simulerEntreprise(
   cl.service = lisser(cl.service, serviceCible, 0.5);
   const tauxAttente =
     r.demande > 0
-      ? (r.perduesCapacite + 0.5 * perduesRupture + 0.15 * perduesCuisine) / r.demande
+      ? (r.perduesCapacite + 0.5 * perduesRupture + 0.15 * perduesProduction) / r.demande
       : 0;
   const plaintes = Math.round(servies * tauxDefauts * 0.35 * (d.satisfactionGarantie ? 0.4 : 1));
   cl.satisfaction = borner(
@@ -1674,7 +1783,7 @@ function simulerEntreprise(
       evoluerNotoriete(
         n,
         0,
-        emplacement.visibilite,
+        emplacement.visibilite * secteur.importanceEmplacement,
         potentielSeg > 0 ? serviesSeg / potentielSeg : 0,
         cl.satisfaction,
         oubli,
@@ -1708,7 +1817,7 @@ function simulerEntreprise(
     m.historiquePromos = [...m.historiquePromos.filter((i) => i >= ctx.index - 12), ctx.index];
 
   // t) Ressources humaines : moral, compétence, ancienneté, départs et syndicalisation
-  const penurie = penurieDuMois(ville.penurieMainOeuvre, conj.phase, ctx.mois);
+  const penurie = penurieDuMois(ctx.chomage, ctx.mois, modificateur(ent, 'penurie'));
   const gerant = heuresPoste(ent, 'gestion') > 0;
   const syndique = ent.rh.syndicat.statut === 'accredite';
   const restants = [];
@@ -1769,7 +1878,7 @@ function simulerEntreprise(
   ent.rh.candidats = ent.rh.candidats.filter((c) => c.expire > ctx.index);
   for (const aff of ent.rh.affichages.filter((a) => a.moisCandidats === suivant)) {
     const poste = posteParId(aff.posteId);
-    const pen = penurieDuMois(ville.penurieMainOeuvre, conj.phase, moisSuivant);
+    const pen = penurieDuMois(ctx.chomage, moisSuivant, modificateur(ent, 'penurie'));
     const n = nombreCandidats(aff.plateformeId, pen, rng);
     for (let i = 0; i < n; i++) {
       ent.rh.candidats.push(
@@ -1832,7 +1941,7 @@ function simulerEntreprise(
     servies,
     perduesCapacite: r.perduesCapacite,
     perduesRupture,
-    perduesCuisine,
+    perduesProduction,
     partMarche: r.part,
     ventesParLigne,
     chiffreAffaires,
@@ -1875,18 +1984,24 @@ function simulerEntreprise(
         : 0,
     heuresOuvertureEffectives: prep.heuresEffectives,
     capacite: prep.capacite,
-    capaciteCuisine: prep.capaciteCuisine,
+    capaciteProduction: Math.round(prep.minutesProduction / 60),
+    demandeProduction: Math.round(minutesDemandees / 60),
     utilisation,
     tauxDirecteur: conj.tauxDirecteur,
     tauxPreferentiel: prime,
     inflation: conj.inflationAnnuelle,
+    chomage: ctx.chomage,
     tauxChange: conj.tauxChange,
     salaireMinimum: ctx.salaireMinimum,
     indicePrixOffre: ip,
     coutMainOeuvre,
   };
-  if (prep.sansCuisinier && perduesCuisine >= 20)
-    messages.push({ code: 'sansCuisinier', niveau: 'alerte', params: { perdues: perduesCuisine } });
+  if (prep.sansProducteur && perduesProduction >= 20)
+    messages.push({
+      code: 'sansProducteur',
+      niveau: 'alerte',
+      params: { perdues: perduesProduction, production: secteur.libelleProduction },
+    });
 
   const archive: MoisArchive = {
     index: ctx.index,
@@ -1937,8 +2052,11 @@ function simulerEntreprise(
     capacite: 1,
     heuresProprietaire: 0,
     primes: 0,
+    joursFermeture: 0,
     pertesRecurrentes: ent.effetsMois.pertesRecurrentes.filter((p) => p.moisRestants > 0),
+    revenusRecurrents: (ent.effetsMois.revenusRecurrents ?? []).filter((p) => p.moisRestants > 0),
   };
+  vieillirModificateurs(ent);
   return archive.messages;
 }
 
@@ -1948,6 +2066,15 @@ function preparerMoisSuivant(ent: Entreprise, etat: EtatPartie, ctx: ContexteMoi
   if (ent.enFaillite || suivant >= etat.config.dureeMois) return;
   const moisSuivant = (ctx.mois % 12) + 1;
   const diff = DIFFICULTES[etat.config.difficulte];
+  const enLigne =
+    ctx.secteur.id === 'enLigne' ||
+    ent.immobilisations.some((i) =>
+      ['siteWeb', 'applicationMobile', 'logicielRendezVous'].includes(i.investissementId ?? ''),
+    );
+  const importateur = lignesStock(ent, ctx.secteur).some((l) => {
+    const id = ent.decisions.approvisionnement[l.id]?.fournisseurId;
+    return id !== undefined && fournisseurParId(id).devise === 'USD';
+  });
   const dilemme = tirerDilemme(
     ent,
     DILEMMES,
@@ -1955,8 +2082,18 @@ function preparerMoisSuivant(ent: Entreprise, etat: EtatPartie, ctx: ContexteMoi
       mois: moisSuivant,
       derniere: ent.archives.at(-1),
       index: suivant,
-      probabilite: diff.dilemmes,
+      probabilite: diff.evenements,
       id: nouvelId(ent, 'dil'),
+      secteur: ctx.secteur,
+      concurrents: etat.concurrents,
+      conj: ctx.conj,
+      valorisation: Math.round(valorisationEnCours(ent) * 1.1),
+      enLigne,
+      hygieneConforme: conformeHygiene(ent),
+      usure: usureEquipement(ent),
+      importateur,
+      poidsNature: diff.poidsNature,
+      poidsFiscal: diff.poidsFiscal,
     },
     ctx.rng,
   );
@@ -1968,11 +2105,12 @@ function preparerMoisSuivant(ent: Entreprise, etat: EtatPartie, ctx: ContexteMoi
       params: { titre: dilemmeParId(dilemme.defId).titre },
     });
   }
-  if (produitActif(ent, 'traiteur')) {
-    const p = ctx.secteur.nouveauxProduits.find((x) => x.id === 'traiteur');
+  const produitB2B = produitB2BActif(ent, ctx.secteur);
+  if (produitB2B) {
     const appels = genererAppels(
       ent,
-      (p?.prixReference ?? 15) * ctx.conj.indicePrix,
+      produitB2B,
+      produitB2B.prixReference * ctx.conj.indicePrix,
       suivant,
       moisSuivant,
       () => nouvelId(ent, 'appel'),
@@ -1988,11 +2126,13 @@ function preparerMoisSuivant(ent: Entreprise, etat: EtatPartie, ctx: ContexteMoi
 
 /** Observation publique des joueurs par les concurrents (données du mois précédent). */
 function observerJoueurs(etat: EtatPartie, secteur: Secteur): ObservationMarche {
-  const actives = etat.entreprises.filter((e) => !e.enFaillite);
+  const actives = etat.entreprises.filter((e) => !e.enFaillite && !e.vente);
   if (actives.length === 0) return { indicePrixJoueurs: 1, qualiteJoueurs: 0.5, partJoueurs: 0 };
   let ip = 0;
   let q = 0;
   let part = 0;
+  let eco = 0;
+  let produitsReussis = 0;
   for (const ent of actives) {
     const derniere = ent.archives.at(-1);
     ip += derniere
@@ -2000,12 +2140,47 @@ function observerJoueurs(etat: EtatPartie, secteur: Secteur): ObservationMarche 
       : indicePrixOffre(ent.decisions.prix, secteur, etat.conjoncture.indicePrix);
     q += ent.clientele.qualitePercue;
     part += derniere ? derniere.indicateurs.partMarche : 0;
+    eco = Math.max(eco, scoreEco(ent.decisions));
+    produitsReussis += ent.marketing.produits.filter(
+      (p) => p.statut === 'actif' && p.succes,
+    ).length;
   }
   return {
     indicePrixJoueurs: ip / actives.length,
     qualiteJoueurs: q / actives.length,
     partJoueurs: part,
+    // Ce que les concurrents voient (et peuvent copier) : livraison, fidélité, écoresponsabilité.
+    livraison: actives.some((e) => e.decisions.livraison),
+    fidelite: actives.some((e) => e.decisions.programmeFidelite),
+    eco,
+    produitsReussis,
   };
+}
+
+/**
+ * Sensibilité des clients au prix dans la ville : plus le revenu médian est bas, plus
+ * les clients comparent les prix (et davantage quand l'économie ralentit).
+ */
+export function sensibilitePrixVille(ville: Ville, conj: Conjoncture): number {
+  return Math.sqrt(REVENU_MEDIAN_QUEBEC / ville.revenuMedian) * sensibilitePrixConjoncture(conj);
+}
+
+/** Potentiel du marché d'un mois (saison, conjoncture, tendance du secteur, difficulté). */
+export function potentielDuMois(
+  secteur: Secteur,
+  ville: Ville,
+  conj: Conjoncture,
+  index: number,
+  mois: number,
+  facteurDifficulte: number,
+): number {
+  return (
+    (ville.marchePotentielMensuel[secteur.id] ?? 0) *
+    secteur.saisonnalite[mois - 1] *
+    facteurConjoncture(conj, secteur.cyclicite) *
+    Math.pow(1 + secteur.croissanceAnnuelle, index / 12) *
+    facteurDifficulte
+  );
 }
 
 /** Révision annuelle du salaire minimum (1er mai), arrondie à 0,05 $. */
@@ -2034,9 +2209,17 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
   const diff = DIFFICULTES[etat.config.difficulte];
   const messagesCommuns: Message[] = [];
 
-  // 1. Conjoncture économique et salaire minimum
-  etat.conjoncture = evoluerConjoncture(etat.conjoncture, mois, rng);
+  // 1. Conjoncture économique (cycle, chômage, inflation, taux) et salaire minimum
+  const phaseAvant = etat.conjoncture.phase;
+  etat.conjoncture = evoluerConjoncture(etat.conjoncture, mois, rng, diff.risqueRecession);
   const conj = etat.conjoncture;
+  if (conj.phase !== phaseAvant) {
+    messagesCommuns.push({
+      code: 'phaseEconomique',
+      niveau: conj.phase === 'recession' || conj.phase === 'ralentissement' ? 'alerte' : 'info',
+      params: { phase: conj.phase, chomage: conj.chomage },
+    });
+  }
   if (conj.derniereVariation !== 0) {
     messagesCommuns.push({
       code: conj.derniereVariation > 0 ? 'tauxDirecteurHausse' : 'tauxDirecteurBaisse',
@@ -2054,20 +2237,27 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
     });
   }
 
-  // 2. Potentiel du marché ce mois-ci (saison, confiance des consommateurs, difficulté)
+  // 2. Potentiel du marché ce mois-ci (saison, conjoncture, tendance, difficulté)
   const potentiel = Math.round(
-    (ville.marchePotentielMensuel[secteur.id] ?? 0) *
-      secteur.saisonnalite[mois - 1] *
-      conj.confiance *
-      diff.marche *
-      (1 + rng.normal(0, 0.02)),
+    potentielDuMois(secteur, ville, conj, index, mois, diff.marche) * (1 + rng.normal(0, 0.02)),
   );
 
-  // 3. Les concurrents décident (en voyant les prix publics du mois dernier)
+  // 3. Les concurrents : arrivées, faillites et rachats, puis décisions (en voyant les
+  // prix publics du mois dernier)
+  messagesCommuns.push(...evoluerStatutsConcurrents(etat.concurrents, index, rng));
   const observation = observerJoueurs(etat, secteur);
   for (const c of etat.concurrents) {
+    if (!c.actif) continue;
     const perso = personnaliteParId(c.personnaliteId);
-    const appliquees = deciderConcurrent(c, perso, observation, index, diff.agressivite, rng);
+    const appliquees = deciderConcurrent(
+      c,
+      perso,
+      observation,
+      index,
+      diff.agressivite,
+      rng,
+      secteur,
+    );
     for (const r of appliquees) {
       messagesCommuns.push({
         code:
@@ -2075,9 +2265,11 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
             ? 'concurrentPrix'
             : r.type === 'publicite'
               ? 'concurrentPublicite'
-              : 'concurrentQualite',
+              : r.type === 'qualite'
+                ? 'concurrentQualite'
+                : 'concurrentCopie',
         niveau: 'alerte',
-        params: { nom: c.nom, valeur: r.valeur },
+        params: { nom: c.nom, valeur: r.valeur, idee: r.idee ?? '' },
       });
     }
     ajusterPrixConcurrent(c, secteur, conj);
@@ -2097,8 +2289,10 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
     messagesCommuns,
     config: etat.config,
     segments: segmentsMarche(secteur),
+    etat,
+    chomage: chomageVille(ville.chomage, conj),
   };
-  const actives = etat.entreprises.filter((e) => !e.enFaillite);
+  const actives = etat.entreprises.filter((e) => !e.enFaillite && !e.vente);
   const preparations = new Map<string, Preparation>();
   for (const ent of actives) {
     const debut = debutDeMois(ent, ctx);
@@ -2116,6 +2310,8 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
   ];
   const marche = simulerMarche(offres, secteur, potentiel, conj.indicePrix, {
     segments: ctx.segments,
+    mois,
+    sensibilitePrix: sensibilitePrixVille(ville, conj),
     livraison: {
       part: secteur.partLivraison,
       majoration: PARAMETRES_MARKETING.livraison.majorationClient,
@@ -2141,13 +2337,15 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
     const prep = preparations.get(ent.id) as Preparation;
     simulerEntreprise(ent, prep, marche.resultats[ent.id] ?? resultatVide(), ctx);
     const archive = ent.archives.at(-1) as MoisArchive;
-    archive.concurrents = etat.concurrents.map((c) => ({
-      id: c.id,
-      part: marche.resultats[c.id]?.part ?? 0,
-      prixIndice: c.indicePrixCible,
-      note: c.note,
-      notoriete: c.notoriete,
-    }));
+    archive.concurrents = etat.concurrents
+      .filter((c) => c.statut !== 'aVenir')
+      .map((c) => ({
+        id: c.id,
+        part: c.actif ? (marche.resultats[c.id]?.part ?? 0) : 0,
+        prixIndice: c.indicePrixCible,
+        note: c.note,
+        notoriete: c.notoriete,
+      }));
     if (ent.moisEnDefaut >= 3) {
       ent.enFaillite = true;
       archive.messages.push({
@@ -2161,9 +2359,9 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
   // 7. Fin du mois
   etat.rngState = rng.state;
   etat.moisCourant = index + 1;
-  if (etat.entreprises.every((e) => e.enFaillite)) {
+  if (etat.entreprises.every((e) => e.enFaillite || e.vente)) {
     etat.terminee = true;
-    etat.raisonFin = 'faillite';
+    etat.raisonFin = etat.entreprises.some((e) => e.vente) ? 'vente' : 'faillite';
   } else if (etat.moisCourant >= etat.config.dureeMois) {
     etat.terminee = true;
     etat.raisonFin = 'duree';

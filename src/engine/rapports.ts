@@ -219,6 +219,8 @@ export interface BilanPartie {
   /** Part de l'entreprise détenue par le joueur (après un investisseur ou un associé). */
   partProprietaire: number;
   valeurPourProprietaire: number;
+  /** L'entreprise a été vendue (offre de rachat acceptée). */
+  vendue: boolean;
   /** Note globale sur 100. */
   note: number;
 }
@@ -238,13 +240,19 @@ export function bilanPartie(ent: Entreprise): BilanPartie {
   const dettes = b.totalPassif;
   const encaisse = Math.max(0, fin ? fin.indicateurs.encaisse : 0);
   const baiiaAnnuel = (derniers12.baiia * 12) / Math.max(1, Math.min(12, ent.archives.length));
-  const valeurEntreprise = Math.max(0, 3 * baiiaAnnuel + encaisse - dettes);
+  // Entreprise vendue : sa valeur est le prix obtenu de l'acheteur.
+  const valeurEntreprise = ent.vente
+    ? ent.vente.prix
+    : Math.max(0, 3 * baiiaAnnuel + encaisse - dettes);
   const partProprietaire =
     ent.finance.actionnaires.find((a) => a.type === 'fondateur')?.part ??
     (ent.associe ? 1 - ent.associe.part : 1);
 
   // Note : rendement pour le propriétaire (50), clients (25), employés (10), part de marché (15).
-  const richesse = b.capitaux.total + prelevementsCumules - apportsTotal;
+  const richesse =
+    (ent.vente ? ent.vente.prix * partProprietaire : b.capitaux.total) +
+    prelevementsCumules -
+    apportsTotal;
   const scoreFinance = Math.max(0, Math.min(50, 25 + (richesse / Math.max(1, apportsTotal)) * 25));
   const satisfactionMoyenne = moyenne((a) => a.indicateurs.satisfaction);
   const moralMoyen = moyenne((a) => a.indicateurs.moral);
@@ -271,6 +279,7 @@ export function bilanPartie(ent: Entreprise): BilanPartie {
     valeurEntreprise,
     partProprietaire,
     valeurPourProprietaire: Math.round(valeurEntreprise * partProprietaire),
+    vendue: ent.vente !== null && ent.vente !== undefined,
     note,
   };
 }

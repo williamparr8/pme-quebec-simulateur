@@ -16,14 +16,9 @@ export const MESSAGES_JALON3: Record<string, (p: Params) => { titre: string; tex
     texte:
       'Le produit n’a pas trouvé son public. C’est le risque de l’innovation : une étude de marché (groupe de discussion) aurait pu t’aider à choisir. Tu peux le retirer de ta gamme (M).',
   }),
-  traiteurOuvert: () => ({
-    titre: 'Ton service de traiteur est prêt',
-    texte:
-      'Des entreprises lanceront des appels d’offres. Soumissionne dans le département Ventes (V) : attention aux délais de paiement et à la cote de crédit des clients.',
-  }),
   soumissionGagnee: (p) => ({
     titre: `Contrat gagné : ${s(p, 'client')}`,
-    texte: `Ta soumission à ${argent(n(p, 'prix'))} par boîte a été retenue. Tu factureras chaque mois; le client paiera plus tard (comptes clients).`,
+    texte: `Ta soumission à ${argent(n(p, 'prix'))} par unité a été retenue. Tu factureras chaque mois; le client paiera plus tard (comptes clients).`,
   }),
   soumissionPerdue: (p) => ({
     titre: `Soumission perdue : ${s(p, 'client')}`,
@@ -32,7 +27,7 @@ export const MESSAGES_JALON3: Record<string, (p: Params) => { titre: string; tex
   contratAnnule: (p) => ({
     titre: `${s(p, 'client')} annule son contrat`,
     texte:
-      'Tu n’as pas livré toutes les boîtes promises ou la qualité a déçu. Avant de signer un contrat, assure-toi d’avoir la capacité en cuisine et les stocks.',
+      'Tu n’as pas livré toutes les quantités promises ou la qualité a déçu. Avant de signer un contrat, assure-toi d’avoir la capacité de production et les stocks.',
   }),
   contratTermine: (p) => ({
     titre: `Contrat terminé : ${s(p, 'client')}`,
@@ -109,19 +104,9 @@ export const MESSAGES_JALON3: Record<string, (p: Params) => { titre: string; tex
     texte:
       'Après des mois de moral très bas, la majorité des employés a signé une carte d’adhésion et le Tribunal administratif du travail a accrédité le syndicat. La première convention collective hausse les salaires de 5 %. L’employeur ne peut pas s’ingérer dans la formation d’un syndicat.',
   }),
-  sansCuisinier: (p) => ({
-    titre: `Sans cuisinier : ${nombre(n(p, 'perdues'))} plats non vendus`,
-    texte:
-      'Ton équipe au comptoir n’arrive pas à préparer tous les repas, et la qualité en souffre. Un cuisinier (R) augmente la capacité de la cuisine.',
-  }),
-  cuisineInsuffisante: (p) => ({
-    titre: `Cuisine débordée : ${nombre(n(p, 'perdues'))} plats non vendus`,
-    texte:
-      'La demande de repas dépasse la capacité de ta cuisine. Ajoute des heures de cuisinier ou d’aide-cuisinier, ou limite les contrats de traiteur.',
-  }),
   pertesPeremption: (p) => ({
-    titre: `Produits périmés : ${argentRond(n(p, 'montant'))}`,
-    texte: `Tu as jeté l’équivalent de ${pourcentage(n(p, 'pct'), 1)} du coût de tes ventes. Commande plus souvent en plus petites quantités, ou choisis des produits qui se conservent plus longtemps (O).`,
+    titre: `Pertes de stock (${s(p, 'libelle') || 'produits périmés'}) : ${argentRond(n(p, 'montant'))}`,
+    texte: `Tu as perdu l’équivalent de ${pourcentage(n(p, 'pct'), 1)} du coût de tes ventes. Commande plus souvent en plus petites quantités, ou choisis des produits qui se conservent plus longtemps (O).`,
   }),
   defautsEleves: (p) => ({
     titre: `Taux de défauts élevé : ${pourcentage(n(p, 'taux'), 1)}`,

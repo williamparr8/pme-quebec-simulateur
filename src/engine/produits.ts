@@ -15,7 +15,7 @@ export function nouveauProduit(secteur: Secteur, id: string): NouveauProduit {
   return p;
 }
 
-/** Toutes les lignes que l'entreprise doit approvisionner (incluant le traiteur). */
+/** Toutes les lignes que l'entreprise doit approvisionner (incluant le produit B2B). */
 export function lignesStock(ent: Entreprise, secteur: Secteur): LigneProduit[] {
   const nouvelles = ent.marketing.produits
     .filter((p) => p.statut === 'actif')
@@ -23,7 +23,18 @@ export function lignesStock(ent: Entreprise, secteur: Secteur): LigneProduit[] {
   return [...secteur.lignes, ...nouvelles];
 }
 
-/** Lignes vendues en magasin (le traiteur se vend par contrats). */
+/** Le produit vendu aux entreprises (B2B) du secteur, s'il existe. */
+export function produitB2B(secteur: Secteur): NouveauProduit | undefined {
+  return secteur.nouveauxProduits.find((p) => p.b2b);
+}
+
+/** Identifiant du produit B2B actif de l'entreprise (null si aucun). */
+export function produitB2BActif(ent: Entreprise, secteur: Secteur): NouveauProduit | null {
+  const p = produitB2B(secteur);
+  return p && produitActif(ent, p.id) ? p : null;
+}
+
+/** Lignes vendues en magasin (le produit B2B se vend par contrats). */
 export function lignesVente(ent: Entreprise, secteur: Secteur): LigneProduit[] {
   return lignesStock(ent, secteur).filter((l) => !(l as NouveauProduit).b2b);
 }
@@ -79,7 +90,7 @@ export function resoudreLancements(
     p.facteur = Math.round((p.succes ? rng.range(0.85, 1.2) : rng.range(0.25, 0.4)) * 100) / 100;
     p.statut = 'actif';
     m.push({
-      code: def.b2b ? 'traiteurOuvert' : p.succes ? 'produitSucces' : 'produitEchec',
+      code: def.b2b ? 'b2bOuvert' : p.succes ? 'produitSucces' : 'produitEchec',
       niveau: p.succes ? 'succes' : 'alerte',
       params: { nom: def.nom },
     });
