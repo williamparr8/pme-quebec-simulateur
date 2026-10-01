@@ -7,11 +7,19 @@ import { SECTEURS, VILLES, secteurParId, villeParId } from '../../data';
 import { tauxPreferentiel, conjonctureInitiale } from '../../engine/economy';
 import { versementMensuel } from '../../engine/loans';
 import { graineDepuisTexte } from '../../engine/rng';
-import { IDS_DEMARCHES } from '../../engine/conformite';
+import {
+  DEMARCHES,
+  IDS_DEMARCHES,
+  coutDemarche,
+  fraisImmatriculation,
+} from '../../engine/conformite';
+import type { FormeJuridique } from '../../engine/types';
+import { FORMES } from './formes';
 import {
   REGLES_FINANCEMENT,
   coutsDemarrage,
   loyerMensuelInitial,
+  apportTotal,
   pretMaximum,
   validerDemarrage,
   type ErreurDemarrage,
@@ -46,6 +54,8 @@ const ETAPES = [
   'Ton entreprise',
   'Secteur et emplacement',
   'Équipement et aménagement',
+  'Forme juridique',
+  'Démarches de démarrage',
   'Financement',
   'Partie',
 ];
@@ -112,8 +122,9 @@ export function EcranCreation() {
       tauxPret,
       REGLES_FINANCEMENT.dureePretMois,
     ) / 100;
-  const maxPret = pretMaximum(params.apportPersonnel);
-  const fondsRoulement = params.apportPersonnel + params.montantPret - couts.total;
+  const apports = apportTotal(params);
+  const maxPret = pretMaximum(apports);
+  const fondsRoulement = apports + params.montantPret - couts.total;
 
   useEffect(() => titre.current?.focus(), [etape]);
 
@@ -244,13 +255,12 @@ export function EcranCreation() {
               </div>
             </fieldset>
             <div className="mt-4">
-              <Astuce titre="Forme juridique : entreprise individuelle">
-                Pour ce premier jalon, tu démarres en{' '}
-                <Terme id="entrepriseIndividuelle">entreprise individuelle</Terme>. Si ton
-                entreprise porte un autre nom que le tien (ex. «{' '}
+              <Astuce titre="Le nom de ton entreprise">
+                Si ton entreprise porte un autre nom que le tien (ex. «{' '}
                 {params.nomEntreprise || 'Café du Coin'} »), tu dois l’immatriculer au Registraire
-                des entreprises du Québec (REQ). Les sociétés par actions, SENC et coopératives
-                arrivent au Jalon 2.
+                des entreprises du Québec (REQ) et obtenir un NEQ. Tu choisiras la forme juridique (
+                <Terme id="entrepriseIndividuelle">entreprise individuelle</Terme>, société de
+                personnes ou société par actions) à l’étape 4.
               </Astuce>
             </div>
           </Carte>
@@ -352,6 +362,160 @@ export function EcranCreation() {
         )}
 
         {etape === 3 && (
+          <Carte>
+            <div className="space-y-5">
+              <ChoixCartes
+                legende="Forme juridique de ton entreprise"
+                nom="forme"
+                valeur={params.formeJuridique}
+                onChange={(id) => maj({ formeJuridique: id as FormeJuridique })}
+                options={FORMES.map((f) => ({
+                  id: f.id,
+                  titre: f.nom,
+                  description: f.resume,
+                  detail: `Constitution ou immatriculation : ${argentRond(fraisImmatriculation(f.id))}`,
+                }))}
+              />
+              {(params.formeJuridique === 'senc' || params.formeJuridique === 'sec') && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="space-y-1">
+                    <span className="block font-semibold">
+                      {params.formeJuridique === 'sec'
+                        ? 'Nom du commanditaire (investisseur)'
+                        : 'Nom de ton associé'}
+                    </span>
+                    <input
+                      type="text"
+                      maxLength={40}
+                      value={params.nomAssocie}
+                      placeholder="Ex. Sam Roy"
+                      onChange={(e) => maj({ nomAssocie: e.target.value })}
+                      className="w-full rounded-md border border-bordure bg-surface-2 px-3 py-2"
+                    />
+                  </label>
+                  <Curseur
+                    libelle="Mise de fonds de l’associé"
+                    valeur={params.apportAssocie}
+                    min={0}
+                    max={100_000}
+                    format={argentRond}
+                    onChange={(v) => maj({ apportAssocie: v })}
+                    aide="Sa part des bénéfices est proportionnelle à sa mise de fonds. Ses prélèvements suivent les tiens."
+                  />
+                </div>
+              )}
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left text-sm">
+                  <caption className="mb-2 text-left font-bold">
+                    Comparatif des formes juridiques
+                  </caption>
+                  <thead>
+                    <tr className="border-b border-bordure text-doux">
+                      <th className="py-1 pr-2 font-semibold">Forme</th>
+                      <th className="py-1 pr-2 font-semibold">Responsabilité</th>
+                      <th className="py-1 pr-2 font-semibold">Imposition</th>
+                      <th className="py-1 pr-2 font-semibold">Ta rémunération</th>
+                      <th className="py-1 font-semibold">Formalités et coûts</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {FORMES.map((f) => (
+                      <tr
+                        key={f.id}
+                        className={`border-b border-bordure/60 align-top ${f.id === params.formeJuridique ? 'bg-accent-doux' : ''}`}
+                      >
+                        <td className="py-1 pr-2 font-semibold">{f.nom}</td>
+                        <td className="py-1 pr-2">{f.responsabilite}</td>
+                        <td className="py-1 pr-2">{f.imposition}</td>
+                        <td className="py-1 pr-2">{f.remuneration}</td>
+                        <td className="py-1">{f.formalites}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Astuce>
+                Tu pourras t’incorporer plus tard (département Juridique) : c’est souvent avantageux
+                quand les bénéfices dépassent tes besoins personnels. La coopérative (au moins 3
+                membres, un membre = un vote) et l’organisme à but non lucratif (OBNL, bénéfices
+                réinvestis dans la mission) existent aussi, mais ne sont pas jouables pour un café à
+                but lucratif.
+              </Astuce>
+            </div>
+          </Carte>
+        )}
+
+        {etape === 4 && (
+          <Carte>
+            <div className="space-y-5">
+              <fieldset className="rounded-lg border border-bordure p-3">
+                <legend className="px-1 font-bold">TPS et TVQ</legend>
+                <label className="flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={params.inscritTaxes}
+                    onChange={(e) => maj({ inscritTaxes: e.target.checked })}
+                  />
+                  <span>
+                    Inscrire l’entreprise aux fichiers de la TPS et de la TVQ dès l’ouverture
+                    <span className="block text-sm text-doux">
+                      Facultatif sous le seuil du petit fournisseur (30 000 $ de ventes taxables sur
+                      4 trimestres), mais obligatoire au-delà. Inscrit : tu ajoutes 14,975 % à tes
+                      prix et tu récupères les taxes payées sur tes achats (CTI et RTI). Non inscrit
+                      : tes prix paraissent moins chers, mais tu ne récupères rien… et un café
+                      dépasse le seuil en quelques mois.
+                    </span>
+                  </span>
+                </label>
+              </fieldset>
+              <fieldset>
+                <legend className="mb-2 font-bold">Démarches avant l’ouverture</legend>
+                <ul className="space-y-2">
+                  {DEMARCHES.map((d) => {
+                    const forcee = d.id === 'req' && params.formeJuridique !== 'individuelle';
+                    const coche = forcee || params.demarches.includes(d.id);
+                    const cout = coutDemarche(d.id, params.formeJuridique);
+                    return (
+                      <li key={d.id} className="rounded-lg border border-bordure p-3">
+                        <label className="flex items-start gap-2">
+                          <input
+                            type="checkbox"
+                            className="mt-1"
+                            checked={coche}
+                            disabled={forcee}
+                            onChange={(e) =>
+                              maj({
+                                demarches: e.target.checked
+                                  ? [...params.demarches, d.id]
+                                  : params.demarches.filter((x) => x !== d.id),
+                              })
+                            }
+                          />
+                          <span>
+                            <span className="font-semibold">{d.nom}</span>{' '}
+                            <span className="chiffres text-sm text-doux">
+                              ({cout > 0 ? argentRond(cout) : 'sans frais'} ·{' '}
+                              {d.obligation === 'facultative' ? 'facultative' : 'obligatoire'})
+                            </span>
+                            <span className="block text-sm text-doux">{d.description}</span>
+                          </span>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </fieldset>
+              <Astuce titre="Et si j’oublie une démarche?">
+                Rien ne t’empêche d’ouvrir… mais chaque mois, l’organisme concerné peut le découvrir
+                : amende, parfois fermeture temporaire, puis régularisation forcée. Tu pourras aussi
+                régulariser plus tard dans le département Juridique.
+              </Astuce>
+            </div>
+          </Carte>
+        )}
+
+        {etape === 5 && (
           <div className="grid gap-4 lg:grid-cols-2">
             <Carte titre="Tes sources de financement">
               <div className="space-y-5">
@@ -366,7 +530,10 @@ export function EcranCreation() {
                   onChange={(v) =>
                     maj({
                       apportPersonnel: v,
-                      montantPret: Math.min(params.montantPret, pretMaximum(v)),
+                      montantPret: Math.min(
+                        params.montantPret,
+                        pretMaximum(apportTotal({ ...params, apportPersonnel: v })),
+                      ),
                     })
                   }
                   aide="Ton épargne investie dans l’entreprise. C’est ton capital : tu risques de le perdre."
@@ -395,7 +562,14 @@ export function EcranCreation() {
                       couts.depotGarantie,
                     ],
                     ['Stock initial', couts.stockInitial],
-                    ['Permis, enseigne, inauguration', couts.fraisDemarrage],
+                    ['Enseigne, inauguration, frais juridiques', couts.fraisDemarrage],
+                    ['Immatriculation, permis et démarches', couts.fraisJuridiques],
+                    [
+                      params.inscritTaxes
+                        ? 'TPS et TVQ sur les achats (récupérables)'
+                        : 'TPS et TVQ sur les achats (non récupérables)',
+                      couts.taxes,
+                    ],
                   ].map(([nom, montant]) => (
                     <tr key={nom as string} className="border-b border-bordure">
                       <td className="py-1">{nom}</td>
@@ -407,10 +581,8 @@ export function EcranCreation() {
                     <td className="py-1 text-right">{argentRond(couts.total)}</td>
                   </tr>
                   <tr>
-                    <td className="py-1">Mise de fonds + prêt</td>
-                    <td className="py-1 text-right">
-                      {argentRond(params.apportPersonnel + params.montantPret)}
-                    </td>
+                    <td className="py-1">Mises de fonds + prêt</td>
+                    <td className="py-1 text-right">{argentRond(apports + params.montantPret)}</td>
                   </tr>
                   <tr
                     className={`font-bold ${fondsRoulement < REGLES_FINANCEMENT.fondsRoulementMin ? 'text-danger' : 'text-succes'}`}
@@ -431,7 +603,7 @@ export function EcranCreation() {
           </div>
         )}
 
-        {etape === 4 && (
+        {etape === 6 && (
           <Carte>
             <div className="space-y-5">
               <ChoixCartes
