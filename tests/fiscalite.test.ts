@@ -76,7 +76,9 @@ describe('impôt des particuliers 2026', () => {
     const i = impotPersonnel({ dividendesNonDetermines: 40_000 });
     expect(i.revenuImposable).toBe(46_000);
     const sansCredit = impotPersonnel({ emploi: 46_000 });
-    expect(i.impotFederal + i.impotQuebec).toBeLessThan(sansCredit.impotFederal + sansCredit.impotQuebec);
+    expect(i.impotFederal + i.impotQuebec).toBeLessThan(
+      sansCredit.impotFederal + sansCredit.impotQuebec,
+    );
   });
 });
 

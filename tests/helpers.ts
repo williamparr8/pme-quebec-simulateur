@@ -1,4 +1,11 @@
-import { CANAUX, FORMATIONS, PLATEFORMES, fournisseursCategorie, secteurParId, villeParId } from '../src/data';
+import {
+  CANAUX,
+  FORMATIONS,
+  PLATEFORMES,
+  fournisseursCategorie,
+  secteurParId,
+  villeParId,
+} from '../src/data';
 import { Rng } from '../src/engine/rng';
 import { IDS_DEMARCHES } from '../src/engine/conformite';
 import { ventesReference } from '../src/engine/financement';
@@ -74,7 +81,16 @@ export const DEMARRAGE_TEST: ParametresDemarrage = {
   formeJuridique: 'individuelle',
   nomAssocie: '',
   apportAssocie: 0,
-  demarches: ['req', 'retenues', 'cnesst', 'permisMunicipal', 'mapaq', 'assurances', 'compteBancaire', 'francisation'],
+  demarches: [
+    'req',
+    'retenues',
+    'cnesst',
+    'permisMunicipal',
+    'mapaq',
+    'assurances',
+    'compteBancaire',
+    'francisation',
+  ],
   inscritTaxes: true,
   ageProprietaire: 30,
   financements: {},
@@ -132,7 +148,9 @@ export function tourAleatoire(etat: EtatPartie, rng: Rng): EtatPartie {
     remboursementAnticipe: rng.chance(0.05) ? rng.int(1000, 30000) : 0,
     promotion: rng.chance(0.2) ? rng.range(0, 0.3) : 0,
     programmeFidelite: rng.chance(0.4),
-    initiativesEco: ['emballages', 'tasse', 'compost', 'certification'].filter(() => rng.chance(0.3)),
+    initiativesEco: ['emballages', 'tasse', 'compost', 'certification'].filter(() =>
+      rng.chance(0.3),
+    ),
     panierBleu: rng.chance(0.5),
     livraison: rng.chance(0.4),
     reponseAvis: rng.pick(['ignorer', 'repondre', 'compenser'] as const),
@@ -140,13 +158,14 @@ export function tourAleatoire(etat: EtatPartie, rng: Rng): EtatPartie {
     avantages: ['repas', 'assurance', 'flexibilite', 'rabais'].filter(() => rng.chance(0.25)),
     prendreEscomptes: rng.chance(0.5),
     methodeInventaire: rng.chance(0.5) ? 'peps' : 'coutMoyen',
-    prevision: rng.chance(0.5) ? { ventes: rng.int(10_000, 60_000), benefice: rng.int(-10_000, 10_000) } : null,
+    prevision: rng.chance(0.5)
+      ? { ventes: rng.int(10_000, 60_000), benefice: rng.int(-10_000, 10_000) }
+      : null,
   });
 
   // Ressources humaines
   if (rng.chance(0.15)) e = embaucher(e, id, rng.int(8, 45), rng.pick(secteur.postes));
-  if (rng.chance(0.2))
-    e = afficherPoste(e, id, rng.pick(secteur.postes), rng.pick(PLATEFORMES).id);
+  if (rng.chance(0.2)) e = afficherPoste(e, id, rng.pick(secteur.postes), rng.pick(PLATEFORMES).id);
   const candidats = e.entreprises[0].rh.candidats.filter((c) => c.statut === 'disponible');
   if (candidats.length > 0 && rng.chance(0.5)) {
     const c = rng.pick(candidats);
@@ -173,7 +192,12 @@ export function tourAleatoire(etat: EtatPartie, rng: Rng): EtatPartie {
   if (rng.chance(0.02)) e = retirerProduit(e, id, rng.pick(secteur.nouveauxProduits).id);
   if (rng.chance(0.08)) {
     const ligne = rng.pick(secteur.lignes);
-    e = changerFournisseur(e, id, ligne.id, rng.pick(fournisseursCategorie(ligne.categorieAppro)).id);
+    e = changerFournisseur(
+      e,
+      id,
+      ligne.id,
+      rng.pick(fournisseursCategorie(ligne.categorieAppro)).id,
+    );
   }
   if (rng.chance(0.08)) {
     const ligne = rng.pick(secteur.lignes);
@@ -182,7 +206,12 @@ export function tourAleatoire(etat: EtatPartie, rng: Rng): EtatPartie {
       e = modifierDecisions(e, id, {
         approvisionnement: {
           ...e.entreprises[0].decisions.approvisionnement,
-          [ligne.id]: { ...p, auto: rng.chance(0.5), pointCommande: rng.int(0, 400), quantite: rng.int(1, 900) },
+          [ligne.id]: {
+            ...p,
+            auto: rng.chance(0.5),
+            pointCommande: rng.int(0, 400),
+            quantite: rng.int(1, 900),
+          },
         },
       });
   }
@@ -191,11 +220,25 @@ export function tourAleatoire(etat: EtatPartie, rng: Rng): EtatPartie {
 
   // Finance
   if (rng.chance(0.05))
-    e = investir(e, id, rng.pick(secteur.investissements).id, rng.pick(['comptant', 'pretFixe', 'pretVariable'] as const));
-  if (rng.chance(0.03)) e = demanderPret(e, id, rng.int(5000, 60000), rng.int(12, 84), rng.chance(0.5) ? 'fixe' : 'variable');
-  if (rng.chance(0.05)) e = placer(e, id, rng.pick(['ceie', 'cpg6', 'cpg12']), rng.int(1000, 20000));
+    e = investir(
+      e,
+      id,
+      rng.pick(secteur.investissements).id,
+      rng.pick(['comptant', 'pretFixe', 'pretVariable'] as const),
+    );
+  if (rng.chance(0.03))
+    e = demanderPret(
+      e,
+      id,
+      rng.int(5000, 60000),
+      rng.int(12, 84),
+      rng.chance(0.5) ? 'fixe' : 'variable',
+    );
+  if (rng.chance(0.05))
+    e = placer(e, id, rng.pick(['ceie', 'cpg6', 'cpg12']), rng.int(1000, 20000));
   const placements = e.entreprises[0].finance.placements;
-  if (placements.length > 0 && rng.chance(0.2)) e = retirerPlacement(e, id, rng.pick(placements).id);
+  if (placements.length > 0 && rng.chance(0.2))
+    e = retirerPlacement(e, id, rng.pick(placements).id);
   if (rng.chance(0.03)) e = accueillirInvestisseur(e, id, rng.int(10_000, 80_000));
   if (rng.chance(0.03)) e = demanderHausseMarge(e, id, rng.int(10_000, 60_000));
 

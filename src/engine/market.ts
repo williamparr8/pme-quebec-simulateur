@@ -283,7 +283,8 @@ export function simulerMarche(
   indicePrix = 1,
   options: OptionsMarche = {},
 ): ResultatMarche {
-  const segments = options.segments && options.segments.length > 0 ? options.segments : [SEGMENT_UNIQUE];
+  const segments =
+    options.segments && options.segments.length > 0 ? options.segments : [SEGMENT_UNIQUE];
   const attraitAlternatif = Math.exp(secteur.utiliteAlternative);
 
   // 1. Bassins : un par segment en magasin, plus la livraison.
@@ -325,9 +326,7 @@ export function simulerMarche(
     const total = b.attraitAlternatif + b.attraits.reduce((a, x) => a + x, 0);
     return b.attraits.map((x) => (b.potentiel * x) / total);
   });
-  const demandes = offres.map((_o, i) =>
-    Math.round(demandesBassins.reduce((a, d) => a + d[i], 0)),
-  );
+  const demandes = offres.map((_o, i) => Math.round(demandesBassins.reduce((a, d) => a + d[i], 0)));
   const capacites = offres.map((o) => Math.max(0, Math.floor(o.capaciteVisites)));
   const potentielTotal = bassins.reduce((a, b) => a + b.potentiel, 0);
   const attraitMoyen = offres.map((_o, i) =>
@@ -338,7 +337,10 @@ export function simulerMarche(
 
   // 3. Débordement : une partie des clients qui trouvent un commerce plein vont chez un
   // concurrent qui a encore de la place (au prorata de son attrait); les autres renoncent.
-  const debordement = offres.reduce((acc, _o, i) => acc + Math.max(0, demandes[i] - capacites[i]), 0);
+  const debordement = offres.reduce(
+    (acc, _o, i) => acc + Math.max(0, demandes[i] - capacites[i]),
+    0,
+  );
   const recus = offres.map(() => 0);
   if (debordement > 0) {
     const ouverts = offres
@@ -368,7 +370,8 @@ export function simulerMarche(
     let reste = servies;
     for (const [k, b] of bassins.entries()) {
       const partBassin = demandeBrute > 0 ? demandesBassins[k][i] / demandeBrute : 0;
-      const s = k === bassins.length - 1 ? reste : Math.min(reste, Math.round(servies * partBassin));
+      const s =
+        k === bassins.length - 1 ? reste : Math.min(reste, Math.round(servies * partBassin));
       reste -= s;
       parSegment[b.id] = { demande: Math.round(demande * partBassin), servies: s };
       const v = ventesParLigne(offre, secteur, s, indicePrix, b.panier);
@@ -402,8 +405,7 @@ export function simulerMarche(
   for (const r of Object.values(resultats)) {
     r.part = totalServies > 0 ? r.servies / totalServies : 0;
   }
-  const totalAttrait =
-    attraitAlternatif + attraitMoyen.reduce((a, x) => a + x, 0);
+  const totalAttrait = attraitAlternatif + attraitMoyen.reduce((a, x) => a + x, 0);
   return {
     potentiel,
     partAlternative: attraitAlternatif / totalAttrait,
@@ -429,8 +431,7 @@ export function evoluerNotoriete(
   oubli = 0.07,
   gainPubliciteDirect?: number,
 ): number {
-  const pub =
-    gainPubliciteDirect ?? 0.13 * (1 - Math.exp(-Math.max(0, budgetPublicite) / 3000));
+  const pub = gainPubliciteDirect ?? 0.13 * (1 - Math.exp(-Math.max(0, budgetPublicite) / 3000));
   const boucheAOreille = 0.3 * borner(partVisites, 0, 1) * borner(satisfaction, 0, 1);
   const gain = (1 - notoriete) * (pub + visibilite + boucheAOreille);
   return borner(notoriete * (1 - oubli) + gain, 0.01, 0.98);

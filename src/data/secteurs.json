@@ -40,7 +40,8 @@
           "tauxAchat": 0.92,
           "elasticite": 0.6,
           "perissable": false,
-          "conservationJours": 30,
+          "conservationJours": 60,
+          "conservationNote": "Mélange de produits : grains de café et sirops (plusieurs mois), lait UHT; le lait frais est racheté au besoin.",
           "cuisine": false,
           "unite": "boisson",
           "categorieAppro": "boissons"
@@ -123,7 +124,14 @@
       "visitesParClientMois": 4,
       "partLivraison": 0.08,
       "partLivraisonNote": "Estimation : environ 8 % des repas et boissons commandés par une plateforme de livraison dans un quartier urbain.",
-      "panierLivraison": { "boissons": 0.6, "viennoiseries": 0.7, "repas": 1.9, "brunch": 1.5, "bolsSante": 1.8, "boissonsFroides": 0.8 },
+      "panierLivraison": {
+        "boissons": 0.6,
+        "viennoiseries": 0.7,
+        "repas": 1.9,
+        "brunch": 1.5,
+        "bolsSante": 1.8,
+        "boissonsFroides": 0.8
+      },
       "segments": [
         {
           "personaId": "etudiants",
@@ -336,7 +344,10 @@
           "dureeVieMois": 96,
           "classeDpa": "8",
           "unique": true,
-          "effets": { "qualiteLignes": { "viennoiseries": 0.07 }, "coutLignes": { "viennoiseries": 0.85 } }
+          "effets": {
+            "qualiteLignes": { "viennoiseries": 0.07 },
+            "coutLignes": { "viennoiseries": 0.85 }
+          }
         },
         {
           "id": "renovation",

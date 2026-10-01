@@ -1,8 +1,5 @@
 import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { PLAN_COMPTABLE } from '../../../engine/accounting';
-import { estSocieteActions } from '../../../engine/conformite';
-import { tauxPreferentiel } from '../../../engine/economy';
-import { tableauAmortissement } from '../../../engine/loans';
 import {
   etatsFinanciers,
   exercicesJoues,
@@ -21,27 +18,40 @@ import {
   moisAnnee,
   pourcentage,
 } from '../../../i18n/format';
-import { useJeu } from '../../../store/jeu';
 import { Bouton } from '../../composants/Bouton';
 import { Astuce, Carte } from '../../composants/Carte';
-import { Curseur } from '../../composants/Curseur';
 import { Terme } from '../../composants/Terme';
 import { TitrePage } from '../../composants/TitrePage';
 import { useJeuCourant } from '../contexte';
+import { VueBudget, VueFinancement, VueInvestissements, VueTresorerie } from './FinanceVues';
 
 const GraphiqueSeuil = lazy(() =>
   import('../../graphiques/Graphiques').then((m) => ({ default: m.GraphiqueSeuil })),
 );
 
-type Vue = 'resultats' | 'bilan' | 'flux' | 'journal' | 'ratios' | 'financement';
+type Vue =
+  | 'resultats'
+  | 'bilan'
+  | 'flux'
+  | 'journal'
+  | 'ratios'
+  | 'budget'
+  | 'tresorerie'
+  | 'investissements'
+  | 'financement';
 const VUES: { id: Vue; nom: string }[] = [
   { id: 'resultats', nom: 'État des résultats' },
   { id: 'bilan', nom: 'Bilan' },
   { id: 'flux', nom: 'Flux de trésorerie' },
   { id: 'journal', nom: 'Journal général' },
   { id: 'ratios', nom: 'Ratios et seuil' },
+  { id: 'budget', nom: 'Budget et prévisions' },
+  { id: 'tresorerie', nom: 'Trésorerie' },
+  { id: 'investissements', nom: 'Investissements' },
   { id: 'financement', nom: 'Financement' },
 ];
+/** Vues qui ne dépendent pas d'une période. */
+const SANS_PERIODE: Vue[] = ['budget', 'tresorerie', 'investissements', 'financement'];
 
 /** Montant comptable : les négatifs entre parenthèses, comme dans les vrais états financiers. */
 function m(x: number): string {
@@ -83,7 +93,17 @@ function TableEtat({ titre, children }: { titre: string; children: ReactNode }) 
 function VueResultats({ r, titre }: { r: EtatResultats; titre: string }) {
   return (
     <TableEtat titre={titre}>
-      <Ligne libelle="Ventes" montant={r.ventes} />
+      {r.rabais !== 0 && (
+        <>
+          <Ligne libelle="Ventes brutes" montant={r.ventesBrutes} />
+          <Ligne
+            libelle="Moins : rabais, promotions et récompenses de fidélité"
+            montant={-r.rabais}
+            retrait
+          />
+        </>
+      )}
+      <Ligne libelle={r.rabais !== 0 ? 'Ventes nettes' : 'Ventes'} montant={r.ventes} />
       <Ligne libelle="Coût des marchandises vendues" montant={-r.coutMarchandises} terme="cmv" />
       <Ligne
         libelle={`Marge brute (${pourcentage(r.tauxMargeBrute)})`}
@@ -99,6 +119,12 @@ function VueResultats({ r, titre }: { r: EtatResultats; titre: string }) {
       <Ligne libelle="Amortissement" montant={-r.amortissement} terme="amortissement" />
       <Ligne libelle="Bénéfice d’exploitation (BAII)" montant={r.baii} total />
       <Ligne libelle="Intérêts et frais financiers" montant={-r.interets} />
+      {r.autresProduits !== 0 && (
+        <Ligne
+          libelle="Autres produits (intérêts gagnés, subventions)"
+          montant={r.autresProduits}
+        />
+      )}
       {r.impots !== 0 && (
         <>
           <Ligne libelle="Bénéfice avant impôts" montant={r.beneficeAvantImpot} total />
@@ -303,15 +329,32 @@ function FragmentEcriture({
 
 const RATIOS_TEXTE: Record<Ratio['id'], { nom: string; terme: string }> = {
   liquidite: { nom: 'Liquidité générale', terme: 'liquidite' },
+  liquiditeImmediate: { nom: 'Liquidité immédiate', terme: 'liquiditeImmediate' },
+  fondsRoulement: { nom: 'Fonds de roulement', terme: 'fondsRoulement' },
   endettement: { nom: 'Ratio d’endettement', terme: 'endettement' },
   margeBrute: { nom: 'Marge brute', terme: 'margeBrute' },
   margeNette: { nom: 'Marge nette', terme: 'margeNette' },
   couvertureInterets: { nom: 'Couverture des intérêts', terme: 'couvertureInterets' },
   rendementActif: { nom: 'Rendement de l’actif (annualisé)', terme: 'rendementActif' },
+  rendementCapitaux: {
+    nom: 'Rendement des capitaux propres (annualisé)',
+    terme: 'rendementCapitaux',
+  },
+  rotationStocks: { nom: 'Rotation des stocks (annualisée)', terme: 'rotationStocks' },
+  delaiRecouvrement: { nom: 'Délai moyen de recouvrement', terme: 'delaiRecouvrement' },
 };
 
 function formatRatio(r: Ratio, v: number): string {
-  return r.format === 'pourcentage' ? pourcentage(v) : `${decimal(v)} fois`;
+  switch (r.format) {
+    case 'pourcentage':
+      return pourcentage(v);
+    case 'argent':
+      return argentRond(v);
+    case 'jours':
+      return `${decimal(v, 1)} jours`;
+    default:
+      return `${decimal(v)} fois`;
+  }
 }
 
 function VueRatios({ periode }: { periode: Periode }) {
@@ -399,202 +442,6 @@ function VueRatios({ periode }: { periode: Periode }) {
   );
 }
 
-function VueFinancement() {
-  const { etat, ent } = useJeuCourant();
-  const changer = useJeu((s) => s.changerDecisions);
-  const [apport, setApport] = useState(0);
-  const [remboursement, setRemboursement] = useState(0);
-  const [dividende, setDividende] = useState(0);
-  const d = ent.decisions;
-  const pret = ent.prets.find((p) => p.solde > 0);
-  const marge = ent.margeCredit;
-  const tableau = pret ? tableauAmortissement(pret) : [];
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-4 lg:grid-cols-2">
-        {estSocieteActions(ent.formeJuridique) ? (
-          <Carte titre="Ta rémunération : salaire et dividendes">
-            <p className="mb-2 text-sm">
-              Salaire de dirigeant : <strong>{argentRond(d.salaireDirigeant)}</strong> par mois (à
-              régler dans RH).
-            </p>
-            <p className="mb-2 text-sm text-doux">
-              Dividende à verser au début du prochain mois. Il n’est pas déductible pour la société
-              et sera imposé dans ta déclaration personnelle (dividende non déterminé, majoré de 15
-              %).
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                type="number"
-                min={0}
-                step={1000}
-                value={dividende}
-                onChange={(e) => setDividende(Number(e.target.value))}
-                aria-label="Montant du dividende"
-                className="chiffres w-32 rounded-md border border-bordure bg-surface-2 px-2 py-1"
-              />
-              <Bouton
-                petit
-                variante="primaire"
-                onClick={() => changer({ dividendePonctuel: dividende })}
-              >
-                Déclarer le dividende
-              </Bouton>
-            </div>
-            {d.dividendePonctuel > 0 && (
-              <p className="mt-2 text-sm font-semibold">
-                Dividende prévu : {argentRond(d.dividendePonctuel)}
-              </p>
-            )}
-          </Carte>
-        ) : (
-          <Carte titre="Ta rémunération : prélèvements">
-            <Curseur
-              libelle="Prélèvements mensuels"
-              valeur={d.prelevements}
-              min={0}
-              max={15_000}
-              decimales={0}
-              format={argentRond}
-              terme="prelevements"
-              onChange={(v) => changer({ prelevements: v })}
-              aide={
-                ent.associe
-                  ? `L’argent que tu retires pour vivre. ${ent.associe.nom} retire en proportion de sa part (${pourcentage(ent.associe.part, 0)}).`
-                  : 'L’argent que tu retires chaque mois pour vivre. Ce n’est pas une charge : il réduit ton capital et ton encaisse.'
-              }
-            />
-          </Carte>
-        )}
-        <Carte titre={<Terme id="margeCredit">Marge de crédit</Terme>}>
-          <dl className="chiffres grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
-            <dt className="text-doux">Limite autorisée</dt>
-            <dd className="text-right">{argentRond(marge.limite / 100)}</dd>
-            <dt className="text-doux">Montant utilisé</dt>
-            <dd className="text-right font-semibold">
-              {argentRond(-ent.livre.soldes.margeCredit / 100)}
-            </dd>
-            <dt className="text-doux">Taux (préférentiel + {pourcentage(marge.ecartTaux, 1)})</dt>
-            <dd className="text-right">
-              {pourcentage(tauxPreferentiel(etat.conjoncture) + marge.ecartTaux, 2)}
-            </dd>
-          </dl>
-          <label className="mt-3 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={d.remboursementAutoMarge}
-              onChange={(e) => changer({ remboursementAutoMarge: e.target.checked })}
-            />
-            Rembourser automatiquement quand l’encaisse dépasse 5 000 $
-          </label>
-          <p className="mt-2 text-xs text-doux">
-            La banque avance automatiquement l’argent si ton encaisse devient négative, jusqu’à la
-            limite.
-          </p>
-        </Carte>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Carte titre="Apport additionnel du propriétaire">
-          <p className="mb-2 text-sm text-doux">
-            Injecter ton épargne personnelle dans l’entreprise (au début du prochain mois).
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              type="number"
-              min={0}
-              step={1000}
-              value={apport}
-              onChange={(e) => setApport(Number(e.target.value))}
-              aria-label="Montant de l’apport"
-              className="chiffres w-32 rounded-md border border-bordure bg-surface-2 px-2 py-1"
-            />
-            <Bouton petit variante="primaire" onClick={() => changer({ apportPonctuel: apport })}>
-              Prévoir l’apport
-            </Bouton>
-          </div>
-          {d.apportPonctuel > 0 && (
-            <p className="mt-2 text-sm font-semibold">
-              Apport prévu ce mois-ci : {argentRond(d.apportPonctuel)}
-            </p>
-          )}
-        </Carte>
-        <Carte titre="Remboursement anticipé de l’emprunt">
-          <p className="mb-2 text-sm text-doux">
-            Réduit la dette et les intérêts futurs, mais diminue ton encaisse.
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              type="number"
-              min={0}
-              step={1000}
-              value={remboursement}
-              onChange={(e) => setRemboursement(Number(e.target.value))}
-              aria-label="Montant du remboursement anticipé"
-              className="chiffres w-32 rounded-md border border-bordure bg-surface-2 px-2 py-1"
-              disabled={!pret}
-            />
-            <Bouton
-              petit
-              onClick={() => changer({ remboursementAnticipe: remboursement })}
-              disabled={!pret}
-            >
-              Prévoir le remboursement
-            </Bouton>
-          </div>
-          {d.remboursementAnticipe > 0 && (
-            <p className="mt-2 text-sm font-semibold">
-              Remboursement prévu : {argentRond(d.remboursementAnticipe)}
-            </p>
-          )}
-        </Carte>
-      </div>
-
-      {pret ? (
-        <Carte
-          titre={pret.nom}
-          sousTitre={`Capital emprunté ${argentRond(pret.capitalInitial / 100)} · taux fixe ${pourcentage(pret.tauxAnnuel, 2)} · ${pret.dureeMois} mois · versement ${argent(pret.versementMensuel / 100)}/mois · solde ${argentRond(pret.solde / 100)}`}
-        >
-          <details>
-            <summary className="cursor-pointer font-semibold text-accent">
-              Voir le <Terme id="tableauAmortissement">tableau d’amortissement</Terme> (
-              {tableau.length} versements restants)
-            </summary>
-            <div className="mt-2 max-h-80 overflow-auto">
-              <table className="chiffres w-full text-sm">
-                <thead className="sticky top-0 bg-surface">
-                  <tr className="border-b border-bordure text-left text-doux">
-                    <th className="py-1 font-semibold">N°</th>
-                    <th className="py-1 text-right font-semibold">Versement</th>
-                    <th className="py-1 text-right font-semibold">Intérêts</th>
-                    <th className="py-1 text-right font-semibold">Capital</th>
-                    <th className="py-1 text-right font-semibold">Solde</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableau.map((l) => (
-                    <tr key={l.numero} className="border-b border-bordure/50">
-                      <td className="py-0.5">{l.numero}</td>
-                      <td className="py-0.5 text-right">{argent(l.versement / 100)}</td>
-                      <td className="py-0.5 text-right">{argent(l.interets / 100)}</td>
-                      <td className="py-0.5 text-right">{argent(l.capital / 100)}</td>
-                      <td className="py-0.5 text-right">{argent(l.solde / 100)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </details>
-        </Carte>
-      ) : (
-        <Carte titre="Emprunt">
-          <p className="text-sm text-doux">Aucun emprunt en cours.</p>
-        </Carte>
-      )}
-    </div>
-  );
-}
-
 export function PageFinance() {
   const { ent, derniere } = useJeuCourant();
   const [vue, setVue] = useState<Vue>('resultats');
@@ -647,7 +494,7 @@ export function PageFinance() {
             </Bouton>
           ))}
         </div>
-        {vue !== 'financement' && (
+        {!SANS_PERIODE.includes(vue) && (
           <label className="flex items-center gap-2 text-sm">
             Période
             <select
@@ -709,6 +556,9 @@ export function PageFinance() {
           ) : (
             <VueRatios periode={periode} />
           ))}
+        {vue === 'budget' && <VueBudget />}
+        {vue === 'tresorerie' && <VueTresorerie />}
+        {vue === 'investissements' && <VueInvestissements />}
         {vue === 'financement' && <VueFinancement />}
       </Carte>
 

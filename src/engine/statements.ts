@@ -250,12 +250,7 @@ export function bilan(soldes: Soldes, portionCouranteDette: Cents = 0): Bilan {
   );
 
   const passifLong: LignePoste[] = [];
-  ajouter(
-    passifLong,
-    'empruntBancaire',
-    emprunt - portionCourante,
-    'Emprunt bancaire (long terme)',
-  );
+  ajouter(passifLong, 'empruntBancaire', emprunt - portionCourante, 'Emprunts à long terme');
   const totalPassifLong = emprunt - portionCourante;
 
   let resultatExercice = 0;

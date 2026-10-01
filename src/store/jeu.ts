@@ -70,6 +70,8 @@ interface StoreJeu {
   regulariser: (id: IdDemarche) => void;
   produireDeclarationReq: () => void;
   planifierIncorporationSociete: (type: 'inc-qc' | 'inc-federal' | null) => void;
+  /** Applique n'importe quelle action du moteur à l'entreprise du joueur. */
+  agir: (f: (etat: EtatPartie, entrepriseId: string) => EtatPartie) => void;
   sauvegarderDans: (emplacement: IdEmplacement) => boolean;
 }
 
@@ -133,6 +135,7 @@ export const useJeu = create<StoreJeu>((set, get) => {
     regulariser: (d) => appliquer((e, id) => regulariserDemarche(e, id, d)),
     produireDeclarationReq: () => appliquer((e, id) => produireMiseAJourAnnuelle(e, id)),
     planifierIncorporationSociete: (t) => appliquer((e, id) => planifierIncorporation(e, id, t)),
+    agir: (f) => appliquer(f),
 
     sauvegarderDans: (emplacement) => {
       const { etat } = get();

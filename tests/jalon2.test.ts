@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { totalBalance } from '../src/engine/accounting';
 import { calculerDpa } from '../src/engine/annuel';
-import { coutDemarche, fraisImmatriculation, fraisMiseAJourAnnuelle } from '../src/engine/conformite';
+import {
+  coutDemarche,
+  fraisImmatriculation,
+  fraisMiseAJourAnnuelle,
+} from '../src/engine/conformite';
 import { etatsFinanciers } from '../src/engine/rapports';
 import {
   creerPartie,
@@ -12,7 +16,11 @@ import {
 import type { EtatPartie, ParametresDemarrage } from '../src/engine/types';
 import { DEMARRAGE_TEST, configTest, jouerMois } from './helpers';
 
-function partie(changements: Partial<ParametresDemarrage>, graine = 21, duree: 12 | 24 | 36 = 24): EtatPartie {
+function partie(
+  changements: Partial<ParametresDemarrage>,
+  graine = 21,
+  duree: 12 | 24 | 36 = 24,
+): EtatPartie {
   return creerPartie(configTest(graine, duree), { ...DEMARRAGE_TEST, ...changements });
 }
 
@@ -20,7 +28,8 @@ function jouer(etat: EtatPartie, mois: number): EtatPartie {
   return jouerMois(etat, mois);
 }
 
-const codes = (e: EtatPartie) => e.entreprises[0].archives.flatMap((a) => a.messages.map((m) => m.code));
+const codes = (e: EtatPartie) =>
+  e.entreprises[0].archives.flatMap((a) => a.messages.map((m) => m.code));
 
 describe('formes juridiques', () => {
   it('société par actions : impôt des sociétés en fin d’exercice, BNR et déclarations T2/CO-17', () => {
@@ -32,24 +41,37 @@ describe('formes juridiques', () => {
     expect(decl.societe).toBeDefined();
     expect(decl.dpa).toBeGreaterThan(0);
     // Le revenu fiscal remplace l'amortissement comptable par la DPA.
-    expect(decl.revenuFiscal).toBeCloseTo(decl.beneficeComptable + decl.amortissementComptable + decl.nonDeductibles - decl.dpa, 1);
+    expect(decl.revenuFiscal).toBeCloseTo(
+      decl.beneficeComptable + decl.amortissementComptable + decl.nonDeductibles - decl.dpa,
+      1,
+    );
     const annee = etatsFinanciers(ent, { type: 'exercice', annee: 2027 });
     expect(annee.resultats.impots).toBeCloseTo(decl.societe?.total ?? -1, 1);
     expect(annee.bilan.ecart).toBe(0);
     // Après la clôture, le résultat est dans les bénéfices non répartis.
     expect(ent.livre.soldes.ventes).not.toBe(0); // janvier 2028 est commencé
-    expect(etatsFinanciers(ent, { type: 'cumul' }).bilan.capitaux.lignes.some((l) => l.libelle.startsWith('Bénéfices non répartis'))).toBe(true);
+    expect(
+      etatsFinanciers(ent, { type: 'cumul' }).bilan.capitaux.lignes.some((l) =>
+        l.libelle.startsWith('Bénéfices non répartis'),
+      ),
+    ).toBe(true);
     expect(ent.decisions.prelevements).toBe(0);
     expect(decl.feuillets.some((f) => f.nom.includes('dirigeant'))).toBe(true);
   });
 
   it('société en nom collectif : le bénéfice est réparti entre les associés à la clôture', () => {
-    const e = jouer(partie({ formeJuridique: 'senc', apportAssocie: 15_000, nomAssocie: 'Sam' }), 12);
+    const e = jouer(
+      partie({ formeJuridique: 'senc', apportAssocie: 15_000, nomAssocie: 'Sam' }),
+      12,
+    );
     const ent = e.entreprises[0];
     expect(ent.associe?.part).toBeCloseTo(15_000 / 60_000, 6);
     expect(ent.livre.soldes.capitalAssocie).not.toBe(0);
     expect(totalBalance(ent.livre.soldes)).toBe(0);
-    expect(ent.fiscal.declarations[0].personnel.revenuEntreprise).toBeCloseTo(ent.fiscal.declarations[0].revenuFiscal * 0.75, 0);
+    expect(ent.fiscal.declarations[0].personnel.revenuEntreprise).toBeCloseTo(
+      ent.fiscal.declarations[0].revenuFiscal * 0.75,
+      0,
+    );
   });
 
   it('une société de personnes exige un associé', () => {
@@ -103,7 +125,7 @@ describe('paie complète', () => {
     expect(janvier.soldesFin.cotisationsAPayer).toBeLessThan(0);
     expect(fevrier.flux.remisesGouvernementales ?? 0).toBeLessThan(0);
     const net = -(janvier.flux.salairesVerses ?? 0);
-    const brut = ((janvier.mouvements.salaires ?? 0) + (janvier.mouvements.vacances ?? 0));
+    const brut = (janvier.mouvements.salaires ?? 0) + (janvier.mouvements.vacances ?? 0);
     expect(net).toBeLessThan(brut);
   });
 });
@@ -115,7 +137,11 @@ describe('conformité et démarches', () => {
       const e = jouer(partie({ demarches: [] }, g), 24);
       if (codes(e).includes('demarcheDecouverte')) {
         trouve = true;
-        expect(etatsFinanciers(e.entreprises[0], { type: 'cumul' }).resultats.chargesExploitation.some((c) => c.compte === 'amendes')).toBe(true);
+        expect(
+          etatsFinanciers(e.entreprises[0], { type: 'cumul' }).resultats.chargesExploitation.some(
+            (c) => c.compte === 'amendes',
+          ),
+        ).toBe(true);
       }
     }
     expect(trouve).toBe(true);
@@ -145,16 +171,28 @@ describe('conformité et démarches', () => {
 
 describe('DPA et décisions', () => {
   it('DPA : 20 % de la FNACC pour l’équipement, linéaire pour les améliorations locatives', () => {
-    const dpa = calculerDpa({ fnacc: { '8': 45_000, '13': 38_000 }, ajoutsAnnee: {}, coutAmeliorations: 38_000 }, 2028, 5);
+    const dpa = calculerDpa(
+      { fnacc: { '8': 45_000, '13': 38_000 }, ajoutsAnnee: {}, coutAmeliorations: 38_000 },
+      2028,
+      5,
+    );
     expect(dpa.parClasse['8']).toBe(9_000);
     expect(dpa.parClasse['13']).toBe(7_600);
     expect(dpa.total).toBe(16_600);
-    const fin = calculerDpa({ fnacc: { '13': 1_000 }, ajoutsAnnee: {}, coutAmeliorations: 38_000 }, 2028, 5);
+    const fin = calculerDpa(
+      { fnacc: { '13': 1_000 }, ajoutsAnnee: {}, coutAmeliorations: 38_000 },
+      2028,
+      5,
+    );
     expect(fin.parClasse['13']).toBe(1_000);
   });
 
   it('DPA : incitatif à l’investissement accéléré l’année d’acquisition (1,5 fois, puis demi-année)', () => {
-    const f = { fnacc: { '8': 10_000, '10': 40_000, '12': 3_000 }, ajoutsAnnee: { '8': 10_000, '10': 40_000, '12': 3_000 }, coutAmeliorations: 0 };
+    const f = {
+      fnacc: { '8': 10_000, '10': 40_000, '12': 3_000 },
+      ajoutsAnnee: { '8': 10_000, '10': 40_000, '12': 3_000 },
+      coutAmeliorations: 0,
+    };
     const avant2030 = calculerDpa(f, 2027, 5);
     expect(avant2030.parClasse['8']).toBe(3_000); // 20 % × 1,5
     expect(avant2030.parClasse['10']).toBe(18_000); // 30 % × 1,5
@@ -169,7 +207,10 @@ describe('DPA et décisions', () => {
     expect(e.entreprises[0].decisions.prelevements).toBe(0);
     expect(e.entreprises[0].decisions.salaireDirigeant).toBe(4_000);
     let i = partie({});
-    i = modifierDecisions(i, i.entreprises[0].id, { salaireDirigeant: 4_000, dividendePonctuel: 1_000 });
+    i = modifierDecisions(i, i.entreprises[0].id, {
+      salaireDirigeant: 4_000,
+      dividendePonctuel: 1_000,
+    });
     expect(i.entreprises[0].decisions.salaireDirigeant).toBe(0);
     expect(i.entreprises[0].decisions.dividendePonctuel).toBe(0);
   });

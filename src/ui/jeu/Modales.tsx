@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { indicePrixOffre } from '../../engine/market';
+import { totalPublicite } from '../../engine/marketing';
+import { estimerMois } from '../../engine/previsions';
 import { bilanPartie } from '../../engine/rapports';
 import { qualiteDe } from '../../engine/simulation';
 import { argent, argentRond, decimal, moisAnnee, nombre, pourcentage } from '../../i18n/format';
@@ -13,8 +16,13 @@ function ConfirmerMois() {
   const { etat, ent, secteur, date } = useJeuCourant();
   const fermer = useJeu((s) => s.fermerModale);
   const terminerMois = useJeu((s) => s.terminerMois);
+  const changer = useJeu((s) => s.changerDecisions);
   const annoncer = useJeu((s) => s.annoncer);
   const d = ent.decisions;
+  const estimation = estimerMois(ent, secteur, date.mois);
+  const [ventes, setVentes] = useState(d.prevision?.ventes ?? estimation?.ventes ?? 0);
+  const [benefice, setBenefice] = useState(d.prevision?.benefice ?? estimation?.benefice ?? 0);
+  const [avecPrevision, setAvecPrevision] = useState(d.prevision !== null || estimation !== null);
   const heuresPersonnel =
     ent.employes.reduce((a, x) => a + x.heuresSemaine, 0) + d.heuresProprietaire;
   const avertissements: string[] = [];
@@ -22,10 +30,23 @@ function ConfirmerMois() {
     avertissements.push('Ton personnel ne couvre pas toutes les heures d’ouverture.');
   if (ent.livre.soldes.encaisse / 100 < 5000)
     avertissements.push('Ton encaisse est basse : vérifie que tu peux payer le loyer et la paie.');
-  if (d.stockJoursCible < 3)
-    avertissements.push('Ton stock cible est très bas : risque de ruptures.');
+  if (ent.dilemmes.length > 0)
+    avertissements.push(
+      'Une décision t’attend (R) : sans réponse, le choix par défaut s’appliquera.',
+    );
+  const appels = ent.b2b.appels.filter((a) => a.soumission === null).length;
+  if (appels > 0)
+    avertissements.push(`${appels} appel${appels > 1 ? 's' : ''} d’offres sans soumission (V).`);
+  const candidats = ent.rh.candidats.filter(
+    (c) => c.statut === 'disponible' && c.expire <= etat.moisCourant,
+  ).length;
+  if (candidats > 0)
+    avertissements.push(
+      `${candidats} candidat${candidats > 1 ? 's' : ''} ne sera plus disponible le mois prochain (R).`,
+    );
 
   const confirmer = () => {
+    if (avecPrevision) changer({ prevision: { ventes, benefice } });
     terminerMois();
     annoncer(
       `Mois de ${moisAnnee(date.annee, date.mois)} terminé. Le rapport mensuel est affiché.`,
@@ -58,16 +79,65 @@ function ConfirmerMois() {
         <dt className="text-doux">Qualité</dt>
         <dd className="text-right">{qualiteDe(secteur, d.qualiteId).nom}</dd>
         <dt className="text-doux">Publicité</dt>
-        <dd className="text-right">{argentRond(d.budgetPublicite)}</dd>
+        <dd className="text-right">{argentRond(totalPublicite(d.publicite))}</dd>
+        {d.promotion > 0 && (
+          <>
+            <dt className="text-doux">Promotion</dt>
+            <dd className="text-right">{pourcentage(d.promotion, 0)} de rabais</dd>
+          </>
+        )}
         <dt className="text-doux">Employés</dt>
         <dd className="text-right">
-          {ent.employes.length} à {argent(d.salaireHoraire)}/h
+          {ent.employes.length}
+          {ent.employes.length > 0 &&
+            ` (salaire moyen ${argent(ent.employes.reduce((a, e) => a + e.salaireHoraire, 0) / ent.employes.length)}/h)`}
         </dd>
         <dt className="text-doux">Heures d’ouverture</dt>
         <dd className="text-right">{d.heuresOuverture} h/semaine</dd>
         <dt className="text-doux">Prélèvements</dt>
         <dd className="text-right">{argentRond(d.prelevements)}</dd>
       </dl>
+      <fieldset className="mt-4 rounded-lg border border-bordure p-3 text-sm">
+        <legend className="px-1 font-semibold">Ta prévision (budget)</legend>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={avecPrevision}
+            onChange={(e) => setAvecPrevision(e.target.checked)}
+          />
+          Comparer mon résultat à ma prévision
+        </label>
+        {avecPrevision && (
+          <div className="mt-2 flex flex-wrap gap-3">
+            <label className="flex flex-col">
+              Ventes prévues ($)
+              <input
+                type="number"
+                step={500}
+                value={ventes}
+                onChange={(e) => setVentes(Number(e.target.value))}
+                className="chiffres w-32 rounded-md border border-bordure bg-surface-2 px-2 py-1"
+              />
+            </label>
+            <label className="flex flex-col">
+              Bénéfice net prévu ($)
+              <input
+                type="number"
+                step={500}
+                value={benefice}
+                onChange={(e) => setBenefice(Number(e.target.value))}
+                className="chiffres w-32 rounded-md border border-bordure bg-surface-2 px-2 py-1"
+              />
+            </label>
+          </div>
+        )}
+        {estimation && avecPrevision && (
+          <p className="mt-1 text-xs text-doux">
+            Estimation selon le dernier mois et la saison : {argentRond(estimation.ventes)} de
+            ventes.
+          </p>
+        )}
+      </fieldset>
       {avertissements.length > 0 && (
         <ul className="mt-3 space-y-1 rounded-lg border-l-4 border-alerte bg-alerte-doux p-3 text-sm">
           {avertissements.map((a) => (
@@ -102,7 +172,21 @@ function Rapport() {
     ],
     ['Part de marché', pourcentage(i.partMarche), p ? pourcentage(p.partMarche) : null],
     ['Marge brute', pourcentage(i.tauxMargeBrute), p ? pourcentage(p.tauxMargeBrute) : null],
+    ['Net Promoter Score', String(i.nps), p ? String(p.nps) : null],
+    [
+      'Moral de l’équipe',
+      i.nbEmployes > 0 ? `${nombre(i.moral)}/100` : '—',
+      p && p.nbEmployes > 0 ? `${nombre(p.moral)}/100` : null,
+    ],
   ];
+  if (derniere.prevision) {
+    chiffres.splice(
+      1,
+      0,
+      ['Ventes prévues', argentRond(derniere.prevision.ventes), null],
+      ['Bénéfice prévu', argentRond(derniere.prevision.benefice), null],
+    );
+  }
   return (
     <Modale
       titre={`Rapport de ${moisAnnee(derniere.annee, derniere.mois)}`}
@@ -237,6 +321,12 @@ function Fin() {
       'Valeur estimée de l’entreprise (3 × BAIIA + encaisse − dettes)',
       argentRond(b.valeurEntreprise),
     ],
+    ...(b.partProprietaire < 1
+      ? ([
+          ['Ta part de l’entreprise', pourcentage(b.partProprietaire, 1)],
+          ['Valeur de ta part', argentRond(b.valeurPourProprietaire)],
+        ] as [string, string][])
+      : []),
     ['Part de marché finale', pourcentage(b.partMarcheFinale)],
     ['Note en ligne finale', `${decimal(b.noteFinale, 1)} ★`],
     ['Satisfaction moyenne des clients', pourcentage(b.satisfactionMoyenne, 0)],

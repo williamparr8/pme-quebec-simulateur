@@ -79,7 +79,12 @@
           "effets": [
             { "type": "salaire", "cible": "concerne", "pourcentage": 0.04 },
             { "type": "competence", "cible": "concerne", "valeur": 0.05 },
-            { "type": "depense", "categorie": "formation", "montant": 400, "libelle": "Formation offerte à un employé" },
+            {
+              "type": "depense",
+              "categorie": "formation",
+              "montant": 400,
+              "libelle": "Formation offerte à un employé"
+            },
             { "type": "moral", "cible": "concerne", "valeur": 4 }
           ]
         },
@@ -131,7 +136,12 @@
               "delaiMois": 2,
               "code": "plainteCongediement",
               "effets": [
-                { "type": "depense", "categorie": "amendes", "montant": 4000, "libelle": "Règlement d'une plainte pour congédiement sans cause juste" }
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 4000,
+                  "libelle": "Règlement d'une plainte pour congédiement sans cause juste"
+                }
               ]
             }
           ]
@@ -170,7 +180,12 @@
               "code": "plainteCNT",
               "effets": [
                 { "type": "prime", "montant": 60, "parEmploye": true },
-                { "type": "depense", "categorie": "amendes", "montant": 1500, "libelle": "Pénalité à la suite d'une plainte à la CNESST (normes du travail)" }
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 1500,
+                  "libelle": "Pénalité à la suite d'une plainte à la CNESST (normes du travail)"
+                }
               ]
             }
           ]
@@ -222,7 +237,12 @@
               "delaiMois": 2,
               "code": "plainteHarcelement",
               "effets": [
-                { "type": "depense", "categorie": "amendes", "montant": 5000, "libelle": "Règlement d'une plainte pour harcèlement psychologique" }
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 5000,
+                  "libelle": "Règlement d'une plainte pour harcèlement psychologique"
+                }
               ]
             }
           ]
@@ -262,7 +282,12 @@
               "delaiMois": 1,
               "code": "plainteCNT",
               "effets": [
-                { "type": "depense", "categorie": "amendes", "montant": 2000, "libelle": "Pénalité à la suite d'une plainte à la CNESST (normes du travail)" }
+                {
+                  "type": "depense",
+                  "categorie": "amendes",
+                  "montant": 2000,
+                  "libelle": "Pénalité à la suite d'une plainte à la CNESST (normes du travail)"
+                }
               ]
             }
           ]
@@ -284,7 +309,12 @@
           "libelle": "Installer une caméra et des contrôles de caisse",
           "explication": "Les contrôles internes (fermeture de caisse à deux, rapprochement quotidien) protègent l'entreprise sans accuser personne.",
           "effets": [
-            { "type": "depense", "categorie": "entretien", "montant": 900, "libelle": "Caméra et procédure de contrôle de la caisse" },
+            {
+              "type": "depense",
+              "categorie": "entretien",
+              "montant": 900,
+              "libelle": "Caméra et procédure de contrôle de la caisse"
+            },
             { "type": "moral", "cible": "tous", "valeur": -1 }
           ]
         },
@@ -308,7 +338,14 @@
           "id": "ignorer",
           "libelle": "Attendre de voir",
           "explication": "Les pertes continuent tant que rien ne change.",
-          "effets": [{ "type": "pertesRecurrentes", "montant": 400, "mois": 3, "libelle": "Argent manquant dans la caisse (vol)" }]
+          "effets": [
+            {
+              "type": "pertesRecurrentes",
+              "montant": 400,
+              "mois": 3,
+              "libelle": "Argent manquant dans la caisse (vol)"
+            }
+          ]
         }
       ],
       "lecon": "La séparation des tâches, le rapprochement quotidien de la caisse et l'inventaire régulier sont des contrôles internes de base. Ils dissuadent la fraude sans accuser personne."
@@ -399,7 +436,12 @@
           "libelle": "Payer toute la formation",
           "explication": "Investir dans un employé motivé prépare la relève (un futur gérant?).",
           "effets": [
-            { "type": "depense", "categorie": "formation", "montant": 800, "libelle": "Certificat en gestion d'un employé" },
+            {
+              "type": "depense",
+              "categorie": "formation",
+              "montant": 800,
+              "libelle": "Certificat en gestion d'un employé"
+            },
             { "type": "competence", "cible": "concerne", "valeur": 0.08 },
             { "type": "moral", "cible": "concerne", "valeur": 10 }
           ]
@@ -409,7 +451,12 @@
           "libelle": "Payer la moitié",
           "explication": "Un partage des coûts engage les deux parties.",
           "effets": [
-            { "type": "depense", "categorie": "formation", "montant": 400, "libelle": "Certificat en gestion d'un employé (50 %)" },
+            {
+              "type": "depense",
+              "categorie": "formation",
+              "montant": 400,
+              "libelle": "Certificat en gestion d'un employé (50 %)"
+            },
             { "type": "competence", "cible": "concerne", "valeur": 0.04 },
             { "type": "moral", "cible": "concerne", "valeur": 5 }
           ]

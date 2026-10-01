@@ -2,12 +2,14 @@ import { lazy, Suspense } from 'react';
 import { SceneCommerce } from '../../../scene/SceneCommerce';
 import { argentRond, decimal, moisAnnee, nombre, pourcentage } from '../../../i18n/format';
 import { useJeu } from '../../../store/jeu';
+import { Bouton } from '../../composants/Bouton';
 import { Astuce, Carte } from '../../composants/Carte';
 import { Indicateur, type Ton } from '../../composants/Indicateur';
 import { ListeMessages } from '../../composants/ListeMessages';
 import { Terme } from '../../composants/Terme';
 import { TitrePage } from '../../composants/TitrePage';
 import { useJeuCourant, variation } from '../contexte';
+import { CarteDilemmes } from '../Dilemmes';
 
 const GraphiqueVentesBenefice = lazy(() =>
   import('../../graphiques/Graphiques').then((m) => ({ default: m.GraphiqueVentesBenefice })),
@@ -58,6 +60,23 @@ export function PageTableau() {
           ? `Résultats de ${moisAnnee(derniere.annee, derniere.mois)}. Prépare maintenant tes décisions pour ${moisAnnee(date.annee, date.mois)}.`
           : `Bienvenue! Prépare tes décisions pour ton premier mois, ${moisAnnee(date.annee, date.mois)}, puis termine le mois.`}
       </TitrePage>
+
+      <CarteDilemmes />
+      {(ent.b2b.appels.some((a) => a.soumission === null) ||
+        ent.rh.candidats.some((c) => c.statut === 'disponible')) && (
+        <div className="flex flex-wrap gap-2 text-sm">
+          {ent.b2b.appels.some((a) => a.soumission === null) && (
+            <Bouton petit onClick={() => changerOnglet('ventes')}>
+              Appels d’offres en attente de soumission (V)
+            </Bouton>
+          )}
+          {ent.rh.candidats.some((c) => c.statut === 'disponible') && (
+            <Bouton petit onClick={() => changerOnglet('rh')}>
+              Candidats à rencontrer (R)
+            </Bouton>
+          )}
+        </div>
+      )}
 
       <SceneCommerce
         nom={ent.nom}
@@ -145,7 +164,7 @@ export function PageTableau() {
                   >
                     Marketing (M)
                   </button>{' '}
-                  : tes prix, ta qualité et ton budget de publicité d’ouverture.
+                  : tes prix, ta qualité et tes canaux de publicité d’ouverture.
                 </li>
                 <li>
                   <button
@@ -155,7 +174,8 @@ export function PageTableau() {
                   >
                     Ressources humaines (R)
                   </button>{' '}
-                  : ton équipe de départ, les salaires et tes propres heures.
+                  : ton équipe de départ (3 baristas, sans cuisinier), les salaires et tes propres
+                  heures.
                 </li>
                 <li>
                   <button
@@ -165,7 +185,7 @@ export function PageTableau() {
                   >
                     Opérations (O)
                   </button>{' '}
-                  : tes heures d’ouverture et ton stock.
+                  : tes heures d’ouverture, tes fournisseurs et tes stocks.
                 </li>
                 <li>
                   <button
@@ -175,7 +195,8 @@ export function PageTableau() {
                   >
                     Finance (F)
                   </button>{' '}
-                  : ton bilan d’ouverture et tes prélèvements pour vivre.
+                  : ton bilan d’ouverture, tes emprunts et tes prélèvements pour vivre. Fais aussi
+                  ta prévision du mois (budget) avant de le terminer.
                 </li>
               </ol>
               <Astuce>

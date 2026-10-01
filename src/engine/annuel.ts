@@ -153,8 +153,7 @@ export function finExerciceFiscal(
     f.soldeImpotAPayer = solde;
     f.acompteMensuel = impot.total > IMPOT_SOCIETES.seuilAcomptes ? arrondi(impot.total / 12) : 0;
     // Le fondateur ne reçoit que sa part des dividendes (les autres actionnaires, la leur).
-    const partFondateur =
-      ent.finance.actionnaires.find((a) => a.type === 'fondateur')?.part ?? 1;
+    const partFondateur = ent.finance.actionnaires.find((a) => a.type === 'fondateur')?.part ?? 1;
     const salaire = f.paieAnnee.dirigeant?.brut ?? 0;
     const dividendes = arrondi((livre.soldes.dividendes / 100) * partFondateur);
     const perso = impotPersonnel({ emploi: salaire, dividendesNonDetermines: dividendes });

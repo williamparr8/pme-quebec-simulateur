@@ -48,8 +48,7 @@ export const TYPES_ETUDES: readonly TypeEtude[] = marketingJson.etudes as TypeEt
 export const PARAMETRES_MARKETING: ParametresMarketing = marketingJson.parametres;
 export const INITIATIVES_ECO: readonly InitiativeEco[] =
   marketingJson.initiativesEco as InitiativeEco[];
-export const FOURNISSEURS: readonly Fournisseur[] =
-  fournisseursJson.fournisseurs as Fournisseur[];
+export const FOURNISSEURS: readonly Fournisseur[] = fournisseursJson.fournisseurs as Fournisseur[];
 export const PLATEFORMES: readonly PlateformeRecrutement[] =
   rhJson.plateformes as PlateformeRecrutement[];
 export const FORMATIONS: readonly Formation[] = rhJson.formations as Formation[];

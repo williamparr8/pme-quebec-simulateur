@@ -16,5 +16,5 @@
     "noUnusedParameters": true,
     "jsx": "react-jsx"
   },
-  "include": ["tests", "src/engine", "src/data"]
+  "include": ["tests", "src/engine", "src/data", "src/i18n"]
 }

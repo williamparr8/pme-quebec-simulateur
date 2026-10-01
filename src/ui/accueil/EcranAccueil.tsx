@@ -76,9 +76,11 @@ export function EcranAccueil() {
             </li>
           </ul>
           <p className="mt-3 text-sm text-doux">
-            Version Jalon 2 : café-bistro à Montréal, 5 formes juridiques, TPS/TVQ, paie complète,
-            impôts et démarches de démarrage. Les autres secteurs et villes, les événements et le
-            mode équipes arrivent dans les prochains jalons.
+            Version Jalon 3 : café-bistro à Montréal avec des départements complets (canaux de
+            publicité et personas, recrutement, fournisseurs et stocks, ventes aux entreprises,
+            financement et investissements), 5 formes juridiques, TPS/TVQ et impôts. Les autres
+            secteurs et villes, les événements et le mode équipes arrivent dans les prochains
+            jalons.
           </p>
         </Carte>
       </div>

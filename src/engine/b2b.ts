@@ -51,7 +51,9 @@ export function genererAppels(
       // Les clients qui paient plus tard ou au crédit faible acceptent un prix un peu plus élevé.
       prixCible:
         Math.round(
-          prixReference * (0.92 + rng.range(0, 0.25) + (delai - 30) * 0.002 + (cote === 'C' ? 0.05 : 0)) * 20,
+          prixReference *
+            (0.92 + rng.range(0, 0.25) + (delai - 30) * 0.002 + (cote === 'C' ? 0.05 : 0)) *
+            20,
         ) / 20,
       nbConcurrents: rng.int(1, 4),
       expire: index,

@@ -7,6 +7,7 @@ import type { CauseVariation } from '../engine/analyse';
 import type { Message } from '../engine/types';
 import { argent, argentRond, decimal, nombre, pourcentage } from './format';
 import { MESSAGES_JALON2 } from './messages-jalon2';
+import { MESSAGES_JALON3 } from './messages-jalon3';
 
 export interface TexteMessage {
   titre: string;
@@ -86,7 +87,7 @@ const MESSAGES: Record<string, (p: Params) => TexteMessage> = {
   ruptureStock: (p) => ({
     titre: `Ruptures de stock : ${nombre(n(p, 'perdues'))} clients déçus`,
     texte:
-      'Ton stock cible est trop bas. Un stock trop petit fait perdre des ventes; un stock trop gros fait jeter des produits périmés. Ajuste-le dans Opérations (O).',
+      'Des produits ont manqué. Revois ton point de commande et ton stock de sécurité, ou choisis un fournisseur plus rapide et plus fiable (O). Les clients qui trouvent souvent les tablettes vides finissent par aller ailleurs.',
   }),
   heuresReduites: (p) => ({
     titre: 'Heures d’ouverture réduites',
@@ -170,11 +171,12 @@ const MESSAGES: Record<string, (p: Params) => TexteMessage> = {
   tauxDirecteurHausse: (p) => ({
     titre: `La Banque du Canada hausse son taux directeur à ${pourcentage(n(p, 'taux'), 2)}`,
     texte:
-      'Le taux préférentiel des banques suit : les intérêts sur ta marge de crédit augmentent. Ton prêt de démarrage est à taux fixe.',
+      'Le taux préférentiel des banques suit : les intérêts sur ta marge de crédit et tes prêts à taux variable augmentent. Les prêts à taux fixe ne bougent pas.',
   }),
   tauxDirecteurBaisse: (p) => ({
     titre: `La Banque du Canada baisse son taux directeur à ${pourcentage(n(p, 'taux'), 2)}`,
-    texte: 'Emprunter coûte moins cher : bonne nouvelle pour ta marge de crédit.',
+    texte:
+      'Emprunter coûte moins cher : bonne nouvelle pour ta marge de crédit et tes prêts à taux variable. Tes placements rapporteront un peu moins.',
   }),
   hausseSalaireMinimum: (p) => ({
     titre: `Le salaire minimum passe à ${argent(n(p, 'taux'))} l’heure`,
@@ -183,7 +185,7 @@ const MESSAGES: Record<string, (p: Params) => TexteMessage> = {
   }),
   salaireAjusteMinimum: (p) => ({
     titre: 'Salaires ajustés au minimum légal',
-    texte: `Ton salaire horaire était sous le minimum. Il a été relevé à ${argent(n(p, 'salaire'))} : payer moins que le salaire minimum est illégal (Loi sur les normes du travail).`,
+    texte: `Des salaires étaient sous le nouveau minimum. Ils ont été relevés à ${argent(n(p, 'salaire'))} : payer moins que le salaire minimum est illégal (Loi sur les normes du travail).`,
   }),
   apportPonctuel: (p) => ({
     titre: `Apport de ${argentRond(n(p, 'montant'))}`,
@@ -224,7 +226,7 @@ const MESSAGES: Record<string, (p: Params) => TexteMessage> = {
 };
 
 export function texteMessage(m: Message): TexteMessage {
-  const f = MESSAGES[m.code] ?? MESSAGES_JALON2[m.code];
+  const f = MESSAGES[m.code] ?? MESSAGES_JALON2[m.code] ?? MESSAGES_JALON3[m.code];
   return f ? f(m.params ?? {}) : { titre: m.code, texte: '' };
 }
 

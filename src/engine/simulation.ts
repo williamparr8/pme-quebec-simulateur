@@ -46,7 +46,14 @@ import {
 } from './ai-competitors';
 import { analyserMois } from './analyse';
 import { finExerciceFiscal } from './annuel';
-import { FRAIS_COURSIER, PONCTUALITE, RISQUE_DEFAUT, genererAppels, moisEcheance, resoudreSoumissions } from './b2b';
+import {
+  FRAIS_COURSIER,
+  PONCTUALITE,
+  RISQUE_DEFAUT,
+  genererAppels,
+  moisEcheance,
+  resoudreSoumissions,
+} from './b2b';
 import {
   IDS_DEMARCHES,
   coutDemarche,
@@ -108,7 +115,12 @@ import {
   valeurStock,
   type ResultatStockLigne,
 } from './inventory';
-import { ajusterTauxVariable, effectuerVersement, portionCourante, rembourserPartiellement } from './loans';
+import {
+  ajusterTauxVariable,
+  effectuerVersement,
+  portionCourante,
+  rembourserPartiellement,
+} from './loans';
 import {
   evoluerNotoriete,
   indicePrixClient,
@@ -182,8 +194,16 @@ const COMPTES_FRAIS_FIXES: Record<
   keyof FraisFixesMensuels,
   { compte: CompteId; libelle: string; taxable: boolean }
 > = {
-  electricite: { compte: 'electricite', libelle: 'Électricité et chauffage (Hydro-Québec)', taxable: true },
-  assurances: { compte: 'assurances', libelle: 'Assurances (taxe sur les primes non récupérable)', taxable: false },
+  electricite: {
+    compte: 'electricite',
+    libelle: 'Électricité et chauffage (Hydro-Québec)',
+    taxable: true,
+  },
+  assurances: {
+    compte: 'assurances',
+    libelle: 'Assurances (taxe sur les primes non récupérable)',
+    taxable: false,
+  },
   comptable: { compte: 'honoraires', libelle: 'Honoraires du comptable', taxable: true },
   entretien: { compte: 'entretien', libelle: 'Entretien et réparations', taxable: true },
   logiciels: { compte: 'logiciels', libelle: 'Logiciel de caisse et abonnements', taxable: true },
@@ -270,13 +290,24 @@ function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
   // Incorporation planifiée : elle prend effet le 1er janvier.
   if (ctx.mois === 1 && f.incorporationPrevue && ent.formeJuridique === 'individuelle') {
     const nouvelle = f.incorporationPrevue;
-    ecritureSimple(L, 'Constitution de la société par actions', 'droitsPermis', 'encaisse', versCents(fraisImmatriculation(nouvelle)), 'droitsEtAmendes');
+    ecritureSimple(
+      L,
+      'Constitution de la société par actions',
+      'droitsPermis',
+      'encaisse',
+      versCents(fraisImmatriculation(nouvelle)),
+      'droitsEtAmendes',
+    );
     convertirEnCapitalActions(L);
     ent.formeJuridique = nouvelle;
     ent.demarches.req = true;
     f.incorporationPrevue = null;
     ent.finance.actionnaires = [{ nom: ent.proprietaire, part: 1, type: 'fondateur' }];
-    ent.decisions = { ...ent.decisions, prelevements: 0, salaireDirigeant: ent.decisions.prelevements };
+    ent.decisions = {
+      ...ent.decisions,
+      prelevements: 0,
+      salaireDirigeant: ent.decisions.prelevements,
+    };
     m.push({ code: 'incorporationEffectuee', niveau: 'succes', params: { forme: nouvelle } });
   }
 
@@ -287,7 +318,11 @@ function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
     const c = contexteEffets(ent, d.employeId, ctx.index, rng);
     appliquerEffets(choix.effets, c);
     m.push(...c.messages);
-    m.push({ code: 'dilemmeNonTranche', niveau: 'alerte', params: { titre: def.titre, choix: choix.libelle } });
+    m.push({
+      code: 'dilemmeNonTranche',
+      niveau: 'alerte',
+      params: { titre: def.titre, choix: choix.libelle },
+    });
   }
   ent.dilemmes = [];
 
@@ -307,31 +342,78 @@ function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
   for (const id of IDS_DEMARCHES) {
     if (ent.demarches[id]) continue;
     const d = demarche(id);
-    if (id === 'req' && ent.formeJuridique === 'individuelle' && ent.nom.toLowerCase().includes(ent.proprietaire.toLowerCase()))
+    if (
+      id === 'req' &&
+      ent.formeJuridique === 'individuelle' &&
+      ent.nom.toLowerCase().includes(ent.proprietaire.toLowerCase())
+    )
       continue;
     if (d.sinistre) {
       // Pas d'assurance : un accident ou un dégât d'eau est payé par l'entreprise.
       if (rng.chance(d.probabiliteDetection)) {
         const cout = Math.round(rng.range(d.sinistre[0], d.sinistre[1]));
-        ecritureSimple(L, 'Sinistre non assuré (dégât d’eau ou réclamation d’un client)', 'sinistres', 'encaisse', versCents(cout), 'droitsEtAmendes');
+        ecritureSimple(
+          L,
+          'Sinistre non assuré (dégât d’eau ou réclamation d’un client)',
+          'sinistres',
+          'encaisse',
+          versCents(cout),
+          'droitsEtAmendes',
+        );
         m.push({ code: 'sinistreNonAssure', niveau: 'danger', params: { montant: cout } });
       }
       continue;
     }
-    if (!estObligatoire(id, secteur, ent.employes.length) || !rng.chance(d.probabiliteDetection)) continue;
+    if (!estObligatoire(id, secteur, ent.employes.length) || !rng.chance(d.probabiliteDetection))
+      continue;
     const cout = coutDemarche(id, ent.formeJuridique);
-    if (d.amende > 0) ecritureSimple(L, `Amende : ${d.nom}`, 'amendes', 'encaisse', versCents(d.amende), 'droitsEtAmendes');
-    if (cout > 0) ecritureSimple(L, `Régularisation forcée : ${d.nom}`, 'droitsPermis', 'encaisse', versCents(cout), 'droitsEtAmendes');
+    if (d.amende > 0)
+      ecritureSimple(
+        L,
+        `Amende : ${d.nom}`,
+        'amendes',
+        'encaisse',
+        versCents(d.amende),
+        'droitsEtAmendes',
+      );
+    if (cout > 0)
+      ecritureSimple(
+        L,
+        `Régularisation forcée : ${d.nom}`,
+        'droitsPermis',
+        'encaisse',
+        versCents(cout),
+        'droitsEtAmendes',
+      );
     ent.demarches[id] = true;
     if (id === 'mapaq') ent.rh.gestionnaireHygiene = true;
     ent.joursFermeture = Math.max(ent.joursFermeture, d.joursFermeture);
-    m.push({ code: 'demarcheDecouverte', niveau: 'danger', params: { nom: d.nom, organisme: d.organisme, amende: d.amende, jours: d.joursFermeture } });
+    m.push({
+      code: 'demarcheDecouverte',
+      niveau: 'danger',
+      params: { nom: d.nom, organisme: d.organisme, amende: d.amende, jours: d.joursFermeture },
+    });
   }
 
   // Hygiène et salubrité : une inspection peut constater l'absence de personne formée.
   if (secteur.alimentation && !conformeHygiene(ent) && rng.chance(RISQUE_HYGIENE)) {
-    ecritureSimple(L, 'Constat d’infraction du MAPAQ (hygiène et salubrité)', 'amendes', 'encaisse', versCents(AMENDE_HYGIENE), 'droitsEtAmendes');
-    payer(L, ent, 'Formation obligatoire de gestionnaire en hygiène', 'formation', 220, true, 'formationAvantages');
+    ecritureSimple(
+      L,
+      'Constat d’infraction du MAPAQ (hygiène et salubrité)',
+      'amendes',
+      'encaisse',
+      versCents(AMENDE_HYGIENE),
+      'droitsEtAmendes',
+    );
+    payer(
+      L,
+      ent,
+      'Formation obligatoire de gestionnaire en hygiène',
+      'formation',
+      220,
+      true,
+      'formationAvantages',
+    );
     ent.rh.gestionnaireHygiene = true;
     m.push({ code: 'infractionHygiene', niveau: 'danger', params: { amende: AMENDE_HYGIENE } });
   }
@@ -342,27 +424,66 @@ function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
     const penalite = taxes * PENALITE_TAXES;
     const interets = taxes * INTERETS_FISCAUX.tauxAnnuel * 0.25;
     const total = Math.round((taxes + penalite + interets) * 100) / 100;
-    ecritureSimple(L, 'Avis de cotisation : TPS/TVQ non perçues, pénalité et intérêts', 'amendes', 'encaisse', versCents(total), 'droitsEtAmendes');
-    m.push({ code: 'cotisationTaxes', niveau: 'danger', params: { ventes: f.ventesNonTaxees, montant: total } });
+    ecritureSimple(
+      L,
+      'Avis de cotisation : TPS/TVQ non perçues, pénalité et intérêts',
+      'amendes',
+      'encaisse',
+      versCents(total),
+      'droitsEtAmendes',
+    );
+    m.push({
+      code: 'cotisationTaxes',
+      niveau: 'danger',
+      params: { ventes: f.ventesNonTaxees, montant: total },
+    });
     f.inscritTaxes = true;
     f.doitSInscrire = false;
     f.ventesNonTaxees = 0;
   }
 
   // REQ : déclaration de mise à jour annuelle à produire avant la fin de juin.
-  if (majAnnuelleExigee(ctx.config.anneeDepart, ent, ctx.annee) && !f.majAnnuelles.includes(ctx.annee)) {
+  if (
+    majAnnuelleExigee(ctx.config.anneeDepart, ent, ctx.annee) &&
+    !f.majAnnuelles.includes(ctx.annee)
+  ) {
     const commis = heuresPoste(ent, 'administration') >= 5;
     if (commis && ctx.mois >= 3) {
       // Le commis comptable produit la déclaration à temps.
       f.majAnnuelles.push(ctx.annee);
-      ecritureSimple(L, `Déclaration de mise à jour annuelle ${ctx.annee} (REQ)`, 'droitsPermis', 'encaisse', versCents(fraisMiseAJourAnnuelle(ent.formeJuridique)), 'droitsEtAmendes');
+      ecritureSimple(
+        L,
+        `Déclaration de mise à jour annuelle ${ctx.annee} (REQ)`,
+        'droitsPermis',
+        'encaisse',
+        versCents(fraisMiseAJourAnnuelle(ent.formeJuridique)),
+        'droitsEtAmendes',
+      );
       m.push({ code: 'majAnnuelleAuto', niveau: 'info', params: { annee: ctx.annee } });
     } else if (ctx.mois === MOIS_LIMITE_MAJ_REQ + 1) {
       const frais = fraisMiseAJourAnnuelle(ent.formeJuridique);
-      ecritureSimple(L, `Déclaration de mise à jour annuelle ${ctx.annee} produite en retard`, 'droitsPermis', 'encaisse', versCents(frais), 'droitsEtAmendes');
-      ecritureSimple(L, 'Pénalité de retard du REQ (50 % des droits)', 'amendes', 'encaisse', versCents(frais * 0.5), 'droitsEtAmendes');
+      ecritureSimple(
+        L,
+        `Déclaration de mise à jour annuelle ${ctx.annee} produite en retard`,
+        'droitsPermis',
+        'encaisse',
+        versCents(frais),
+        'droitsEtAmendes',
+      );
+      ecritureSimple(
+        L,
+        'Pénalité de retard du REQ (50 % des droits)',
+        'amendes',
+        'encaisse',
+        versCents(frais * 0.5),
+        'droitsEtAmendes',
+      );
       f.majAnnuelles.push(ctx.annee);
-      m.push({ code: 'majAnnuelleEnRetard', niveau: 'alerte', params: { annee: ctx.annee, penalite: frais * 0.5 } });
+      m.push({
+        code: 'majAnnuelleEnRetard',
+        niveau: 'alerte',
+        params: { annee: ctx.annee, penalite: frais * 0.5 },
+      });
     } else if (ctx.mois >= 3 && ctx.mois <= MOIS_LIMITE_MAJ_REQ) {
       m.push({ code: 'rappelMajAnnuelle', niveau: 'info', params: { annee: ctx.annee } });
     }
@@ -375,13 +496,25 @@ function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
   }
 
   // Nouveaux produits : fin du développement.
-  m.push(...resoudreLancements(ent, secteur, ctx.index, qualiteDe(secteur, ent.decisions.qualiteId).score, rng));
+  m.push(
+    ...resoudreLancements(
+      ent,
+      secteur,
+      ctx.index,
+      qualiteDe(secteur, ent.decisions.qualiteId).score,
+      rng,
+    ),
+  );
 
   // Ventes aux entreprises : résultat des soumissions.
   const gagnes = resoudreSoumissions(ent, () => nouvelId(ent, 'contrat'), rng);
   ent.b2b.contrats.push(...gagnes);
   for (const r of ent.b2b.resultats)
-    m.push({ code: r.gagne ? 'soumissionGagnee' : 'soumissionPerdue', niveau: r.gagne ? 'succes' : 'info', params: { client: r.client, prix: r.prix } });
+    m.push({
+      code: r.gagne ? 'soumissionGagnee' : 'soumissionPerdue',
+      niveau: r.gagne ? 'succes' : 'info',
+      params: { client: r.client, prix: r.prix },
+    });
 
   // Salaire minimum et absentéisme du mois.
   let ajuste = false;
@@ -392,7 +525,12 @@ function debutDeMois(ent: Entreprise, ctx: ContexteMois): Message[] {
     }
     e.absenteisme = Math.round(tauxAbsenteisme(e.moral, traitParId(e.trait)) * 1000) / 1000;
   }
-  if (ajuste) m.push({ code: 'salaireAjusteMinimum', niveau: 'info', params: { salaire: ctx.salaireMinimum } });
+  if (ajuste)
+    m.push({
+      code: 'salaireAjusteMinimum',
+      niveau: 'info',
+      params: { salaire: ctx.salaireMinimum },
+    });
   return m;
 }
 
@@ -413,14 +551,18 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
   const gerant = heuresPoste(ent, 'gestion') > 0;
   const capaciteAvantages =
     ent.employes.length > 0
-      ? ent.employes.reduce((a, e) => a + effetsAvantages(d.avantages, e.heuresSemaine).capacite, 0) /
-        ent.employes.length
+      ? ent.employes.reduce(
+          (a, e) => a + effetsAvantages(d.avantages, e.heuresSemaine).capacite,
+          0,
+        ) / ent.employes.length
       : 0;
 
   // Le temps passé à répondre aux avis est pris sur les heures du propriétaire.
   const heuresProprietaire = Math.max(
     0,
-    d.heuresProprietaire + ent.effetsMois.heuresProprietaire - (d.reponseAvis === 'ignorer' ? 0 : 1),
+    d.heuresProprietaire +
+      ent.effetsMois.heuresProprietaire -
+      (d.reponseAvis === 'ignorer' ? 0 : 1),
   );
   let service = 0;
   let cuisine = 0;
@@ -438,12 +580,19 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
   service += heuresProprietaire;
   const multiplicateur =
     ouvert * facteurMois * (1 + effets.capaciteService + capaciteAvantages + (gerant ? 0.04 : 0));
-  const capacite = Math.floor(service * SEMAINES_PAR_MOIS * secteur.transactionsParHeureEmploye * multiplicateur);
+  const capacite = Math.floor(
+    service * SEMAINES_PAR_MOIS * secteur.transactionsParHeureEmploye * multiplicateur,
+  );
   const sansCuisinier = heuresCuisine <= 0;
   const capaciteCuisine = Math.floor(
-    (sansCuisinier ? service * 0.12 : cuisine) * SEMAINES_PAR_MOIS * secteur.unitesCuisineParHeure * ouvert * facteurMois,
+    (sansCuisinier ? service * 0.12 : cuisine) *
+      SEMAINES_PAR_MOIS *
+      secteur.unitesCuisineParHeure *
+      ouvert *
+      facteurMois,
   );
-  const heuresPersonnel = ent.employes.reduce((a, x) => a + x.heuresSemaine, 0) + heuresProprietaire;
+  const heuresPersonnel =
+    ent.employes.reduce((a, x) => a + x.heuresSemaine, 0) + heuresProprietaire;
   const heuresEffectives = Math.min(d.heuresOuverture, heuresService);
 
   // Qualité et coût de chaque ligne (qualité choisie, fournisseur, formation, investissements).
@@ -453,13 +602,24 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
   const coutLignes: Record<string, number> = {};
   for (const ligne of lignesStock(ent, secteur)) {
     const politique = d.approvisionnement[ligne.id];
-    const fournisseurId = politique?.fournisseurId ?? secteur.fournisseursDefaut[ligne.categorieAppro];
+    const fournisseurId =
+      politique?.fournisseurId ?? secteur.fournisseursDefaut[ligne.categorieAppro];
     const f = fournisseurParId(fournisseurId);
-    let q = qualite.score + equipement.bonusQualite + f.bonusQualite + (effets.qualiteLignes[ligne.id] ?? 0);
+    let q =
+      qualite.score +
+      equipement.bonusQualite +
+      f.bonusQualite +
+      (effets.qualiteLignes[ligne.id] ?? 0);
     if (ligne.categorieAppro === 'boissons') q += Math.min(0.04, 0.02 * formesBarista);
     if (ligne.cuisine) q += sansCuisinier ? -0.06 : Math.min(0.04, 0.02 * formesCuisine);
     qualiteLignes[ligne.id] = borner(q, 0.05, 1);
-    coutLignes[ligne.id] = coutUnitaireLigne(ligne, fournisseurId, qualite, conj, effets.coutLignes[ligne.id] ?? 1);
+    coutLignes[ligne.id] = coutUnitaireLigne(
+      ligne,
+      fournisseurId,
+      qualite,
+      conj,
+      effets.coutLignes[ligne.id] ?? 1,
+    );
   }
   let poids = 0;
   let somme = 0;
@@ -474,15 +634,20 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
   const heuresTotales = heuresPersonnel;
   const moralPondere =
     heuresTotales > 0
-      ? (ent.employes.reduce((a, x) => a + x.moral * x.heuresSemaine, 0) + 80 * heuresProprietaire) / heuresTotales
+      ? (ent.employes.reduce((a, x) => a + x.moral * x.heuresSemaine, 0) +
+          80 * heuresProprietaire) /
+        heuresTotales
       : 50;
   const competenceMoyenne =
     heuresTotales > 0
-      ? (ent.employes.reduce((a, x) => a + x.competence * x.heuresSemaine, 0) + 1.1 * heuresProprietaire) / heuresTotales
+      ? (ent.employes.reduce((a, x) => a + x.competence * x.heuresSemaine, 0) +
+          1.1 * heuresProprietaire) /
+        heuresTotales
       : 0.8;
   const bonusService = Math.min(
     0.06,
-    ent.employes.reduce((a, e) => a + traitParId(e.trait).service, 0) + (d.satisfactionGarantie ? 0.01 : 0),
+    ent.employes.reduce((a, e) => a + traitParId(e.trait).service, 0) +
+      (d.satisfactionGarantie ? 0.01 : 0),
   );
 
   // Positionnement et marketing.
@@ -491,14 +656,18 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
   const local = scoreLocal(d, secteur);
   const recentes = promotionsRecentes(ent.marketing, ctx.index);
   const prix: Record<string, number> = {};
-  for (const [k, v] of Object.entries(d.prix)) prix[k] = Math.round(v * (1 - d.promotion) * 100) / 100;
+  for (const [k, v] of Object.entries(d.prix))
+    prix[k] = Math.round(v * (1 - d.promotion) * 100) / 100;
   const bonusSegments: Record<string, number> = {};
   const fidelite = PARAMETRES_MARKETING.fidelite;
   for (const seg of ctx.segments) {
     const p = personaParId(seg.id);
     bonusSegments[seg.id] =
       effets.commandeEnLigne * p.numerique +
-      secteur.sensibilites.prix * p.sensibilites.prix * ent.marketing.adhesionFidelite * fidelite.rabais;
+      secteur.sensibilites.prix *
+        p.sensibilites.prix *
+        ent.marketing.adhesionFidelite *
+        fidelite.rabais;
   }
   const ete = ctx.mois >= 5 && ctx.mois <= 9;
   const heuresMarketing = heuresPoste(ent, 'marketing');
@@ -547,7 +716,8 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
       bonusSegments,
       image: ent.marketing.image,
       // Les membres du programme de fidélité viennent environ 25 % plus souvent.
-      facteurDemande: (1 + (ete ? effets.demandeEte : 0)) * (1 + 0.25 * ent.marketing.adhesionFidelite),
+      facteurDemande:
+        (1 + (ete ? effets.demandeEte : 0)) * (1 + 0.25 * ent.marketing.adhesionFidelite),
     },
   };
 }
@@ -584,7 +754,15 @@ function ajouterPaie(
   brut: number,
   r: ReturnType<typeof retenuesEmploye>,
 ) {
-  const c = cumuls[cle] ?? { nom, brut: 0, impotFederal: 0, impotQuebec: 0, rrq: 0, rqap: 0, assuranceEmploi: 0 };
+  const c = cumuls[cle] ?? {
+    nom,
+    brut: 0,
+    impotFederal: 0,
+    impotQuebec: 0,
+    rrq: 0,
+    rqap: 0,
+    assuranceEmploi: 0,
+  };
   c.brut = Math.round((c.brut + brut) * 100) / 100;
   c.impotFederal = Math.round((c.impotFederal + r.impotFederal) * 100) / 100;
   c.impotQuebec = Math.round((c.impotQuebec + r.impotQuebec) * 100) / 100;
@@ -598,7 +776,12 @@ function ajouterPaie(
 // Simulation d'une entreprise
 // ---------------------------------------------------------------------------
 
-function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre, ctx: ContexteMois): Message[] {
+function simulerEntreprise(
+  ent: Entreprise,
+  prep: Preparation,
+  r: ResultatOffre,
+  ctx: ContexteMois,
+): Message[] {
   const L = ent.livre;
   const d = ent.decisions;
   const f = ent.fiscal;
@@ -614,47 +797,98 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
   if (d.apportPonctuel > 0) {
     ecritureSimple(
       L,
-      societe ? 'Émission d’actions additionnelles au fondateur' : 'Apport additionnel du propriétaire',
+      societe
+        ? 'Émission d’actions additionnelles au fondateur'
+        : 'Apport additionnel du propriétaire',
       'encaisse',
       societe ? 'capitalActions' : 'capital',
       versCents(d.apportPonctuel),
       'apportsProprietaire',
     );
-    messages.push({ code: 'apportPonctuel', niveau: 'info', params: { montant: d.apportPonctuel } });
+    messages.push({
+      code: 'apportPonctuel',
+      niveau: 'info',
+      params: { montant: d.apportPonctuel },
+    });
   }
   const pretPrincipal = ent.prets.find((p) => p.solde > 0);
   if (d.remboursementAnticipe > 0 && pretPrincipal) {
     const montant = rembourserPartiellement(pretPrincipal, versCents(d.remboursementAnticipe));
-    ecritureSimple(L, `Remboursement anticipé – ${pretPrincipal.nom}`, 'empruntBancaire', 'encaisse', montant, 'remboursementsEmprunts');
-    messages.push({ code: 'remboursementAnticipe', niveau: 'info', params: { montant: versDollars(montant) } });
+    ecritureSimple(
+      L,
+      `Remboursement anticipé – ${pretPrincipal.nom}`,
+      'empruntBancaire',
+      'encaisse',
+      montant,
+      'remboursementsEmprunts',
+    );
+    messages.push({
+      code: 'remboursementAnticipe',
+      niveau: 'info',
+      params: { montant: versDollars(montant) },
+    });
   }
 
   // b) Paiements du mois précédent : fournisseurs (net 30), retenues à la source et cotisations (DAS)
-  ecritureSimple(L, 'Paiement des fournisseurs (achats du mois précédent)', 'comptesFournisseurs', 'encaisse', -L.soldes.comptesFournisseurs, 'paiementsFournisseurs');
-  solderComptes(L, 'Remise des retenues à la source et des cotisations (Revenu Québec et ARC)', ['retenuesAPayer', 'cotisationsAPayer'], 'remisesGouvernementales');
+  ecritureSimple(
+    L,
+    'Paiement des fournisseurs (achats du mois précédent)',
+    'comptesFournisseurs',
+    'encaisse',
+    -L.soldes.comptesFournisseurs,
+    'paiementsFournisseurs',
+  );
+  solderComptes(
+    L,
+    'Remise des retenues à la source et des cotisations (Revenu Québec et ARC)',
+    ['retenuesAPayer', 'cotisationsAPayer'],
+    'remisesGouvernementales',
+  );
 
   // c) Remise de la TPS et de la TVQ de la période précédente (taxes perçues − CTI − RTI)
   if (ctx.index > 0 && moisDeRemiseTaxes(f.frequenceTaxes, ctx.mois)) {
-    const net = solderComptes(L, 'Remise de la TPS et de la TVQ (perçues moins CTI et RTI)', ['tpsAPayer', 'tvqAPayer', 'ctiARecouvrer', 'rtiARecouvrer'], 'remisesTaxes');
+    const net = solderComptes(
+      L,
+      'Remise de la TPS et de la TVQ (perçues moins CTI et RTI)',
+      ['tpsAPayer', 'tvqAPayer', 'ctiARecouvrer', 'rtiARecouvrer'],
+      'remisesTaxes',
+    );
     if (net !== 0)
-      messages.push({ code: net > 0 ? 'remiseTaxes' : 'remboursementTaxes', niveau: 'info', params: { montant: Math.abs(versDollars(net)) } });
+      messages.push({
+        code: net > 0 ? 'remiseTaxes' : 'remboursementTaxes',
+        niveau: 'info',
+        params: { montant: Math.abs(versDollars(net)) },
+      });
   }
 
   // d) Impôt des sociétés : acomptes provisionnels mensuels et solde de l'an dernier (mars)
   if (societe && f.acompteMensuel > 0) {
-    ecritureSimple(L, 'Acompte provisionnel d’impôt (fédéral et Québec)', 'impotsAPayer', 'encaisse', versCents(f.acompteMensuel), 'impotsPayes');
+    ecritureSimple(
+      L,
+      'Acompte provisionnel d’impôt (fédéral et Québec)',
+      'impotsAPayer',
+      'encaisse',
+      versCents(f.acompteMensuel),
+      'impotsPayes',
+    );
     f.acomptesVersesAnnee = Math.round((f.acomptesVersesAnnee + f.acompteMensuel) * 100) / 100;
   }
   if (ctx.mois === 3 && f.soldeImpotAPayer !== 0) {
     ecritureSimple(
       L,
-      f.soldeImpotAPayer > 0 ? 'Paiement du solde d’impôt de l’an dernier' : 'Remboursement d’impôt de l’an dernier',
+      f.soldeImpotAPayer > 0
+        ? 'Paiement du solde d’impôt de l’an dernier'
+        : 'Remboursement d’impôt de l’an dernier',
       'impotsAPayer',
       'encaisse',
       versCents(f.soldeImpotAPayer),
       'impotsPayes',
     );
-    messages.push({ code: f.soldeImpotAPayer > 0 ? 'soldeImpotPaye' : 'remboursementImpot', niveau: 'info', params: { montant: Math.abs(f.soldeImpotAPayer) } });
+    messages.push({
+      code: f.soldeImpotAPayer > 0 ? 'soldeImpotPaye' : 'remboursementImpot',
+      niveau: 'info',
+      params: { montant: Math.abs(f.soldeImpotAPayer) },
+    });
     f.soldeImpotAPayer = 0;
   }
 
@@ -669,9 +903,13 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
   const traiteurActif = produitActif(ent, 'traiteur');
   if (!traiteurActif) ent.b2b.contrats = [];
   const demandeB2B = ent.b2b.contrats.reduce((a, c) => a + c.repasParMois, 0);
-  const demandeLigne = (id: string) => (demandeMarche.get(id) ?? 0) + (id === 'traiteur' ? demandeB2B : 0);
-  const demandeCuisine = lignes.filter((l) => l.cuisine).reduce((a, l) => a + demandeLigne(l.id), 0);
-  const ratioCuisine = demandeCuisine > prep.capaciteCuisine ? prep.capaciteCuisine / demandeCuisine : 1;
+  const demandeLigne = (id: string) =>
+    (demandeMarche.get(id) ?? 0) + (id === 'traiteur' ? demandeB2B : 0);
+  const demandeCuisine = lignes
+    .filter((l) => l.cuisine)
+    .reduce((a, l) => a + demandeLigne(l.id), 0);
+  const ratioCuisine =
+    demandeCuisine > prep.capaciteCuisine ? prep.capaciteCuisine / demandeCuisine : 1;
   const utilisation = prep.capacite > 0 ? r.demande / prep.capacite : r.demande > 0 ? 2 : 0;
   const tauxDefauts = borner(
     0.015 +
@@ -692,15 +930,28 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
     const stock = (ent.operations.stocks[ligne.id] ??= stockVide());
     let politique = d.approvisionnement[ligne.id];
     if (!politique) {
-      politique = politiqueParDefaut(ligne, secteur.fournisseursDefaut[ligne.categorieAppro], demandeLigne(ligne.id), conj);
+      politique = politiqueParDefaut(
+        ligne,
+        secteur.fournisseursDefaut[ligne.categorieAppro],
+        demandeLigne(ligne.id),
+        conj,
+      );
       d.approvisionnement[ligne.id] = politique;
     }
     const fournisseur = fournisseurParId(politique.fournisseurId);
     const cout = prep.coutLignes[ligne.id];
     const conservation = fournisseur.conservationJours ?? ligne.conservationJours;
     const demande = demandeLigne(ligne.id);
+    // Ventes aux entreprises : la demande du mois est connue d'avance (contrats).
+    if (ligne.id === 'traiteur') stock.demandeRecente = demande;
     if (politique.auto) {
-      const calcul = politiqueRecommandee(stock.demandeRecente || demande, cout, fournisseur, conservation, precision);
+      const calcul = politiqueRecommandee(
+        stock.demandeRecente || demande,
+        cout,
+        fournisseur,
+        conservation,
+        precision,
+      );
       politique.pointCommande = calcul.pointCommande;
       politique.quantite = calcul.quantite;
     }
@@ -756,7 +1007,10 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
   let perduesStockVisites = 0;
   let unitesB2B = 0;
   const ventesParLigne: { ligneId: string; unites: number; chiffreAffaires: number }[] = [];
-  const ligneCle = secteur.lignes.reduce((a, l) => (l.tauxAchat > a.tauxAchat ? l : a), secteur.lignes[0]);
+  const ligneCle = secteur.lignes.reduce(
+    (a, l) => (l.tauxAchat > a.tauxAchat ? l : a),
+    secteur.lignes[0],
+  );
   for (const ligne of lignes) {
     const res = resultatsStock.get(ligne.id);
     if (!res) continue;
@@ -769,7 +1023,11 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
     const prix = d.prix[ligne.id] ?? prixReference(ligne, conj.indicePrix);
     ventesBrutes += magasinEtLivraison * prix;
     ventesLivraisonBrutes += livraison * prix;
-    ventesParLigne.push({ ligneId: ligne.id, unites: magasinEtLivraison, chiffreAffaires: Math.round(magasinEtLivraison * prix * 100) / 100 });
+    ventesParLigne.push({
+      ligneId: ligne.id,
+      unites: magasinEtLivraison,
+      chiffreAffaires: Math.round(magasinEtLivraison * prix * 100) / 100,
+    });
     perduesCuisine += res.perduesPreparation;
     perduesStockVisites += res.perdues * (ligne.id === ligneCle.id ? 1 : 0.3);
   }
@@ -782,11 +1040,20 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
   const fid = PARAMETRES_MARKETING.fidelite;
   const rabaisPromo = ventesBrutes * d.promotion;
   const apresPromo = ventesBrutes - rabaisPromo;
-  const rabaisFidelite = d.programmeFidelite ? (apresPromo - ventesLivraisonBrutes) * ent.marketing.adhesionFidelite * fid.rabais : 0;
+  const rabaisFidelite = d.programmeFidelite
+    ? (apresPromo - ventesLivraisonBrutes) * ent.marketing.adhesionFidelite * fid.rabais
+    : 0;
   const tasse = INITIATIVES_ECO.find((i) => i.id === 'tasse');
-  const rabaisTasse = d.initiativesEco.includes('tasse') && tasse ? servies * tasse.coutParVisite : 0;
+  const rabaisTasse =
+    d.initiativesEco.includes('tasse') && tasse ? servies * tasse.coutParVisite : 0;
   const compensations = d.reponseAvis === 'compenser' ? apresPromo * 0.008 : 0;
-  const rabais = Math.round(Math.max(0, Math.min(ventesBrutes, rabaisPromo + rabaisFidelite + rabaisTasse + compensations)) * 100) / 100;
+  const rabais =
+    Math.round(
+      Math.max(
+        0,
+        Math.min(ventesBrutes, rabaisPromo + rabaisFidelite + rabaisTasse + compensations),
+      ) * 100,
+    ) / 100;
   const ventesNettes = Math.round((ventesBrutes - rabais) * 100) / 100;
 
   // g) Ventes au détail (avec TPS et TVQ si l'entreprise est inscrite) et frais de cartes
@@ -797,7 +1064,10 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
       libelle: 'Ventes du mois (TPS et TVQ perçues sur le prix après rabais)',
       flux: 'encaissementsClients',
       lignes: [
-        { compte: 'encaisse', debit: versCents(ventesNettes) + versCents(t.tps) + versCents(t.tvq) },
+        {
+          compte: 'encaisse',
+          debit: versCents(ventesNettes) + versCents(t.tps) + versCents(t.tvq),
+        },
         { compte: 'rabaisPromotions', debit: versCents(rabais) },
         { compte: 'ventes', credit: versCents(ventesBrutes) },
         { compte: 'tpsAPayer', credit: versCents(t.tps) },
@@ -819,9 +1089,24 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
     });
   }
   const partMagasin = ventesBrutes > 0 ? 1 - ventesLivraisonBrutes / ventesBrutes : 1;
-  ecritureSimple(L, 'Frais de traitement des cartes de débit et de crédit', 'fraisCartes', 'encaisse', versCents(encaissement * partMagasin * PART_VENTES_CARTES * FRAIS_TRAITEMENT_CARTES.taux), 'fraisBancaires');
+  ecritureSimple(
+    L,
+    'Frais de traitement des cartes de débit et de crédit',
+    'fraisCartes',
+    'encaisse',
+    versCents(encaissement * partMagasin * PART_VENTES_CARTES * FRAIS_TRAITEMENT_CARTES.taux),
+    'fraisBancaires',
+  );
   if (ventesLivraisonBrutes > 0) {
-    payer(L, ent, 'Commissions de la plateforme de livraison', 'commissions', ventesLivraisonBrutes * PARAMETRES_MARKETING.livraison.commission, true, 'commissionsLivraison');
+    payer(
+      L,
+      ent,
+      'Commissions de la plateforme de livraison',
+      'commissions',
+      ventesLivraisonBrutes * PARAMETRES_MARKETING.livraison.commission,
+      true,
+      'commissionsLivraison',
+    );
   }
 
   // h) Ventes aux entreprises : livraisons facturées à crédit (comptes clients)
@@ -864,16 +1149,30 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
     c.satisfaction =
       ratio < 0.95
         ? borner(c.satisfaction - 0.6 * (1 - ratio), 0, 1)
-        : borner(lisser(c.satisfaction, 0.85 + 0.2 * ((prep.qualiteLignes.traiteur ?? 0.5) - 0.5), 0.3), 0, 1);
+        : borner(
+            lisser(c.satisfaction, 0.85 + 0.2 * ((prep.qualiteLignes.traiteur ?? 0.5) - 0.5), 0.3),
+            0,
+            1,
+          );
     c.moisRestants -= 1;
   }
   for (const c of ent.b2b.contrats) {
-    if (c.satisfaction < 0.45) messages.push({ code: 'contratAnnule', niveau: 'alerte', params: { client: c.client } });
-    else if (c.moisRestants <= 0) messages.push({ code: 'contratTermine', niveau: 'info', params: { client: c.client } });
+    if (c.satisfaction < 0.45)
+      messages.push({ code: 'contratAnnule', niveau: 'alerte', params: { client: c.client } });
+    else if (c.moisRestants <= 0)
+      messages.push({ code: 'contratTermine', niveau: 'info', params: { client: c.client } });
   }
   ent.b2b.contrats = ent.b2b.contrats.filter((c) => c.satisfaction >= 0.45 && c.moisRestants > 0);
   if (ventesB2B > 0 && !prep.effets.livraisonPropre) {
-    payer(L, ent, 'Livraisons du traiteur par coursier', 'commissions', ventesB2B * FRAIS_COURSIER, true, 'commissionsLivraison');
+    payer(
+      L,
+      ent,
+      'Livraisons du traiteur par coursier',
+      'commissions',
+      ventesB2B * FRAIS_COURSIER,
+      true,
+      'commissionsLivraison',
+    );
   }
 
   // Seuil du petit fournisseur (ventes taxables des 4 derniers trimestres)
@@ -886,7 +1185,11 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
       messages.push({ code: 'seuilTaxesDepasse', niveau: 'danger', params: { ventes: ventes12 } });
     } else if (f.doitSInscrire) {
       f.ventesNonTaxees += ventesTaxables;
-      messages.push({ code: 'inscriptionTaxesRequise', niveau: 'danger', params: { ventes: f.ventesNonTaxees } });
+      messages.push({
+        code: 'inscriptionTaxesRequise',
+        niveau: 'danger',
+        params: { ventes: f.ventesNonTaxees },
+      });
     }
   }
 
@@ -901,25 +1204,64 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
   }
   const part = secteur.partAchatsTaxables;
   acheterMarchandises(L, ent, 'Achats payés à la livraison', achats.comptant, part, 'encaisse');
-  acheterMarchandises(L, ent, 'Achats à crédit (net 30 jours)', achats.net30, part, 'comptesFournisseurs');
+  acheterMarchandises(
+    L,
+    ent,
+    'Achats à crédit (net 30 jours)',
+    achats.net30,
+    part,
+    'comptesFournisseurs',
+  );
   if (d.prendreEscomptes && achats.escompte > 0) {
-    acheterMarchandises(L, ent, 'Achats payés en 10 jours (2/10 net 30)', achats.escompte, part, 'encaisse');
-    ecritureSimple(L, 'Escompte de 2 % obtenu pour paiement rapide', 'encaisse', 'escomptesAchats', versCents(achats.escompte * TAUX_ESCOMPTE), 'paiementsFournisseurs');
+    acheterMarchandises(
+      L,
+      ent,
+      'Achats payés en 10 jours (2/10 net 30)',
+      achats.escompte,
+      part,
+      'encaisse',
+    );
+    ecritureSimple(
+      L,
+      'Escompte de 2 % obtenu pour paiement rapide',
+      'encaisse',
+      'escomptesAchats',
+      versCents(achats.escompte * TAUX_ESCOMPTE),
+      'paiementsFournisseurs',
+    );
   } else {
-    acheterMarchandises(L, ent, 'Achats à crédit (2/10 net 30, escompte non pris)', achats.escompte, part, 'comptesFournisseurs');
+    acheterMarchandises(
+      L,
+      ent,
+      'Achats à crédit (2/10 net 30, escompte non pris)',
+      achats.escompte,
+      part,
+      'comptesFournisseurs',
+    );
   }
   const achatsCents = L.soldes.stocks - siCents;
   const sfCents = versCents(
-    Object.values(ent.operations.stocks).reduce((a, s) => a + valeurStock(s, d.methodeInventaire), 0),
+    Object.values(ent.operations.stocks).reduce(
+      (a, s) => a + valeurStock(s, d.methodeInventaire),
+      0,
+    ),
   );
   const pertesCents = versCents(coutPerimes);
   ecritureSimple(L, 'Produits périmés jetés', 'pertesStocks', 'stocks', pertesCents);
-  ecritureSimple(L, 'Coût des marchandises vendues (stock d’ouverture + achats − stock de clôture)', 'coutMarchandises', 'stocks', siCents + achatsCents - pertesCents - sfCents);
+  ecritureSimple(
+    L,
+    'Coût des marchandises vendues (stock d’ouverture + achats − stock de clôture)',
+    'coutMarchandises',
+    'stocks',
+    siCents + achatsCents - pertesCents - sfCents,
+  );
 
   // j) Paie : salaire brut → retenues à la source → salaire net; cotisations de l'employeur
   const dirigeant = societe && d.salaireDirigeant > 0 ? d.salaireDirigeant : 0;
   const masseAnnuelle =
-    (ent.employes.reduce((a, x) => a + salaireMensuel(x.salaireHoraire, x.heuresSemaine), 0) + dirigeant) * 12;
+    (ent.employes.reduce((a, x) => a + salaireMensuel(x.salaireHoraire, x.heuresSemaine), 0) +
+      dirigeant) *
+    12;
   const feries = JOURS_FERIES_PAR_MOIS[ctx.mois - 1];
   const primeParEmploye = ent.employes.length > 0 ? ent.effetsMois.primes / ent.employes.length : 0;
   let salaires = 0;
@@ -928,7 +1270,9 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
   let cotisations = 0;
   let coutAvantages = 0;
   for (const emp of ent.employes) {
-    const brut = salaireMensuel(emp.salaireHoraire, emp.heuresSemaine * (1 - emp.absenteisme)) + primeParEmploye;
+    const brut =
+      salaireMensuel(emp.salaireHoraire, emp.heuresSemaine * (1 - emp.absenteisme)) +
+      primeParEmploye;
     const ferie = feries * indemniteJourFerie(emp.salaireHoraire, emp.heuresSemaine);
     const vac = Math.round((brut + ferie) * tauxVacances(emp.moisAnciennete) * 100) / 100;
     const total = brut + ferie + vac;
@@ -945,10 +1289,20 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
   }
   if (ent.enAttente.indemnites > 0) {
     const ret = retenuesEmploye(ent.enAttente.indemnites, 0, true);
-    ajouterPaie(f.paieAnnee, 'indemnites', 'Anciens employés (indemnités de préavis)', ent.enAttente.indemnites, ret);
+    ajouterPaie(
+      f.paieAnnee,
+      'indemnites',
+      'Anciens employés (indemnités de préavis)',
+      ent.enAttente.indemnites,
+      ret,
+    );
     salaires += ent.enAttente.indemnites;
     retenues += ret.total;
-    messages.push({ code: 'indemnitesPreavis', niveau: 'info', params: { montant: ent.enAttente.indemnites } });
+    messages.push({
+      code: 'indemnitesPreavis',
+      niveau: 'info',
+      params: { montant: ent.enAttente.indemnites },
+    });
   }
   let cDirigeant = 0;
   if (dirigeant > 0) {
@@ -979,39 +1333,92 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
       { compte: 'encaisse', credit: cSalaires + cVacances + cDirigeant - cRetenues },
     ],
   });
-  ecritureSimple(L, 'Cotisations de l’employeur (RRQ, RQAP, AE, FSS, CNT, CNESST)', 'chargesSociales', 'cotisationsAPayer', versCents(cotisations));
-  ecritureSimple(L, 'Avantages sociaux (assurance collective, repas, rabais)', 'avantagesSociaux', 'encaisse', versCents(coutAvantages), 'formationAvantages');
+  ecritureSimple(
+    L,
+    'Cotisations de l’employeur (RRQ, RQAP, AE, FSS, CNT, CNESST)',
+    'chargesSociales',
+    'cotisationsAPayer',
+    versCents(cotisations),
+  );
+  ecritureSimple(
+    L,
+    'Avantages sociaux (assurance collective, repas, rabais)',
+    'avantagesSociaux',
+    'encaisse',
+    versCents(coutAvantages),
+    'formationAvantages',
+  );
 
   // k) Loyer (indexé à chaque anniversaire du bail) et frais fixes
   if (ctx.index > 0 && ctx.index % 12 === 0) {
     ent.bail.loyerMensuel = Math.round(ent.bail.loyerMensuel * (1 + ent.bail.indexation));
-    messages.push({ code: 'indexationLoyer', niveau: 'info', params: { loyer: versDollars(ent.bail.loyerMensuel), taux: ent.bail.indexation } });
+    messages.push({
+      code: 'indexationLoyer',
+      niveau: 'info',
+      params: { loyer: versDollars(ent.bail.loyerMensuel), taux: ent.bail.indexation },
+    });
   }
-  payer(L, ent, 'Loyer et frais communs', 'loyer', versDollars(ent.bail.loyerMensuel), true, 'loyerEtFrais');
+  payer(
+    L,
+    ent,
+    'Loyer et frais communs',
+    'loyer',
+    versDollars(ent.bail.loyerMensuel),
+    true,
+    'loyerEtFrais',
+  );
   const commis = Math.min(1, heuresPoste(ent, 'administration') / 10);
-  for (const [cle, montant] of Object.entries(secteur.fraisFixesMensuels) as [keyof FraisFixesMensuels, number][]) {
+  for (const [cle, montant] of Object.entries(secteur.fraisFixesMensuels) as [
+    keyof FraisFixesMensuels,
+    number,
+  ][]) {
     const { compte, libelle, taxable } = COMPTES_FRAIS_FIXES[cle];
     if (cle === 'assurances' && !ent.demarches.assurances) continue;
     let base = montant;
     if (cle === 'comptable') {
       base += fraisComptablesForme(ent.formeJuridique);
-      if (!ent.demarches.compteBancaire) base += demarche('compteBancaire').fraisComptablesSupplementaires ?? 0;
+      if (!ent.demarches.compteBancaire)
+        base += demarche('compteBancaire').fraisComptablesSupplementaires ?? 0;
       // Un commis comptable à l'interne fait une partie du travail du comptable externe.
       base *= 1 - 0.6 * commis;
     }
     payer(L, ent, libelle, compte, base * conj.indicePrix, taxable, 'loyerEtFrais');
   }
-  payer(L, ent, 'Frais d’utilisation des investissements (abonnements, véhicule, terrasse)', 'logiciels', fraisInvestissements(ent, secteur, ctx.mois) * conj.indicePrix, true, 'loyerEtFrais');
-  const ecoMensuel = INITIATIVES_ECO.filter((i) => d.initiativesEco.includes(i.id) && i.id !== 'tasse').reduce(
-    (a, i) => a + i.coutMensuel + i.coutParVisite * servies,
-    0,
+  payer(
+    L,
+    ent,
+    'Frais d’utilisation des investissements (abonnements, véhicule, terrasse)',
+    'logiciels',
+    fraisInvestissements(ent, secteur, ctx.mois) * conj.indicePrix,
+    true,
+    'loyerEtFrais',
   );
-  payer(L, ent, 'Initiatives écoresponsables (emballages, compost, certification)', 'ecoresponsabilite', ecoMensuel, true, 'loyerEtFrais');
+  const ecoMensuel = INITIATIVES_ECO.filter(
+    (i) => d.initiativesEco.includes(i.id) && i.id !== 'tasse',
+  ).reduce((a, i) => a + i.coutMensuel + i.coutParVisite * servies, 0);
+  payer(
+    L,
+    ent,
+    'Initiatives écoresponsables (emballages, compost, certification)',
+    'ecoresponsabilite',
+    ecoMensuel,
+    true,
+    'loyerEtFrais',
+  );
 
   // l) Marketing : publicité par canal et programme de fidélité
   const pub = totalPublicite(d.publicite);
   payer(L, ent, 'Publicité (tous les canaux)', 'publicite', pub, true, 'publicite');
-  if (d.programmeFidelite) payer(L, ent, 'Logiciel du programme de fidélité', 'publicite', fid.coutLogicielMensuel, true, 'publicite');
+  if (d.programmeFidelite)
+    payer(
+      L,
+      ent,
+      'Logiciel du programme de fidélité',
+      'publicite',
+      fid.coutLogicielMensuel,
+      true,
+      'publicite',
+    );
   planifierEffetsPublicite(ent.marketing, secteur, d.publicite, ctx.index, prep.bonusConversion);
   const gainsPub = effetsPubliciteDuMois(ent.marketing, ctx.index);
 
@@ -1019,23 +1426,66 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
   for (const pret of ent.prets) {
     if (pret.solde <= 0) continue;
     const v = effectuerVersement(pret);
-    ecritureSimple(L, `Intérêts – ${pret.nom}`, 'interets', 'encaisse', v.interets, 'interetsPayes');
-    ecritureSimple(L, `Remboursement du capital – ${pret.nom}`, 'empruntBancaire', 'encaisse', v.capital, 'remboursementsEmprunts');
+    ecritureSimple(
+      L,
+      `Intérêts – ${pret.nom}`,
+      'interets',
+      'encaisse',
+      v.interets,
+      'interetsPayes',
+    );
+    ecritureSimple(
+      L,
+      `Remboursement du capital – ${pret.nom}`,
+      'empruntBancaire',
+      'encaisse',
+      v.capital,
+      'remboursementsEmprunts',
+    );
   }
   const margeUtilisee = -L.soldes.margeCredit;
   if (margeUtilisee > 0) {
-    ecritureSimple(L, 'Intérêts sur la marge de crédit', 'interets', 'encaisse', Math.round((margeUtilisee * (prime + ent.margeCredit.ecartTaux)) / 12), 'interetsPayes');
+    ecritureSimple(
+      L,
+      'Intérêts sur la marge de crédit',
+      'interets',
+      'encaisse',
+      Math.round((margeUtilisee * (prime + ent.margeCredit.ecartTaux)) / 12),
+      'interetsPayes',
+    );
   }
 
   // n) Placements : intérêts du mois et certificats échus
   for (const p of ent.finance.placements) {
-    ecritureSimple(L, 'Intérêts sur les placements', 'encaisse', 'revenusPlacement', Math.round((p.montant * p.taux) / 12), 'interetsRecus');
+    ecritureSimple(
+      L,
+      'Intérêts sur les placements',
+      'encaisse',
+      'revenusPlacement',
+      Math.round((p.montant * p.taux) / 12),
+      'interetsRecus',
+    );
   }
-  for (const p of ent.finance.placements.filter((x) => x.echeance !== null && x.echeance <= ctx.index)) {
-    ecritureSimple(L, 'Échéance d’un certificat de placement garanti', 'encaisse', 'placements', p.montant, 'placementsNets');
-    messages.push({ code: 'placementEchu', niveau: 'info', params: { montant: versDollars(p.montant) } });
+  for (const p of ent.finance.placements.filter(
+    (x) => x.echeance !== null && x.echeance <= ctx.index,
+  )) {
+    ecritureSimple(
+      L,
+      'Échéance d’un certificat de placement garanti',
+      'encaisse',
+      'placements',
+      p.montant,
+      'placementsNets',
+    );
+    messages.push({
+      code: 'placementEchu',
+      niveau: 'info',
+      params: { montant: versDollars(p.montant) },
+    });
   }
-  ent.finance.placements = ent.finance.placements.filter((x) => x.echeance === null || x.echeance > ctx.index);
+  ent.finance.placements = ent.finance.placements.filter(
+    (x) => x.echeance === null || x.echeance > ctx.index,
+  );
 
   // o) Amortissement comptable (linéaire, bien par bien)
   for (const [type, montant] of amortirImmobilisations(ent)) {
@@ -1047,16 +1497,27 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
   for (const fa of ent.b2b.factures) {
     if (fa.statut !== 'ouverte' || fa.echeance > ctx.index) continue;
     if (rng.chance(PONCTUALITE[fa.cote])) {
-      ecritureSimple(L, `Paiement reçu de ${fa.client}`, 'encaisse', 'comptesClients', fa.ht + fa.tps + fa.tvq, 'encaissementsClients');
+      ecritureSimple(
+        L,
+        `Paiement reçu de ${fa.client}`,
+        'encaisse',
+        'comptesClients',
+        fa.ht + fa.tps + fa.tvq,
+        'encaissementsClients',
+      );
       fa.statut = 'payee';
     }
   }
   const clientsEnDefaut = new Set<string>();
-  for (const client of new Set(ent.b2b.factures.filter((x) => x.statut === 'ouverte').map((x) => x.client))) {
+  for (const client of new Set(
+    ent.b2b.factures.filter((x) => x.statut === 'ouverte').map((x) => x.client),
+  )) {
     const ouvertes = ent.b2b.factures.filter((x) => x.client === client && x.statut === 'ouverte');
     const enRetard = ouvertes.some((x) => x.echeance < ctx.index);
-    if (rng.chance(RISQUE_DEFAUT[ouvertes[0].cote] * (enRetard ? 3 : 1))) clientsEnDefaut.add(client);
-    else if (enRetard) messages.push({ code: 'clientEnRetard', niveau: 'alerte', params: { client } });
+    if (rng.chance(RISQUE_DEFAUT[ouvertes[0].cote] * (enRetard ? 3 : 1)))
+      clientsEnDefaut.add(client);
+    else if (enRetard)
+      messages.push({ code: 'clientEnRetard', niveau: 'alerte', params: { client } });
   }
   for (const client of clientsEnDefaut) {
     const ouvertes = ent.b2b.factures.filter((x) => x.client === client && x.statut === 'ouverte');
@@ -1074,20 +1535,51 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
     });
     for (const x of ouvertes) x.statut = 'radiee';
     ent.b2b.contrats = ent.b2b.contrats.filter((c) => c.client !== client);
-    messages.push({ code: 'creanceIrrecouvrable', niveau: 'danger', params: { client, montant: versDollars(ht + tps + tvq) } });
+    messages.push({
+      code: 'creanceIrrecouvrable',
+      niveau: 'danger',
+      params: { client, montant: versDollars(ht + tps + tvq) },
+    });
   }
-  ent.b2b.factures = ent.b2b.factures.filter((x) => x.statut === 'ouverte' || x.emission >= ctx.index - 12);
+  ent.b2b.factures = ent.b2b.factures.filter(
+    (x) => x.statut === 'ouverte' || x.emission >= ctx.index - 12,
+  );
 
   // q) Rémunération des propriétaires : prélèvements (individuelle, société de personnes) ou dividendes
   if (!societe) {
-    ecritureSimple(L, 'Prélèvements du propriétaire', 'prelevements', 'encaisse', versCents(d.prelevements), 'prelevementsProprietaire');
+    ecritureSimple(
+      L,
+      'Prélèvements du propriétaire',
+      'prelevements',
+      'encaisse',
+      versCents(d.prelevements),
+      'prelevementsProprietaire',
+    );
     if (ent.associe && ent.associe.part < 1) {
       const partAssocie = (d.prelevements * ent.associe.part) / (1 - ent.associe.part);
-      ecritureSimple(L, `Prélèvements de l’associé (${ent.associe.nom})`, 'prelevementsAssocie', 'encaisse', versCents(partAssocie), 'prelevementsProprietaire');
+      ecritureSimple(
+        L,
+        `Prélèvements de l’associé (${ent.associe.nom})`,
+        'prelevementsAssocie',
+        'encaisse',
+        versCents(partAssocie),
+        'prelevementsProprietaire',
+      );
     }
   } else if (d.dividendePonctuel > 0) {
-    ecritureSimple(L, 'Dividendes versés aux actionnaires (non déterminés)', 'dividendes', 'encaisse', versCents(d.dividendePonctuel), 'dividendesVerses');
-    messages.push({ code: 'dividendeVerse', niveau: 'info', params: { montant: d.dividendePonctuel } });
+    ecritureSimple(
+      L,
+      'Dividendes versés aux actionnaires (non déterminés)',
+      'dividendes',
+      'encaisse',
+      versCents(d.dividendePonctuel),
+      'dividendesVerses',
+    );
+    messages.push({
+      code: 'dividendeVerse',
+      niveau: 'info',
+      params: { montant: d.dividendePonctuel },
+    });
   }
 
   // r) Marge de crédit automatique
@@ -1095,12 +1587,31 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
   const utilisee = -L.soldes.margeCredit;
   if (L.soldes.encaisse < 0 && utilisee < limite) {
     const tirage = Math.min(limite - utilisee, -L.soldes.encaisse);
-    ecritureSimple(L, 'Tirage sur la marge de crédit', 'encaisse', 'margeCredit', tirage, 'margeCredit');
-    messages.push({ code: 'tirageMarge', niveau: 'alerte', params: { montant: versDollars(tirage) } });
+    ecritureSimple(
+      L,
+      'Tirage sur la marge de crédit',
+      'encaisse',
+      'margeCredit',
+      tirage,
+      'margeCredit',
+    );
+    messages.push({
+      code: 'tirageMarge',
+      niveau: 'alerte',
+      params: { montant: versDollars(tirage) },
+    });
   } else if (d.remboursementAutoMarge && utilisee > 0) {
     const coussin = versCents(REGLES_FINANCEMENT.coussinEncaisse);
     const remb = Math.min(utilisee, L.soldes.encaisse - coussin);
-    if (remb > 0) ecritureSimple(L, 'Remboursement de la marge de crédit', 'margeCredit', 'encaisse', remb, 'margeCredit');
+    if (remb > 0)
+      ecritureSimple(
+        L,
+        'Remboursement de la marge de crédit',
+        'margeCredit',
+        'encaisse',
+        remb,
+        'margeCredit',
+      );
   }
 
   // s) Clientèle : qualité perçue, service, satisfaction, avis, notoriété, image et fidélité
@@ -1121,7 +1632,9 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
   );
   cl.service = lisser(cl.service, serviceCible, 0.5);
   const tauxAttente =
-    r.demande > 0 ? (r.perduesCapacite + 0.5 * perduesRupture + 0.15 * perduesCuisine) / r.demande : 0;
+    r.demande > 0
+      ? (r.perduesCapacite + 0.5 * perduesRupture + 0.15 * perduesCuisine) / r.demande
+      : 0;
   const plaintes = Math.round(servies * tauxDefauts * 0.35 * (d.satisfactionGarantie ? 0.4 : 1));
   cl.satisfaction = borner(
     satisfactionClients(cl.qualitePercue, cl.service, prep.ambiance, ipClient, tauxAttente) -
@@ -1135,32 +1648,64 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
     cl.note = nouvelleNote(cl.note, cl.nbAvis, noteMois, nouveauxAvis);
     cl.nbAvis += nouveauxAvis;
   }
-  m.tauxRupturePercu = lisser(m.tauxRupturePercu, r.servies > 0 ? perduesRupture / r.servies : 0, 0.5);
+  m.tauxRupturePercu = lisser(
+    m.tauxRupturePercu,
+    r.servies > 0 ? perduesRupture / r.servies : 0,
+    0.5,
+  );
   m.adhesionFidelite = evoluerAdhesion(m.adhesionFidelite, d.programmeFidelite);
   const retentionAvant = m.retention;
-  m.retention = retentionClients({ satisfaction: cl.satisfaction, note: cl.note, adhesion: m.adhesionFidelite, tauxRupture: m.tauxRupturePercu });
+  m.retention = retentionClients({
+    satisfaction: cl.satisfaction,
+    note: cl.note,
+    adhesion: m.adhesionFidelite,
+    tauxRupture: m.tauxRupturePercu,
+  });
   const oubli = 0.07 * (1.3 - 0.6 * m.retention);
   const fatigue = prep.promotionsRecentes >= PARAMETRES_MARKETING.promotion.moisFatigue;
   for (const seg of ctx.segments) {
     const persona = personaParId(seg.id);
-    const promo = d.promotion > 0 ? d.promotion * 0.25 * persona.sensibilites.prix * (fatigue ? 0.5 : 1) : 0;
+    const promo =
+      d.promotion > 0 ? d.promotion * 0.25 * persona.sensibilites.prix * (fatigue ? 0.5 : 1) : 0;
     const potentielSeg = ctx.potentiel * seg.part;
     const serviesSeg = r.parSegment[seg.id]?.servies ?? 0;
     const n = m.notorieteSegments[seg.id] ?? cl.notoriete;
     m.notorieteSegments[seg.id] = borner(
-      evoluerNotoriete(n, 0, emplacement.visibilite, potentielSeg > 0 ? serviesSeg / potentielSeg : 0, cl.satisfaction, oubli, combinerGains([gainsPub[seg.id] ?? 0, promo])) +
-        (ctx.index === 0 ? 0.06 : 0),
+      evoluerNotoriete(
+        n,
+        0,
+        emplacement.visibilite,
+        potentielSeg > 0 ? serviesSeg / potentielSeg : 0,
+        cl.satisfaction,
+        oubli,
+        combinerGains([gainsPub[seg.id] ?? 0, promo]),
+      ) + (ctx.index === 0 ? 0.06 : 0),
       0.01,
       0.98,
     );
   }
   cl.notoriete = notorieteMoyenne(secteur, m.notorieteSegments);
-  const bonusCommandites = Math.min(0.08, (d.publicite.commandites ?? 0) / 10_000 + (d.publicite.evenements ?? 0) / 15_000);
-  m.image = evoluerImage(m.image, imageCible({ qualite: cl.qualitePercue, ambiance: prep.ambiance, note: cl.note, eco: prep.eco, local: prep.local, satisfaction: cl.satisfaction, bonusCommandites }));
+  const bonusCommandites = Math.min(
+    0.08,
+    (d.publicite.commandites ?? 0) / 10_000 + (d.publicite.evenements ?? 0) / 15_000,
+  );
+  m.image = evoluerImage(
+    m.image,
+    imageCible({
+      qualite: cl.qualitePercue,
+      ambiance: prep.ambiance,
+      note: cl.note,
+      eco: prep.eco,
+      local: prep.local,
+      satisfaction: cl.satisfaction,
+      bonusCommandites,
+    }),
+  );
   const clientsActifs = Math.round(servies / secteur.visitesParClientMois);
   const nouveauxClients = Math.max(0, Math.round(clientsActifs - retentionAvant * m.clientsActifs));
   m.clientsActifs = clientsActifs;
-  if (d.promotion > 0) m.historiquePromos = [...m.historiquePromos.filter((i) => i >= ctx.index - 12), ctx.index];
+  if (d.promotion > 0)
+    m.historiquePromos = [...m.historiquePromos.filter((i) => i >= ctx.index - 12), ctx.index];
 
   // t) Ressources humaines : moral, compétence, ancienneté, départs et syndicalisation
   const penurie = penurieDuMois(ville.penurieMainOeuvre, conj.phase, ctx.mois);
@@ -1182,8 +1727,10 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
         avantages: av.moral,
         gerant: gerant && poste.role !== 'gestion',
         syndique,
-        moisDepuisEvaluation: emp.derniereEvaluation === null ? null : ctx.index - emp.derniereEvaluation,
-        moisDepuisAugmentation: ctx.index - (emp.derniereAugmentation ?? ctx.index - emp.moisAnciennete),
+        moisDepuisEvaluation:
+          emp.derniereEvaluation === null ? null : ctx.index - emp.derniereEvaluation,
+        moisDepuisAugmentation:
+          ctx.index - (emp.derniereAugmentation ?? ctx.index - emp.moisAnciennete),
         moisAnciennete: emp.moisAnciennete,
       }),
       rng,
@@ -1192,14 +1739,21 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
     emp.moisAnciennete += 1;
     if (rng.chance(probabiliteDepart(emp.moral, penurie, trait, av.depart))) {
       ent.rh.departs.push({ index: ctx.index, type: 'demission' });
-      messages.push({ code: 'demission', niveau: 'alerte', params: { nom: `${emp.prenom} ${emp.nom}`, moral: emp.moral } });
+      messages.push({
+        code: 'demission',
+        niveau: 'alerte',
+        params: { nom: `${emp.prenom} ${emp.nom}`, moral: emp.moral },
+      });
     } else {
       restants.push(emp);
     }
   }
   ent.employes = restants;
   ent.rh.departs = ent.rh.departs.filter((x) => x.index > ctx.index - 12);
-  const moralMoyen = ent.employes.length > 0 ? ent.employes.reduce((a, x) => a + x.moral, 0) / ent.employes.length : 70;
+  const moralMoyen =
+    ent.employes.length > 0
+      ? ent.employes.reduce((a, x) => a + x.moral, 0) / ent.employes.length
+      : 70;
   ent.rh.moisMoralBas = moralMoyen < 40 && ent.employes.length >= 4 ? ent.rh.moisMoralBas + 1 : 0;
   if (!syndique && ent.rh.moisMoralBas >= 6 && rng.chance(0.25)) {
     ent.rh.syndicat = { statut: 'accredite', depuis: ctx.index };
@@ -1223,13 +1777,21 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
           nouvelId(ent, 'cand'),
           poste,
           plateformeParId(aff.plateformeId),
-          { salaireMarche: salaireMarchePoste(poste, ville.indiceSalaires, conj.indicePrix), salaireMinimum: ctx.salaireMinimum, penurie: pen },
+          {
+            salaireMarche: salaireMarchePoste(poste, ville.indiceSalaires, conj.indicePrix),
+            salaireMinimum: ctx.salaireMinimum,
+            penurie: pen,
+          },
           suivant,
           rng,
         ),
       );
     }
-    messages.push({ code: n > 0 ? 'candidatsRecus' : 'aucunCandidat', niveau: n > 0 ? 'info' : 'alerte', params: { n, poste: poste.nom } });
+    messages.push({
+      code: n > 0 ? 'candidatsRecus' : 'aucunCandidat',
+      niveau: n > 0 ? 'info' : 'alerte',
+      params: { n, poste: poste.nom },
+    });
   }
   ent.rh.affichages = ent.rh.affichages.filter((a) => a.moisCandidats > suivant);
 
@@ -1243,7 +1805,12 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
     messages.push({
       code: societe ? 'declarationsSociete' : 'declarationsPersonnelles',
       niveau: 'info',
-      params: { annee: ctx.annee, impot: societe ? (decl.societe?.total ?? 0) : decl.personnel.total, revenu: decl.revenuFiscal, feuillets: decl.feuillets.length },
+      params: {
+        annee: ctx.annee,
+        impot: societe ? (decl.societe?.total ?? 0) : decl.personnel.total,
+        revenu: decl.revenuFiscal,
+        feuillets: decl.feuillets.length,
+      },
     });
   }
 
@@ -1297,10 +1864,15 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
     depensesMarketing,
     tauxDefauts,
     plaintes,
-    moral: ent.employes.length > 0 ? ent.employes.reduce((a, x) => a + x.moral, 0) / ent.employes.length : 0,
+    moral:
+      ent.employes.length > 0
+        ? ent.employes.reduce((a, x) => a + x.moral, 0) / ent.employes.length
+        : 0,
     nbEmployes: ent.employes.length,
     absenteisme:
-      ent.employes.length > 0 ? ent.employes.reduce((a, x) => a + x.absenteisme, 0) / ent.employes.length : 0,
+      ent.employes.length > 0
+        ? ent.employes.reduce((a, x) => a + x.absenteisme, 0) / ent.employes.length
+        : 0,
     heuresOuvertureEffectives: prep.heuresEffectives,
     capacite: prep.capacite,
     capaciteCuisine: prep.capaciteCuisine,
@@ -1313,7 +1885,7 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
     indicePrixOffre: ip,
     coutMainOeuvre,
   };
-  if (prep.sansCuisinier && perduesCuisine > 0)
+  if (prep.sansCuisinier && perduesCuisine >= 20)
     messages.push({ code: 'sansCuisinier', niveau: 'alerte', params: { perdues: perduesCuisine } });
 
   const archive: MoisArchive = {
@@ -1332,14 +1904,26 @@ function simulerEntreprise(ent: Entreprise, prep: Preparation, r: ResultatOffre,
     concurrents: [],
   };
   const precedente = ent.archives.at(-1);
-  archive.messages = [...messages, ...ctx.messagesCommuns, ...analyserMois(archive, precedente, d, secteur, ent, prep.heuresEffectives)];
+  archive.messages = [
+    ...messages,
+    ...ctx.messagesCommuns,
+    ...analyserMois(archive, precedente, d, secteur, ent, prep.heuresEffectives),
+  ];
   ent.archives.push(archive);
   ouvrirNouveauMois(L);
 
   // y) Clôture de l'exercice comptable
   if (ctx.mois === 12) {
-    const resultatAnnee = cloturerExercice(L, typeCapitaux(ent.formeJuridique), ent.associe?.part ?? 0);
-    archive.messages.push({ code: 'finExercice', niveau: 'info', params: { annee: ctx.annee, benefice: versDollars(resultatAnnee) } });
+    const resultatAnnee = cloturerExercice(
+      L,
+      typeCapitaux(ent.formeJuridique),
+      ent.associe?.part ?? 0,
+    );
+    archive.messages.push({
+      code: 'finExercice',
+      niveau: 'info',
+      params: { annee: ctx.annee, benefice: versDollars(resultatAnnee) },
+    });
   }
 
   // z) Remise à zéro des opérations ponctuelles et des effets du mois
@@ -1367,19 +1951,38 @@ function preparerMoisSuivant(ent: Entreprise, etat: EtatPartie, ctx: ContexteMoi
   const dilemme = tirerDilemme(
     ent,
     DILEMMES,
-    { mois: moisSuivant, derniere: ent.archives.at(-1), index: suivant, probabilite: diff.dilemmes, id: nouvelId(ent, 'dil') },
+    {
+      mois: moisSuivant,
+      derniere: ent.archives.at(-1),
+      index: suivant,
+      probabilite: diff.dilemmes,
+      id: nouvelId(ent, 'dil'),
+    },
     ctx.rng,
   );
   if (dilemme) {
     ent.dilemmes.push(dilemme);
-    ent.archives.at(-1)?.messages.push({ code: 'nouveauDilemme', niveau: 'alerte', params: { titre: dilemmeParId(dilemme.defId).titre } });
+    ent.archives.at(-1)?.messages.push({
+      code: 'nouveauDilemme',
+      niveau: 'alerte',
+      params: { titre: dilemmeParId(dilemme.defId).titre },
+    });
   }
   if (produitActif(ent, 'traiteur')) {
     const p = ctx.secteur.nouveauxProduits.find((x) => x.id === 'traiteur');
-    const appels = genererAppels(ent, (p?.prixReference ?? 15) * ctx.conj.indicePrix, suivant, moisSuivant, () => nouvelId(ent, 'appel'), ctx.rng);
+    const appels = genererAppels(
+      ent,
+      (p?.prixReference ?? 15) * ctx.conj.indicePrix,
+      suivant,
+      moisSuivant,
+      () => nouvelId(ent, 'appel'),
+      ctx.rng,
+    );
     ent.b2b.appels = appels;
     if (appels.length > 0)
-      ent.archives.at(-1)?.messages.push({ code: 'appelsOffres', niveau: 'info', params: { n: appels.length } });
+      ent.archives
+        .at(-1)
+        ?.messages.push({ code: 'appelsOffres', niveau: 'info', params: { n: appels.length } });
   }
 }
 
@@ -1392,17 +1995,30 @@ function observerJoueurs(etat: EtatPartie, secteur: Secteur): ObservationMarche 
   let part = 0;
   for (const ent of actives) {
     const derniere = ent.archives.at(-1);
-    ip += derniere ? derniere.indicateurs.indicePrixOffre : indicePrixOffre(ent.decisions.prix, secteur, etat.conjoncture.indicePrix);
+    ip += derniere
+      ? derniere.indicateurs.indicePrixOffre
+      : indicePrixOffre(ent.decisions.prix, secteur, etat.conjoncture.indicePrix);
     q += ent.clientele.qualitePercue;
     part += derniere ? derniere.indicateurs.partMarche : 0;
   }
-  return { indicePrixJoueurs: ip / actives.length, qualiteJoueurs: q / actives.length, partJoueurs: part };
+  return {
+    indicePrixJoueurs: ip / actives.length,
+    qualiteJoueurs: q / actives.length,
+    partJoueurs: part,
+  };
 }
 
 /** Révision annuelle du salaire minimum (1er mai), arrondie à 0,05 $. */
-function salaireMinimumDuMois(actuel: number, annee: number, mois: number): { taux: number; hausse: boolean } {
+function salaireMinimumDuMois(
+  actuel: number,
+  annee: number,
+  mois: number,
+): { taux: number; hausse: boolean } {
   if (mois === SALAIRE_MINIMUM.moisRevision && annee > 2026) {
-    return { taux: Math.round(actuel * (1 + SALAIRE_MINIMUM.hausseAnnuelleSimulee) * 20) / 20, hausse: true };
+    return {
+      taux: Math.round(actuel * (1 + SALAIRE_MINIMUM.hausseAnnuelleSimulee) * 20) / 20,
+      hausse: true,
+    };
   }
   return { taux: actuel, hausse: false };
 }
@@ -1431,7 +2047,11 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
   const sm = salaireMinimumDuMois(etat.salaireMinimum, annee, mois);
   if (sm.hausse) {
     etat.salaireMinimum = sm.taux;
-    messagesCommuns.push({ code: 'hausseSalaireMinimum', niveau: 'info', params: { taux: sm.taux } });
+    messagesCommuns.push({
+      code: 'hausseSalaireMinimum',
+      niveau: 'info',
+      params: { taux: sm.taux },
+    });
   }
 
   // 2. Potentiel du marché ce mois-ci (saison, confiance des consommateurs, difficulté)
@@ -1450,7 +2070,12 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
     const appliquees = deciderConcurrent(c, perso, observation, index, diff.agressivite, rng);
     for (const r of appliquees) {
       messagesCommuns.push({
-        code: r.type === 'prix' ? 'concurrentPrix' : r.type === 'publicite' ? 'concurrentPublicite' : 'concurrentQualite',
+        code:
+          r.type === 'prix'
+            ? 'concurrentPrix'
+            : r.type === 'publicite'
+              ? 'concurrentPublicite'
+              : 'concurrentQualite',
         niveau: 'alerte',
         params: { nom: c.nom, valeur: r.valeur },
       });
@@ -1477,7 +2102,12 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
   const preparations = new Map<string, Preparation>();
   for (const ent of actives) {
     const debut = debutDeMois(ent, ctx);
-    ent.decisions = validerDecisions(ent.decisions, secteur, ent.formeJuridique, lignesStock(ent, secteur));
+    ent.decisions = validerDecisions(
+      ent.decisions,
+      secteur,
+      ent.formeJuridique,
+      lignesStock(ent, secteur),
+    );
     preparations.set(ent.id, preparerOffre(ent, ctx, debut));
   }
   const offres: Offre[] = [
@@ -1495,7 +2125,15 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
 
   // 5. Résultats des concurrents
   for (const c of etat.concurrents) {
-    majConcurrentApresMarche(c, personnaliteParId(c.personnaliteId), marche.resultats[c.id], secteur, conj, potentiel, rng);
+    majConcurrentApresMarche(
+      c,
+      personnaliteParId(c.personnaliteId),
+      marche.resultats[c.id],
+      secteur,
+      conj,
+      potentiel,
+      rng,
+    );
   }
 
   // 6. Résultats et comptabilité de chaque entreprise des joueurs
@@ -1512,7 +2150,10 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
     }));
     if (ent.moisEnDefaut >= 3) {
       ent.enFaillite = true;
-      archive.messages.push({ code: estSocieteActions(ent.formeJuridique) ? 'failliteSociete' : 'faillite', niveau: 'danger' });
+      archive.messages.push({
+        code: estSocieteActions(ent.formeJuridique) ? 'failliteSociete' : 'faillite',
+        niveau: 'danger',
+      });
     }
     preparerMoisSuivant(ent, etat, ctx);
   }
@@ -1542,5 +2183,9 @@ export function prixMarche(etat: EtatPartie, ligneId: string): number {
 export function salaireMarche(etat: EtatPartie, posteId?: string): number {
   const secteur = secteurParId(etat.config.secteurId);
   const ville = villeParId(etat.config.villeId);
-  return salaireMarchePoste(posteParId(posteId ?? secteur.postes[0]), ville.indiceSalaires, etat.conjoncture.indicePrix);
+  return salaireMarchePoste(
+    posteParId(posteId ?? secteur.postes[0]),
+    ville.indiceSalaires,
+    etat.conjoncture.indicePrix,
+  );
 }

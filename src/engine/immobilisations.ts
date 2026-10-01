@@ -4,7 +4,12 @@
  * (DPA) est calculée séparément à la fin de l'exercice (annuel.ts).
  */
 import type { CompteId } from './accounting';
-import type { EffetsInvestissement, Investissement, Secteur, TypeImmobilisation } from './data-types';
+import type {
+  EffetsInvestissement,
+  Investissement,
+  Secteur,
+  TypeImmobilisation,
+} from './data-types';
 import type { Entreprise, Immobilisation } from './types';
 import { versCents, type Cents } from './util';
 

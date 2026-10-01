@@ -83,7 +83,13 @@ export const DIFFICULTES: Record<
     dilemmes: number;
   }
 > = {
-  facile: { marche: 1.1, notorieteDepart: 0.12, agressivite: 0.6, limiteMarge: 25_000, dilemmes: 0.15 },
+  facile: {
+    marche: 1.1,
+    notorieteDepart: 0.12,
+    agressivite: 0.6,
+    limiteMarge: 25_000,
+    dilemmes: 0.15,
+  },
   realiste: {
     marche: 1.0,
     notorieteDepart: 0.08,
@@ -91,7 +97,13 @@ export const DIFFICULTES: Record<
     limiteMarge: 20_000,
     dilemmes: 0.25,
   },
-  expert: { marche: 0.9, notorieteDepart: 0.05, agressivite: 1.4, limiteMarge: 15_000, dilemmes: 0.35 },
+  expert: {
+    marche: 0.9,
+    notorieteDepart: 0.05,
+    agressivite: 1.4,
+    limiteMarge: 15_000,
+    dilemmes: 0.35,
+  },
 };
 
 export const REGLES_FINANCEMENT = {
@@ -213,7 +225,13 @@ export function coutsDemarrage(
     taxes,
     total:
       Math.round(
-        (equipement + amenagement + depotGarantie + stock + fraisDemarrage + fraisJuridiques + taxes) *
+        (equipement +
+          amenagement +
+          depotGarantie +
+          stock +
+          fraisDemarrage +
+          fraisJuridiques +
+          taxes) *
           100,
       ) / 100,
   };
@@ -411,8 +429,11 @@ export function validerDecisions(
     const valeur = Number.isFinite(p) ? p : ligne.prixReference;
     prix[ligne.id] =
       Math.round(
-        borner(valeur, ligne.prixReference * b.prixRatio.min, ligne.prixReference * b.prixRatio.max * 1.5) *
-          100,
+        borner(
+          valeur,
+          ligne.prixReference * b.prixRatio.min,
+          ligne.prixReference * b.prixRatio.max * 1.5,
+        ) * 100,
       ) / 100;
   }
   const fini = (x: number | undefined, defaut: number) =>
@@ -443,7 +464,8 @@ export function validerDecisions(
     prix,
     qualiteId: secteur.qualites.some((q) => q.id === d.qualiteId) ? d.qualiteId : 'standard',
     publicite,
-    promotion: Math.round(borner(fini(d.promotion, 0), b.promotion.min, b.promotion.max) * 100) / 100,
+    promotion:
+      Math.round(borner(fini(d.promotion, 0), b.promotion.min, b.promotion.max) * 100) / 100,
     programmeFidelite: Boolean(d.programmeFidelite),
     initiativesEco: [...new Set(d.initiativesEco ?? [])],
     panierBleu: Boolean(d.panierBleu),
@@ -567,7 +589,12 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
     reste -= valeur;
     stocks[b.ligne.id] = stockInitial(valeur, b.cout, b.conservation, b.demande);
   }
-  stocks[durable.ligne.id] = stockInitial(reste, durable.cout, durable.conservation, durable.demande);
+  stocks[durable.ligne.id] = stockInitial(
+    reste,
+    durable.cout,
+    durable.conservation,
+    durable.demande,
+  );
 
   const entreprise: Entreprise = {
     id: 'joueur-1',
@@ -632,7 +659,9 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
     ],
     finance: {
       placements: [],
-      actionnaires: societe ? [{ nom: params.nomProprietaire.trim() || 'Fondateur', part: 1, type: 'fondateur' }] : [],
+      actionnaires: societe
+        ? [{ nom: params.nomProprietaire.trim() || 'Fondateur', part: 1, type: 'fondateur' }]
+        : [],
     },
     b2b: { appels: [], contrats: [], factures: [], resultats: [] },
     dilemmes: [],
@@ -695,7 +724,14 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
       },
     );
     entreprise.prets.push(pret);
-    ecritureSimple(livre, 'Prêt bancaire de démarrage', 'encaisse', 'empruntBancaire', pret.capitalInitial, 'empruntsRecus');
+    ecritureSimple(
+      livre,
+      'Prêt bancaire de démarrage',
+      'encaisse',
+      'empruntBancaire',
+      pret.capitalInitial,
+      'empruntsRecus',
+    );
   }
 
   // Autres sources : prêts, subvention et investisseur providentiel.
@@ -713,7 +749,14 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
         part: Math.round(part * 10000) / 10000,
         type: 'ange',
       });
-      ecritureSimple(livre, 'Émission d’actions à un investisseur providentiel', 'encaisse', 'capitalActions', versCents(montant), 'apportsProprietaire');
+      ecritureSimple(
+        livre,
+        'Émission d’actions à un investisseur providentiel',
+        'encaisse',
+        'capitalActions',
+        versCents(montant),
+        'apportsProprietaire',
+      );
       continue;
     }
     const pret = creerPret(
@@ -730,7 +773,14 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
       },
     );
     entreprise.prets.push(pret);
-    ecritureSimple(livre, NOMS_PRETS[id], 'encaisse', 'empruntBancaire', pret.capitalInitial, 'empruntsRecus');
+    ecritureSimple(
+      livre,
+      NOMS_PRETS[id],
+      'encaisse',
+      'empruntBancaire',
+      pret.capitalInitial,
+      'empruntsRecus',
+    );
     if (s.subvention) {
       ecritureSimple(
         livre,
@@ -744,17 +794,71 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
   }
 
   // Investissements de démarrage (taxes récupérables seulement si l'entreprise est inscrite).
-  payer(livre, entreprise, `Achat : ${equipement.nom}`, 'equipement', couts.equipement, true, 'acquisitionImmobilisations');
-  payer(livre, entreprise, `Travaux : ${amenagement.nom}`, 'ameliorationsLocatives', couts.amenagement, true, 'acquisitionImmobilisations');
-  ecritureSimple(livre, 'Dépôt de garantie du bail', 'depotGarantie', 'encaisse', versCents(couts.depotGarantie), 'depotGarantie');
+  payer(
+    livre,
+    entreprise,
+    `Achat : ${equipement.nom}`,
+    'equipement',
+    couts.equipement,
+    true,
+    'acquisitionImmobilisations',
+  );
+  payer(
+    livre,
+    entreprise,
+    `Travaux : ${amenagement.nom}`,
+    'ameliorationsLocatives',
+    couts.amenagement,
+    true,
+    'acquisitionImmobilisations',
+  );
+  ecritureSimple(
+    livre,
+    'Dépôt de garantie du bail',
+    'depotGarantie',
+    'encaisse',
+    versCents(couts.depotGarantie),
+    'depotGarantie',
+  );
   const stockTaxable = couts.stockInitial * secteur.partAchatsTaxables;
-  ecritureSimple(livre, 'Stock initial de marchandises (aliments détaxés)', 'stocks', 'encaisse', versCents(couts.stockInitial - stockTaxable), 'achatStockInitial');
-  payer(livre, entreprise, 'Stock initial (emballages et fournitures)', 'stocks', stockTaxable, true, 'achatStockInitial');
-  payer(livre, entreprise, 'Frais de démarrage (enseigne, inauguration, frais juridiques)', 'fraisDemarrage', couts.fraisDemarrage, true, 'fraisDemarrage');
+  ecritureSimple(
+    livre,
+    'Stock initial de marchandises (aliments détaxés)',
+    'stocks',
+    'encaisse',
+    versCents(couts.stockInitial - stockTaxable),
+    'achatStockInitial',
+  );
+  payer(
+    livre,
+    entreprise,
+    'Stock initial (emballages et fournitures)',
+    'stocks',
+    stockTaxable,
+    true,
+    'achatStockInitial',
+  );
+  payer(
+    livre,
+    entreprise,
+    'Frais de démarrage (enseigne, inauguration, frais juridiques)',
+    'fraisDemarrage',
+    couts.fraisDemarrage,
+    true,
+    'fraisDemarrage',
+  );
   for (const id of IDS_DEMARCHES) {
     if (!demarches[id]) continue;
     const cout = coutDemarche(id, forme);
-    if (cout > 0) ecritureSimple(livre, demarche(id).nom, 'droitsPermis', 'encaisse', versCents(cout), 'droitsEtAmendes');
+    if (cout > 0)
+      ecritureSimple(
+        livre,
+        demarche(id).nom,
+        'droitsPermis',
+        'encaisse',
+        versCents(cout),
+        'droitsEtAmendes',
+      );
   }
 
   // Le coût des immobilisations inscrit aux livres (taxes non récupérables incluses au besoin).
@@ -765,7 +869,9 @@ export function creerPartie(config: ConfigPartie, params: ParametresDemarrage): 
   ajouterAcquisition(entreprise.fiscal, '13', versDollars(livre.soldes.ameliorationsLocatives));
 
   // Jalon 1 : deux concurrents (le Géant et le Local branché).
-  const concurrents = PERSONNALITES.slice(0, 2).map((p) => creerConcurrent(p, secteur, diff.agressivite));
+  const concurrents = PERSONNALITES.slice(0, 2).map((p) =>
+    creerConcurrent(p, secteur, diff.agressivite),
+  );
 
   entreprise.prochainId = prochainId;
   return {

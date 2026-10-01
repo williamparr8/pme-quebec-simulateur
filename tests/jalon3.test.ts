@@ -3,8 +3,15 @@ import { CANAUX, canalParId, fournisseurParId, secteurParId, villeParId } from '
 import { totalBalance } from '../src/engine/accounting';
 import { margeErreur } from '../src/engine/etudes';
 import { evaluerPlan, partAnge, validerSources, ventesReference } from '../src/engine/financement';
-import { indemniteJourFerie, probabiliteAcceptation, semainesPreavis, tauxVacances } from '../src/engine/hr';
 import {
+  indemniteJourFerie,
+  probabiliteAcceptation,
+  semainesPreavis,
+  tauxVacances,
+} from '../src/engine/hr';
+import {
+  FRAIS_PETITE_COMMANDE,
+  coutCommande,
   politiqueRecommandee,
   quantiteEconomique,
   simulerStockLigne,
@@ -12,8 +19,20 @@ import {
   unitesEnStock,
   valeurStock,
 } from '../src/engine/inventory';
-import { ajusterTauxVariable, comparerTaux, creerPret, effectuerVersement, tableauAmortissement } from '../src/engine/loans';
-import { combinerGains, gainCanal, netPromoterScore, porteeCanal, retentionClients } from '../src/engine/marketing';
+import {
+  ajusterTauxVariable,
+  comparerTaux,
+  creerPret,
+  effectuerVersement,
+  tableauAmortissement,
+} from '../src/engine/loans';
+import {
+  combinerGains,
+  gainCanal,
+  netPromoterScore,
+  porteeCanal,
+  retentionClients,
+} from '../src/engine/marketing';
 import { etatsFinanciers } from '../src/engine/rapports';
 import { Rng } from '../src/engine/rng';
 import {
@@ -46,11 +65,24 @@ describe('stocks et approvisionnement', () => {
 
   it('la politique recommandée respecte la péremption et la commande minimale', () => {
     const p = politiqueRecommandee(600, 4.4, fournisseur, 4);
-    expect(p.pointCommande).toBeGreaterThanOrEqual(Math.round(p.demandeJour * fournisseur.delaiJours));
-    expect(p.quantite).toBeGreaterThanOrEqual(p.quantiteMinFournisseur);
+    expect(p.pointCommande).toBeGreaterThanOrEqual(
+      Math.round(p.demandeJour * fournisseur.delaiJours),
+    );
+    // Le minimum du fournisseur ferait périmer la marchandise : on paie plutôt des frais.
+    expect(p.quantiteMinFournisseur).toBeGreaterThan(p.quantiteMaxPeremption);
+    expect(p.quantite).toBeLessThanOrEqual(p.quantiteMaxPeremption);
+    const gros = politiqueRecommandee(3000, 4.4, fournisseur, 5);
+    expect(gros.quantite).toBeGreaterThanOrEqual(gros.quantiteMinFournisseur);
+    expect(coutCommande(10, 4.4, fournisseur)).toBeCloseTo(
+      44 + fournisseur.fraisCommande + FRAIS_PETITE_COMMANDE * fournisseur.minimumCommande,
+      6,
+    );
+    expect(politiqueRecommandee(0, 4.4, fournisseur, 4).pointCommande).toBe(0);
     const boulangerie = fournisseurParId('boulangerieQuartier');
     const v = politiqueRecommandee(900, 1.6, boulangerie, 2);
-    expect(v.quantite).toBeLessThanOrEqual(Math.max(v.quantiteMinFournisseur, v.quantiteMaxPeremption));
+    expect(v.quantite).toBeLessThanOrEqual(
+      Math.max(v.quantiteMinFournisseur, v.quantiteMaxPeremption),
+    );
   });
 
   it('conservation des unités : début + reçues − sorties − périmées = fin', () => {
@@ -168,9 +200,13 @@ describe('marketing', () => {
 
   it('les affinités des canaux varient selon les personas', () => {
     const tiktok = canalParId('tiktok');
-    expect(gainCanal(tiktok, 1500, 'etudiants')).toBeGreaterThan(gainCanal(tiktok, 1500, 'retraites'));
+    expect(gainCanal(tiktok, 1500, 'etudiants')).toBeGreaterThan(
+      gainCanal(tiktok, 1500, 'retraites'),
+    );
     const journal = canalParId('journal');
-    expect(gainCanal(journal, 1500, 'retraites')).toBeGreaterThan(gainCanal(journal, 1500, 'etudiants'));
+    expect(gainCanal(journal, 1500, 'retraites')).toBeGreaterThan(
+      gainCanal(journal, 1500, 'etudiants'),
+    );
     expect(combinerGains([0.1, 0.1])).toBeCloseTo(0.19, 6);
     for (const c of CANAUX) expect(gainCanal(c, 15_000, 'familles')).toBeLessThanOrEqual(0.6);
   });
@@ -203,9 +239,16 @@ describe('marketing', () => {
     const sondage = ent.marketing.etudes.find((x) => x.typeId === 'sondageComplet');
     expect(sondage?.notorieteSegments?.etudiants.marge).toBeGreaterThan(0);
     expect(sondage?.prixAcceptable?.boissons.valeur).toBeGreaterThan(0);
-    expect(ent.marketing.etudes.find((x) => x.typeId === 'analyseConcurrence')?.concurrents).toHaveLength(2);
-    expect(ent.marketing.etudes.find((x) => x.typeId === 'groupeDiscussion')?.produitsPrometteurs?.length).toBeGreaterThan(0);
-    expect(ent.marketing.etudes.find((x) => x.typeId === 'donneesSecondaires')?.potentiel?.valeur).toBeGreaterThan(0);
+    expect(
+      ent.marketing.etudes.find((x) => x.typeId === 'analyseConcurrence')?.concurrents,
+    ).toHaveLength(2);
+    expect(
+      ent.marketing.etudes.find((x) => x.typeId === 'groupeDiscussion')?.produitsPrometteurs
+        ?.length,
+    ).toBeGreaterThan(0);
+    expect(
+      ent.marketing.etudes.find((x) => x.typeId === 'donneesSecondaires')?.potentiel?.valeur,
+    ).toBeGreaterThan(0);
   });
 });
 
@@ -252,7 +295,11 @@ describe('ressources humaines', () => {
     }
     expect(trouve).toBe(true);
     const sansReponse = simulerMois(e);
-    expect(sansReponse.entreprises[0].archives.at(-1)?.messages.some((m) => m.code === 'dilemmeNonTranche')).toBe(true);
+    expect(
+      sansReponse.entreprises[0].archives
+        .at(-1)
+        ?.messages.some((m) => m.code === 'dilemmeNonTranche'),
+    ).toBe(true);
     const d = e.entreprises[0].dilemmes[0];
     const avecReponse = repondreDilemme(e, e.entreprises[0].id, d.id, 'inexistant');
     expect(avecReponse.entreprises[0].dilemmes).toHaveLength(1);
@@ -292,7 +339,9 @@ describe('investissements, financement et placements', () => {
     expect(ent.fiscal.ajoutsAnnee['12']).toBeGreaterThan(0);
     expect(ent.livre.soldes.informatique).toBeGreaterThan(0);
     e = investir(e, id, 'logicielCaisse', 'comptant');
-    expect(e.entreprises[0].immobilisations.filter((i) => i.investissementId === 'logicielCaisse')).toHaveLength(1);
+    expect(
+      e.entreprises[0].immobilisations.filter((i) => i.investissementId === 'logicielCaisse'),
+    ).toHaveLength(1);
     e = jouerMois(e, 13);
     const fin = e.entreprises[0];
     expect(fin.livre.soldes.amortCumInformatique).toBeLessThan(0);
@@ -304,7 +353,9 @@ describe('investissements, financement et placements', () => {
     let e = nouvellePartie(72, 24);
     const id = e.entreprises[0].id;
     e = investir(e, id, 'vehicule', 'pretFixe');
-    expect(e.entreprises[0].immobilisations.some((i) => i.investissementId === 'vehicule')).toBe(false);
+    expect(e.entreprises[0].immobilisations.some((i) => i.investissementId === 'vehicule')).toBe(
+      false,
+    );
     e = jouerMois(e, 8);
     const prets = e.entreprises[0].prets.length;
     e = investir(e, id, 'vehicule', 'pretVariable');
@@ -330,7 +381,14 @@ describe('investissements, financement et placements', () => {
 
   it('le plan d’affaires trop optimiste est pénalisé', () => {
     const ref = ventesReference(cafe, mtl, emplacementDe(mtl, 'rue'));
-    const base = { secteur: cafe, ville: mtl, emplacement: emplacementDe(mtl, 'rue'), apports: 45_000, coutProjet: 110_000, chargesFixesMensuelles: 15_000 };
+    const base = {
+      secteur: cafe,
+      ville: mtl,
+      emplacement: emplacementDe(mtl, 'rue'),
+      apports: 45_000,
+      coutProjet: 110_000,
+      chargesFixesMensuelles: 15_000,
+    };
     const realiste = evaluerPlan(planRealiste(), base);
     const optimiste = evaluerPlan({ ...planRealiste(), ventesMensuelles: ref * 2 }, base);
     expect(realiste.score).toBeGreaterThan(optimiste.score);
@@ -338,13 +396,31 @@ describe('investissements, financement et placements', () => {
   });
 
   it('sources de démarrage : âge, forme juridique et plan d’affaires sont vérifiés', () => {
-    const p = (changements: Partial<ParametresDemarrage>): ParametresDemarrage => ({ ...DEMARRAGE_TEST, ...changements });
-    const codes = (x: ParametresDemarrage) => validerSources(x, { apports: 45_000, coutProjet: 110_000, scorePlan: 80 }).map((e) => e.code);
-    expect(codes(p({ ageProprietaire: 45, financements: { futurpreneur: 20_000 } }))).toContain('age');
+    const p = (changements: Partial<ParametresDemarrage>): ParametresDemarrage => ({
+      ...DEMARRAGE_TEST,
+      ...changements,
+    });
+    const codes = (x: ParametresDemarrage) =>
+      validerSources(x, { apports: 45_000, coutProjet: 110_000, scorePlan: 80 }).map((e) => e.code);
+    expect(codes(p({ ageProprietaire: 45, financements: { futurpreneur: 20_000 } }))).toContain(
+      'age',
+    );
     expect(codes(p({ financements: { ange: 30_000 } }))).toContain('forme');
-    expect(validerSources(p({ financements: { bdc: 30_000 } }), { apports: 45_000, coutProjet: 110_000, scorePlan: null }).map((e) => e.code)).toContain('planRequis');
+    expect(
+      validerSources(p({ financements: { bdc: 30_000 } }), {
+        apports: 45_000,
+        coutProjet: 110_000,
+        scorePlan: null,
+      }).map((e) => e.code),
+    ).toContain('planRequis');
     expect(partAnge(30_000, 45_000, 80)).toBeLessThan(0.49);
-    expect(validerDemarrage(p({ financements: { futurpreneur: 20_000 }, planAffaires: planRealiste() }), cafe, mtl)).toEqual([]);
+    expect(
+      validerDemarrage(
+        p({ financements: { futurpreneur: 20_000 }, planAffaires: planRealiste() }),
+        cafe,
+        mtl,
+      ),
+    ).toEqual([]);
   });
 
   it('création avec plusieurs sources : prêts, subvention et investisseur providentiel', () => {

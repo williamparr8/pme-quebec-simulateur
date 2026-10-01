@@ -35,7 +35,15 @@ export function satisfactionClients(
 export function noteDuMois(note: number, reponse: 'ignorer' | 'repondre' | 'compenser'): number {
   const negatif = note < 4;
   const bonus =
-    reponse === 'repondre' ? (negatif ? 0.12 : 0.03) : reponse === 'compenser' ? (negatif ? 0.25 : 0.05) : 0;
+    reponse === 'repondre'
+      ? negatif
+        ? 0.12
+        : 0.03
+      : reponse === 'compenser'
+        ? negatif
+          ? 0.25
+          : 0.05
+        : 0;
   return borner(note + bonus, 1, 5);
 }
 

@@ -45,7 +45,11 @@ function tirerTrait(rng: Rng): TraitPersonnalite {
 }
 
 /** Salaire de marché d'un poste ($/h), selon la ville et l'inflation. */
-export function salaireMarchePoste(poste: Poste, indiceSalaires: number, indicePrix: number): number {
+export function salaireMarchePoste(
+  poste: Poste,
+  indiceSalaires: number,
+  indicePrix: number,
+): number {
   return poste.salaireMedian * indiceSalaires * indicePrix;
 }
 
@@ -75,7 +79,11 @@ export function genererCandidat(
     ctx.salaireMinimum,
     Math.round(
       ctx.salaireMarche *
-        (0.9 + 0.35 * (competence - 1) + 0.008 * experience + 0.06 * ctx.penurie + rng.normal(0, 0.03)) *
+        (0.9 +
+          0.35 * (competence - 1) +
+          0.008 * experience +
+          0.06 * ctx.penurie +
+          rng.normal(0, 0.03)) *
         4,
     ) / 4,
   );

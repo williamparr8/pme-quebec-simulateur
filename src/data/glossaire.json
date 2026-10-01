@@ -505,6 +505,317 @@
       "terme": "Planification fiscale et évasion fiscale",
       "categorie": "Fiscalité",
       "definition": "La planification fiscale utilise légalement les règles (forme juridique, salaire ou dividendes, REER). L'évasion fiscale cache des revenus ou gonfle des dépenses : c'est illégal et sévèrement puni."
+    },
+    {
+      "id": "promotion",
+      "terme": "Promotion (rabais)",
+      "categorie": "Marketing",
+      "definition": "Réduction temporaire du prix pour attirer des clients. Elle augmente le volume, mais réduit la marge; trop fréquente, elle habitue les clients à attendre les rabais.",
+      "exemple": "Un rabais de 20 % sur un café de 5 $ réduit la marge brute de 3,70 $ à 2,70 $."
+    },
+    {
+      "id": "cycleVieProduit",
+      "terme": "Développement de produits",
+      "categorie": "Marketing",
+      "definition": "Créer un nouveau produit coûte de l'argent (recettes, essais, emballages, formation) et comporte un risque d'échec. Une gamme variée augmente le panier moyen et attire de nouveaux clients."
+    },
+    {
+      "id": "imageMarque",
+      "terme": "Image de marque",
+      "categorie": "Marketing",
+      "definition": "Ce que les clients pensent de ton commerce : qualité, ambiance, réputation, valeurs. Une marque forte rend les clients moins sensibles au prix."
+    },
+    {
+      "id": "cpm",
+      "terme": "Coût par mille (CPM)",
+      "categorie": "Marketing",
+      "definition": "Prix payé pour 1 000 affichages (impressions) d'une publicité. Il permet de comparer les canaux, mais un CPM bas ne garantit pas des clients.",
+      "formule": "Impressions = Budget ÷ CPM × 1 000",
+      "exemple": "1 000 $ sur Facebook à 9 $ le mille donnent environ 111 000 impressions."
+    },
+    {
+      "id": "portee",
+      "terme": "Portée",
+      "categorie": "Marketing",
+      "definition": "Proportion de l'audience d'un canal exposée assez souvent à ta publicité pour s'en souvenir. Elle augmente avec le budget, avec des rendements décroissants."
+    },
+    {
+      "id": "tauxConversion",
+      "terme": "Taux de conversion",
+      "categorie": "Marketing",
+      "definition": "Proportion des personnes rejointes qui passent à l'étape suivante : retenir ton nom, visiter, acheter.",
+      "formule": "Taux de conversion = Personnes qui agissent ÷ Personnes rejointes"
+    },
+    {
+      "id": "programmeFidelite",
+      "terme": "Programme de fidélité",
+      "categorie": "Marketing",
+      "definition": "Récompenses offertes aux clients qui reviennent (points, carte poinçonnée). Il coûte une partie des ventes, mais augmente la fréquence des visites et la rétention."
+    },
+    {
+      "id": "segmentation",
+      "terme": "Segmentation et personas",
+      "categorie": "Marketing",
+      "definition": "Diviser le marché en groupes de clients aux besoins semblables. Un persona est un portrait type d'un segment (âge, habitudes, ce qui compte pour lui).",
+      "exemple": "Les étudiants sont sensibles au prix et à l'écoresponsabilité; les professionnels, au service rapide."
+    },
+    {
+      "id": "ecoresponsabilite",
+      "terme": "Écoresponsabilité et achat local",
+      "categorie": "Marketing",
+      "definition": "Pratiques qui réduisent l'impact environnemental (emballages compostables, compost, certification) et achat auprès de fournisseurs québécois. Certains segments y accordent beaucoup d'importance."
+    },
+    {
+      "id": "distribution",
+      "terme": "Place (distribution)",
+      "categorie": "Marketing",
+      "definition": "Le « P » de la place : comment le produit se rend au client (magasin, commande en ligne, livraison, plateforme). Chaque canal a ses coûts, comme la commission d'une plateforme de livraison."
+    },
+    {
+      "id": "etudeMarche",
+      "terme": "Étude de marché",
+      "categorie": "Marketing",
+      "definition": "Collecte d'information sur le marché : données secondaires (déjà publiées) ou primaires (sondage, groupe de discussion). Elle réduit l'incertitude avant une décision."
+    },
+    {
+      "id": "echantillon",
+      "terme": "Échantillon",
+      "categorie": "Marketing",
+      "definition": "Groupe de personnes interrogées pour représenter une population plus grande. Plus il est grand et choisi au hasard, plus les résultats sont fiables."
+    },
+    {
+      "id": "margeErreur",
+      "terme": "Marge d'erreur",
+      "categorie": "Marketing",
+      "definition": "Écart probable entre le résultat d'un sondage et la vraie valeur dans la population, habituellement « 19 fois sur 20 ».",
+      "formule": "Marge d'erreur ≈ 1,96 × √(p × (1 − p) ÷ n)",
+      "exemple": "Avec 400 répondants, la marge d'erreur maximale est d'environ ±4,9 points."
+    },
+    {
+      "id": "nps",
+      "terme": "Net Promoter Score (NPS)",
+      "categorie": "Marketing",
+      "definition": "Indicateur de recommandation : on demande « Quelle est la probabilité que vous nous recommandiez? » (0 à 10).",
+      "formule": "NPS = % de promoteurs (9-10) − % de détracteurs (0-6)"
+    },
+    {
+      "id": "retention",
+      "terme": "Taux de rétention",
+      "categorie": "Marketing",
+      "definition": "Proportion des clients d'un mois qui reviennent le mois suivant. Garder un client coûte moins cher qu'en attirer un nouveau."
+    },
+    {
+      "id": "clv",
+      "terme": "Valeur à vie d'un client (CLV)",
+      "categorie": "Marketing",
+      "definition": "Marge que rapporte un client pendant toute sa relation avec l'entreprise.",
+      "formule": "CLV ≈ Marge mensuelle par client ÷ (1 − rétention)"
+    },
+    {
+      "id": "cac",
+      "terme": "Coût d'acquisition d'un client (CAC)",
+      "categorie": "Marketing",
+      "definition": "Dépenses de marketing divisées par le nombre de nouveaux clients. Il doit rester bien inférieur à la valeur à vie d'un client.",
+      "formule": "CAC = Dépenses de marketing ÷ Nouveaux clients"
+    },
+    {
+      "id": "absenteisme",
+      "terme": "Absentéisme",
+      "categorie": "Ressources humaines",
+      "definition": "Proportion des heures prévues que les employés ne travaillent pas (maladie, retards, absences). Il augmente quand le moral baisse."
+    },
+    {
+      "id": "avantagesSociaux",
+      "terme": "Avantages sociaux",
+      "categorie": "Ressources humaines",
+      "definition": "Ce que l'employeur offre en plus du salaire : assurance collective, repas, horaires flexibles, rabais. Ils coûtent de l'argent, mais améliorent le moral et la rétention du personnel."
+    },
+    {
+      "id": "hygieneMapaq",
+      "terme": "Formation en hygiène et salubrité (MAPAQ)",
+      "categorie": "Juridique",
+      "definition": "Formation obligatoire dans les établissements alimentaires : gestionnaire d'établissement (12 h) ou manipulateur d'aliments (6 h). Une personne formée doit être présente, ou au moins 10 % du personnel qui manipule des aliments."
+    },
+    {
+      "id": "syndicalisation",
+      "terme": "Syndicalisation (accréditation)",
+      "categorie": "Ressources humaines",
+      "definition": "Quand la majorité des salariés adhère à un syndicat, le Tribunal administratif du travail l'accrédite. L'employeur doit alors négocier une convention collective et ne peut pas s'ingérer dans les activités syndicales."
+    },
+    {
+      "id": "joursFeries",
+      "terme": "Jours fériés et chômés",
+      "categorie": "Ressources humaines",
+      "definition": "Huit jours par année au Québec (1er janvier, Vendredi saint ou lundi de Pâques, Journée nationale des patriotes, 24 juin, 1er juillet, fête du Travail, Action de grâce, Noël). L'employé reçoit une indemnité d'environ une journée de salaire.",
+      "formule": "Indemnité = 1/20 du salaire des 4 semaines précédentes"
+    },
+    {
+      "id": "tauxDefauts",
+      "terme": "Taux de défauts",
+      "categorie": "Opérations",
+      "definition": "Proportion des produits ratés ou non conformes. Ils coûtent des matières premières (produits refaits) et génèrent des plaintes."
+    },
+    {
+      "id": "pointCommande",
+      "terme": "Point de commande",
+      "categorie": "Opérations",
+      "definition": "Niveau de stock qui déclenche une nouvelle commande : assez pour vendre pendant le délai de livraison, plus un stock de sécurité.",
+      "formule": "Point de commande = Demande par jour × Délai de livraison + Stock de sécurité"
+    },
+    {
+      "id": "stockSecurite",
+      "terme": "Stock de sécurité",
+      "categorie": "Opérations",
+      "definition": "Stock gardé en réserve pour faire face aux variations de la demande et aux retards de livraison.",
+      "formule": "Stock de sécurité ≈ z × écart-type de la demande quotidienne × √délai"
+    },
+    {
+      "id": "qec",
+      "terme": "Quantité économique de commande (QEC)",
+      "categorie": "Opérations",
+      "definition": "Quantité à commander qui minimise la somme des coûts de commande et des coûts de possession du stock (formule de Wilson). Elle ne tient pas compte de la péremption.",
+      "formule": "QEC = √(2 × Demande annuelle × Coût par commande ÷ Coût de possession par unité)"
+    },
+    {
+      "id": "escompte",
+      "terme": "Escompte de caisse (2/10 net 30)",
+      "categorie": "Finance",
+      "definition": "Le fournisseur accorde 2 % de rabais si la facture est payée dans les 10 jours; sinon, le montant complet est dû dans 30 jours. Renoncer à l'escompte revient à emprunter à environ 37 % par année.",
+      "formule": "Coût annuel ≈ 2 % ÷ 98 % × 365 ÷ 20 jours"
+    },
+    {
+      "id": "methodeInventaire",
+      "terme": "Méthodes d'évaluation des stocks (PEPS et coût moyen)",
+      "categorie": "Comptabilité",
+      "definition": "PEPS (premier entré, premier sorti) : le coût des ventes utilise les coûts les plus anciens. Coût moyen pondéré : chaque unité vaut la moyenne des coûts d'achat. Quand les prix montent, le PEPS donne un stock plus élevé et un coût des ventes plus bas."
+    },
+    {
+      "id": "comptesClients",
+      "terme": "Comptes clients",
+      "categorie": "Comptabilité",
+      "definition": "Sommes que des clients doivent à l'entreprise pour des ventes à crédit. C'est un actif, mais ce n'est pas encore de l'argent en banque."
+    },
+    {
+      "id": "creancesIrrecouvrables",
+      "terme": "Créance irrécouvrable (mauvaise créance)",
+      "categorie": "Comptabilité",
+      "definition": "Compte client qu'on ne pourra jamais encaisser (client en faillite, disparu). Il est radié : c'est une charge. La TPS et la TVQ facturées peuvent être récupérées."
+    },
+    {
+      "id": "appelOffres",
+      "terme": "Appel d'offres et soumission",
+      "categorie": "Ventes",
+      "definition": "Un client décrit son besoin et invite des fournisseurs à soumettre un prix. Le plus bas prix ne gagne pas toujours : la réputation et la fiabilité comptent aussi."
+    },
+    {
+      "id": "classementChronologique",
+      "terme": "Classement chronologique des comptes clients",
+      "categorie": "Finance",
+      "definition": "Tableau des comptes clients selon leur âge (non échus, 1 à 30 jours de retard, plus de 30 jours). Plus une facture est vieille, plus le risque de ne pas être payé augmente."
+    },
+    {
+      "id": "delaiRecouvrement",
+      "terme": "Délai moyen de recouvrement",
+      "categorie": "Finance",
+      "definition": "Nombre moyen de jours que mettent les clients à payer.",
+      "formule": "Délai = Comptes clients ÷ Ventes annuelles × 365"
+    },
+    {
+      "id": "liquiditeImmediate",
+      "terme": "Ratio de liquidité immédiate",
+      "categorie": "Finance",
+      "definition": "Capacité de payer les dettes à court terme sans compter sur la vente des stocks.",
+      "formule": "(Actif à court terme − Stocks) ÷ Passif à court terme"
+    },
+    {
+      "id": "rendementCapitaux",
+      "terme": "Rendement des capitaux propres (RCP)",
+      "categorie": "Finance",
+      "definition": "Bénéfice net rapporté par chaque dollar investi par les propriétaires.",
+      "formule": "RCP = Bénéfice net ÷ Capitaux propres"
+    },
+    {
+      "id": "rotationStocks",
+      "terme": "Rotation des stocks",
+      "categorie": "Finance",
+      "definition": "Nombre de fois par année que le stock est vendu et renouvelé. Une rotation élevée signifie peu d'argent immobilisé et moins de pertes.",
+      "formule": "Rotation = Coût des marchandises vendues ÷ Stock moyen"
+    },
+    {
+      "id": "placements",
+      "terme": "Placements à court terme",
+      "categorie": "Finance",
+      "definition": "Surplus d'encaisse placé pour rapporter des intérêts : compte d'épargne (retrait en tout temps) ou certificat de placement garanti (CPG, argent bloqué jusqu'à l'échéance)."
+    },
+    {
+      "id": "ecartBudgetaire",
+      "terme": "Budget et écarts",
+      "categorie": "Finance",
+      "definition": "Le budget fixe des objectifs chiffrés. Le contrôle budgétaire compare le réel au prévu et cherche la cause des écarts pour corriger le tir.",
+      "formule": "Écart = Réel − Prévu"
+    },
+    {
+      "id": "tauxFixeVariable",
+      "terme": "Taux fixe et taux variable",
+      "categorie": "Finance",
+      "definition": "Un prêt à taux fixe garde le même taux pendant toute sa durée. Un prêt à taux variable suit le taux préférentiel : moins cher au départ, mais risqué si les taux montent."
+    },
+    {
+      "id": "rcsd",
+      "terme": "Ratio de couverture du service de la dette",
+      "categorie": "Finance",
+      "definition": "Mesure si les flux d'exploitation suffisent à rembourser les dettes. Les banques exigent souvent au moins 1,25.",
+      "formule": "RCSD = BAIIA annuel ÷ Versements annuels (capital et intérêts)"
+    },
+    {
+      "id": "investisseurProvidentiel",
+      "terme": "Investisseur providentiel (ange)",
+      "categorie": "Finance",
+      "definition": "Personne fortunée, souvent un entrepreneur, qui investit dans une jeune société en échange d'actions et qui conseille les fondateurs."
+    },
+    {
+      "id": "dilution",
+      "terme": "Dilution",
+      "categorie": "Finance",
+      "definition": "Baisse du pourcentage de propriété des actionnaires existants quand la société émet de nouvelles actions à un investisseur.",
+      "exemple": "Si un investisseur achète 20 % des actions, le fondateur passe de 100 % à 80 %."
+    },
+    {
+      "id": "planAffaires",
+      "terme": "Plan d'affaires",
+      "categorie": "Gestion",
+      "definition": "Document qui présente le projet : marché, stratégie, équipe, prévisions financières et besoins de financement. Les prêteurs vérifient surtout si les prévisions sont réalistes et si l'entrepreneur investit lui-même."
+    },
+    {
+      "id": "cautionPersonnelle",
+      "terme": "Caution personnelle",
+      "categorie": "Juridique",
+      "definition": "Engagement du propriétaire à rembourser personnellement un prêt de son entreprise si elle ne le peut pas. Elle annule en partie la protection de la responsabilité limitée."
+    },
+    {
+      "id": "loveMoney",
+      "terme": "Love money",
+      "categorie": "Finance",
+      "definition": "Argent prêté ou donné par la famille et les amis pour démarrer une entreprise. Souple et souvent sans intérêt, mais un échec peut briser des liens."
+    },
+    {
+      "id": "tauxChange",
+      "terme": "Taux de change",
+      "categorie": "Économie",
+      "definition": "Prix d'une monnaie dans une autre. Quand le dollar canadien baisse, les produits importés des États-Unis coûtent plus cher.",
+      "exemple": "À 1,38 $ CA pour 1 $ US, une facture de 1 000 $ US coûte 1 380 $ CA."
+    },
+    {
+      "id": "subvention",
+      "terme": "Subvention",
+      "categorie": "Finance",
+      "definition": "Aide financière non remboursable accordée sous conditions (programme, âge, secteur). Elle est comptabilisée comme un produit et est généralement imposable."
+    },
+    {
+      "id": "incitatifInvestissement",
+      "terme": "Incitatif à l'investissement accéléré",
+      "categorie": "Fiscalité",
+      "definition": "Mesure fiscale fédérale qui augmente la DPA de l'année d'acquisition (1,5 fois le taux normal pour les biens mis en service avant 2030) pour encourager les entreprises à investir."
     }
   ]
 }

@@ -4,7 +4,7 @@
  * Le localStorage peut être indisponible (navigation privée) : toutes les opérations
  * sont protégées et le jeu reste jouable sans lui.
  */
-import type { EtatPartie } from '../engine/types';
+import { VERSION_ETAT, type EtatPartie } from '../engine/types';
 
 export type IdEmplacement = 'auto' | '1' | '2' | '3';
 export const EMPLACEMENTS_MANUELS: IdEmplacement[] = ['1', '2', '3'];
@@ -24,7 +24,7 @@ export interface ResumeSauvegarde {
 
 interface FichierSauvegarde {
   format: 'pme-quebec-simulateur';
-  version: 1;
+  version: typeof VERSION_ETAT;
   sauvegardeLe: string;
   etat: EtatPartie;
 }
@@ -51,7 +51,7 @@ export function estEtatPartie(x: unknown): x is EtatPartie {
   if (typeof x !== 'object' || x === null) return false;
   const e = x as Partial<EtatPartie>;
   return (
-    e.version === 1 &&
+    e.version === VERSION_ETAT &&
     typeof e.moisCourant === 'number' &&
     typeof e.rngState === 'number' &&
     typeof e.config === 'object' &&
@@ -64,7 +64,7 @@ export function estEtatPartie(x: unknown): x is EtatPartie {
 function envelopper(etat: EtatPartie): FichierSauvegarde {
   return {
     format: 'pme-quebec-simulateur',
-    version: 1,
+    version: VERSION_ETAT,
     sauvegardeLe: new Date().toISOString(),
     etat,
   };
@@ -79,7 +79,14 @@ export function analyserFichier(texte: string): EtatPartie {
   }
   const f = donnees as Partial<FichierSauvegarde>;
   const etat = f && f.format === 'pme-quebec-simulateur' ? f.etat : donnees;
-  if (!estEtatPartie(etat)) throw new Error('Ce fichier ne contient pas une partie de PME Québec.');
+  if (!estEtatPartie(etat)) {
+    const version = (etat as { version?: unknown } | null)?.version;
+    if (typeof version === 'number' && version < VERSION_ETAT)
+      throw new Error(
+        'Cette partie a été créée avec une version précédente du jeu. Le moteur a beaucoup changé depuis : commence une nouvelle partie.',
+      );
+    throw new Error('Ce fichier ne contient pas une partie de PME Québec.');
+  }
   return etat;
 }
 

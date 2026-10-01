@@ -49,7 +49,12 @@ import {
   salaireMarchePoste,
   semainesPreavis,
 } from './hr';
-import { investissementDef, possede, COMPTES_IMMOBILISATIONS, effetsInvestissements } from './immobilisations';
+import {
+  investissementDef,
+  possede,
+  COMPTES_IMMOBILISATIONS,
+  effetsInvestissements,
+} from './immobilisations';
 import { creerPret, rembourserPartiellement } from './loans';
 import { nouveauProduit, lignesVente } from './produits';
 import { Rng } from './rng';
@@ -86,7 +91,10 @@ function indexCourant(e: EtatPartie): number {
   return Math.min(e.moisCourant, e.config.dureeMois - 1);
 }
 
-const COMPTES_DEPENSES: Record<CategorieDepense, { compte: CompteId; flux: FluxId; taxable: boolean }> = {
+const COMPTES_DEPENSES: Record<
+  CategorieDepense,
+  { compte: CompteId; flux: FluxId; taxable: boolean }
+> = {
   formation: { compte: 'formation', flux: 'formationAvantages', taxable: true },
   entretien: { compte: 'entretien', flux: 'loyerEtFrais', taxable: true },
   amendes: { compte: 'amendes', flux: 'droitsEtAmendes', taxable: false },
@@ -201,7 +209,15 @@ export function embaucher(
       salaireMarchePoste(poste, ville.indiceSalaires, e.conjoncture.indicePrix),
     );
     ent.employes.push(genererEmploye(nouvelId(ent, 'emp'), poste, heures, salaire, rng));
-    payer(ent.livre, ent, 'Recrutement et intégration d’un employé', 'recrutement', COUT_RECRUTEMENT, true, 'publicite');
+    payer(
+      ent.livre,
+      ent,
+      'Recrutement et intégration d’un employé',
+      'recrutement',
+      COUT_RECRUTEMENT,
+      true,
+      'publicite',
+    );
     e.rngState = rng.state;
   });
 }
@@ -219,7 +235,15 @@ export function afficherPoste(
     const plateforme = plateformeParId(plateformeId);
     const index = indexCourant(e);
     if (plateforme.cout > 0)
-      payer(ent.livre, ent, `Affichage d’un poste : ${plateforme.nom}`, 'recrutement', plateforme.cout, true, 'publicite');
+      payer(
+        ent.livre,
+        ent,
+        `Affichage d’un poste : ${plateforme.nom}`,
+        'recrutement',
+        plateforme.cout,
+        true,
+        'publicite',
+      );
     if (plateforme.delaiMois === 0) {
       genererCandidatsAffichage(ent, e, posteId, plateformeId, index);
     } else {
@@ -288,19 +312,35 @@ export function embaucherCandidat(
     }
     e.rngState = rng.state;
     const h = Math.round(
-      borner(heures ?? c.heuresSouhaitees, BORNES_DECISIONS.heuresEmploye.min, BORNES_DECISIONS.heuresEmploye.max),
+      borner(
+        heures ?? c.heuresSouhaitees,
+        BORNES_DECISIONS.heuresEmploye.min,
+        BORNES_DECISIONS.heuresEmploye.max,
+      ),
     );
     ent.employes.push(employeDepuisCandidat(c, salaire, h));
     ent.rh.candidats = ent.rh.candidats.filter((x) => x.id !== candidatId);
     const plateforme = plateformeParId(c.plateformeId);
     if (plateforme.pourcentageSalaire > 0) {
       const frais = salaire * h * 52 * plateforme.pourcentageSalaire;
-      payer(ent.livre, ent, `Frais de l’agence de placement (${c.prenom} ${c.nom})`, 'recrutement', frais, true, 'publicite');
+      payer(
+        ent.livre,
+        ent,
+        `Frais de l’agence de placement (${c.prenom} ${c.nom})`,
+        'recrutement',
+        frais,
+        true,
+        'publicite',
+      );
     }
   });
 }
 
-export function retirerCandidat(etat: EtatPartie, entrepriseId: string, candidatId: string): EtatPartie {
+export function retirerCandidat(
+  etat: EtatPartie,
+  entrepriseId: string,
+  candidatId: string,
+): EtatPartie {
   return action(etat, entrepriseId, (ent) => {
     ent.rh.candidats = ent.rh.candidats.filter((x) => x.id !== candidatId);
   });
@@ -335,7 +375,8 @@ export function modifierSalaireEmploye(
   return action(etat, entrepriseId, (ent, e) => {
     const employe = parId(ent.employes, employeId);
     const nouveau =
-      Math.round(borner(salaire, e.salaireMinimum, BORNES_DECISIONS.salaireHoraire.max) * 100) / 100;
+      Math.round(borner(salaire, e.salaireMinimum, BORNES_DECISIONS.salaireHoraire.max) * 100) /
+      100;
     if (nouveau >= employe.salaireHoraire * 1.02) {
       employe.derniereAugmentation = indexCourant(e);
       employe.moral = Math.round(borner(employe.moral + 3, 0, 100));
@@ -345,12 +386,17 @@ export function modifierSalaireEmploye(
 }
 
 /** Augmentation générale (en proportion) pour tous les employés. */
-export function augmentationGenerale(etat: EtatPartie, entrepriseId: string, taux: number): EtatPartie {
+export function augmentationGenerale(
+  etat: EtatPartie,
+  entrepriseId: string,
+  taux: number,
+): EtatPartie {
   return action(etat, entrepriseId, (ent, e) => {
     const t = borner(taux, 0, 0.3);
     if (t <= 0) return;
     for (const x of ent.employes) {
-      x.salaireHoraire = Math.round(borner(x.salaireHoraire * (1 + t), e.salaireMinimum, 60) * 100) / 100;
+      x.salaireHoraire =
+        Math.round(borner(x.salaireHoraire * (1 + t), e.salaireMinimum, 60) * 100) / 100;
       if (t >= 0.02) {
         x.derniereAugmentation = indexCourant(e);
         x.moral = Math.round(borner(x.moral + 3, 0, 100));
@@ -370,9 +416,18 @@ export function formerEmploye(
     const f = formationParId(formationId);
     if (employe.formations.includes(f.id)) return;
     if (f.postes && !f.postes.includes(employe.posteId)) return;
-    payer(ent.livre, ent, `Formation : ${f.nom} (${employe.prenom} ${employe.nom})`, 'formation', f.cout, true, 'formationAvantages');
+    payer(
+      ent.livre,
+      ent,
+      `Formation : ${f.nom} (${employe.prenom} ${employe.nom})`,
+      'formation',
+      f.cout,
+      true,
+      'formationAvantages',
+    );
     employe.formations.push(f.id);
-    employe.competence = Math.round(borner(employe.competence + f.gainCompetence, 0.5, 1.4) * 100) / 100;
+    employe.competence =
+      Math.round(borner(employe.competence + f.gainCompetence, 0.5, 1.4) * 100) / 100;
     employe.moral = Math.round(borner(employe.moral + f.gainMoral, 0, 100));
   });
 }
@@ -381,13 +436,25 @@ export function formerEmploye(
 export function formerProprietaireHygiene(etat: EtatPartie, entrepriseId: string): EtatPartie {
   return action(etat, entrepriseId, (ent) => {
     if (ent.rh.gestionnaireHygiene) return;
-    payer(ent.livre, ent, FORMATION_GESTIONNAIRE_HYGIENE.nom, 'formation', FORMATION_GESTIONNAIRE_HYGIENE.cout, true, 'formationAvantages');
+    payer(
+      ent.livre,
+      ent,
+      FORMATION_GESTIONNAIRE_HYGIENE.nom,
+      'formation',
+      FORMATION_GESTIONNAIRE_HYGIENE.cout,
+      true,
+      'formationAvantages',
+    );
     ent.rh.gestionnaireHygiene = true;
   });
 }
 
 /** Évaluation annuelle de rendement : reconnaissance (moral) et constat des besoins. */
-export function evaluerEmploye(etat: EtatPartie, entrepriseId: string, employeId: string): EtatPartie {
+export function evaluerEmploye(
+  etat: EtatPartie,
+  entrepriseId: string,
+  employeId: string,
+): EtatPartie {
   return action(etat, entrepriseId, (ent, e) => {
     const employe = parId(ent.employes, employeId);
     const index = indexCourant(e);
@@ -421,7 +488,11 @@ export function repondreDilemme(
 // Marketing
 // ---------------------------------------------------------------------------
 
-export function commanderEtude(etat: EtatPartie, entrepriseId: string, typeId: IdTypeEtude): EtatPartie {
+export function commanderEtude(
+  etat: EtatPartie,
+  entrepriseId: string,
+  typeId: IdTypeEtude,
+): EtatPartie {
   return action(etat, entrepriseId, (ent, e) => {
     const type = typeEtudeParId(typeId);
     const secteur = secteurParId(e.config.secteurId);
@@ -429,7 +500,15 @@ export function commanderEtude(etat: EtatPartie, entrepriseId: string, typeId: I
     const index = indexCourant(e);
     const { annee, mois } = dateDuMois(e.config, index);
     const rng = new Rng(e.rngState);
-    payer(ent.livre, ent, `Étude de marché : ${type.nom}`, 'etudesMarche', type.cout, true, 'publicite');
+    payer(
+      ent.livre,
+      ent,
+      `Étude de marché : ${type.nom}`,
+      'etudesMarche',
+      type.cout,
+      true,
+      'publicite',
+    );
     const effets = effetsInvestissements(ent, secteur);
     ent.marketing.etudes.unshift(
       realiserEtude(
@@ -441,7 +520,10 @@ export function commanderEtude(etat: EtatPartie, entrepriseId: string, typeId: I
           conj: e.conjoncture,
           concurrents: e.concurrents,
           facteurMarche: DIFFICULTES[e.config.difficulte].marche,
-          ambiance: Math.min(0.95, amenagementDe(secteur, ent.amenagementId).ambiance + effets.ambiance),
+          ambiance: Math.min(
+            0.95,
+            amenagementDe(secteur, ent.amenagementId).ambiance + effets.ambiance,
+          ),
           index,
           annee,
           mois,
@@ -455,13 +537,25 @@ export function commanderEtude(etat: EtatPartie, entrepriseId: string, typeId: I
   });
 }
 
-export function lancerProduit(etat: EtatPartie, entrepriseId: string, produitId: string): EtatPartie {
+export function lancerProduit(
+  etat: EtatPartie,
+  entrepriseId: string,
+  produitId: string,
+): EtatPartie {
   return action(etat, entrepriseId, (ent, e) => {
     const secteur = secteurParId(e.config.secteurId);
     const p = nouveauProduit(secteur, produitId);
     const existant = ent.marketing.produits.find((x) => x.ligneId === produitId);
     if (existant && existant.statut !== 'retire') return;
-    payer(ent.livre, ent, `Développement : ${p.nom}`, 'developpementProduits', p.coutDeveloppement, true, 'publicite');
+    payer(
+      ent.livre,
+      ent,
+      `Développement : ${p.nom}`,
+      'developpementProduits',
+      p.coutDeveloppement,
+      true,
+      'publicite',
+    );
     const index = indexCourant(e);
     if (existant) {
       existant.statut = 'developpement';
@@ -488,7 +582,11 @@ export function lancerProduit(etat: EtatPartie, entrepriseId: string, produitId:
 }
 
 /** Retirer un produit de la gamme (le stock restant sera écoulé ou jeté). */
-export function retirerProduit(etat: EtatPartie, entrepriseId: string, produitId: string): EtatPartie {
+export function retirerProduit(
+  etat: EtatPartie,
+  entrepriseId: string,
+  produitId: string,
+): EtatPartie {
   return action(etat, entrepriseId, (ent) => {
     const p = ent.marketing.produits.find((x) => x.ligneId === produitId);
     if (!p || p.statut === 'retire') return;
@@ -537,17 +635,39 @@ export function investir(
       const type = mode === 'pretFixe' ? 'fixe' : 'variable';
       const ev = evaluerCredit(ent, inv.cout, 60, type, e.conjoncture);
       if (!ev.accepte) return;
-      const pret = creerPret(nouvelId(ent, 'pret'), `Prêt d’équipement : ${inv.nom}`, versCents(inv.cout), ev.taux, 60, {
-        preteur: 'Banque',
-        type,
-        ecartTaux: ev.taux - tauxPreferentiel(e.conjoncture),
-      });
+      const pret = creerPret(
+        nouvelId(ent, 'pret'),
+        `Prêt d’équipement : ${inv.nom}`,
+        versCents(inv.cout),
+        ev.taux,
+        60,
+        {
+          preteur: 'Banque',
+          type,
+          ecartTaux: ev.taux - tauxPreferentiel(e.conjoncture),
+        },
+      );
       ent.prets.push(pret);
-      ecritureSimple(ent.livre, `Prêt d’équipement : ${inv.nom}`, 'encaisse', 'empruntBancaire', pret.capitalInitial, 'empruntsRecus');
+      ecritureSimple(
+        ent.livre,
+        `Prêt d’équipement : ${inv.nom}`,
+        'encaisse',
+        'empruntBancaire',
+        pret.capitalInitial,
+        'empruntsRecus',
+      );
     }
     const comptes = COMPTES_IMMOBILISATIONS[inv.type];
     const avant = ent.livre.soldes[comptes.actif];
-    payer(ent.livre, ent, `Acquisition : ${inv.nom}`, comptes.actif, inv.cout, true, 'acquisitionImmobilisations');
+    payer(
+      ent.livre,
+      ent,
+      `Acquisition : ${inv.nom}`,
+      comptes.actif,
+      inv.cout,
+      true,
+      'acquisitionImmobilisations',
+    );
     const cout = versDollars(ent.livre.soldes[comptes.actif] - avant);
     ent.immobilisations.push({
       id: nouvelId(ent, 'immo'),
@@ -555,7 +675,8 @@ export function investir(
       type: inv.type,
       classeDpa: inv.classeDpa,
       cout,
-      dureeVieMois: inv.type === 'ameliorations' ? Math.max(12, ent.bail.dureeMois - index) : inv.dureeVieMois,
+      dureeVieMois:
+        inv.type === 'ameliorations' ? Math.max(12, ent.bail.dureeMois - index) : inv.dureeVieMois,
       acquisition: index,
       amortCumule: 0,
       investissementId: inv.id,
@@ -577,27 +698,57 @@ export function demanderPret(
     const duree = Math.round(borner(dureeMois, 12, 120));
     const ev = evaluerCredit(ent, m, duree, type, e.conjoncture);
     if (!ev.accepte) return;
-    const pret = creerPret(nouvelId(ent, 'pret'), `Prêt à terme (taux ${type})`, versCents(m), ev.taux, duree, {
-      preteur: 'Banque',
-      type,
-      ecartTaux: ev.taux - tauxPreferentiel(e.conjoncture),
-    });
+    const pret = creerPret(
+      nouvelId(ent, 'pret'),
+      `Prêt à terme (taux ${type})`,
+      versCents(m),
+      ev.taux,
+      duree,
+      {
+        preteur: 'Banque',
+        type,
+        ecartTaux: ev.taux - tauxPreferentiel(e.conjoncture),
+      },
+    );
     ent.prets.push(pret);
-    ecritureSimple(ent.livre, 'Nouveau prêt à terme', 'encaisse', 'empruntBancaire', pret.capitalInitial, 'empruntsRecus');
+    ecritureSimple(
+      ent.livre,
+      'Nouveau prêt à terme',
+      'encaisse',
+      'empruntBancaire',
+      pret.capitalInitial,
+      'empruntsRecus',
+    );
   });
 }
 
 /** Remboursement anticipé d'un prêt précis (au lieu du premier prêt). */
-export function rembourserPret(etat: EtatPartie, entrepriseId: string, pretId: string, montant: number): EtatPartie {
+export function rembourserPret(
+  etat: EtatPartie,
+  entrepriseId: string,
+  pretId: string,
+  montant: number,
+): EtatPartie {
   return action(etat, entrepriseId, (ent) => {
     const pret = ent.prets.find((p) => p.id === pretId && p.solde > 0);
     if (!pret) return;
     const rembourse = rembourserPartiellement(pret, versCents(Math.max(0, montant)));
-    ecritureSimple(ent.livre, `Remboursement anticipé – ${pret.nom}`, 'empruntBancaire', 'encaisse', rembourse, 'remboursementsEmprunts');
+    ecritureSimple(
+      ent.livre,
+      `Remboursement anticipé – ${pret.nom}`,
+      'empruntBancaire',
+      'encaisse',
+      rembourse,
+      'remboursementsEmprunts',
+    );
   });
 }
 
-export function demanderHausseMarge(etat: EtatPartie, entrepriseId: string, limite: number): EtatPartie {
+export function demanderHausseMarge(
+  etat: EtatPartie,
+  entrepriseId: string,
+  limite: number,
+): EtatPartie {
   return action(etat, entrepriseId, (ent, e) => {
     const base = DIFFICULTES[e.config.difficulte].limiteMarge;
     const max = limiteMargeMax(ent, base);
@@ -606,7 +757,12 @@ export function demanderHausseMarge(etat: EtatPartie, entrepriseId: string, limi
   });
 }
 
-export function placer(etat: EtatPartie, entrepriseId: string, typeId: string, montant: number): EtatPartie {
+export function placer(
+  etat: EtatPartie,
+  entrepriseId: string,
+  typeId: string,
+  montant: number,
+): EtatPartie {
   return action(etat, entrepriseId, (ent, e) => {
     const m = versCents(Math.max(0, Math.round(montant)));
     if (m <= 0 || m > ent.livre.soldes.encaisse) return;
@@ -619,16 +775,34 @@ export function placer(etat: EtatPartie, entrepriseId: string, typeId: string, m
       taux: tauxPlacement(typeId, e.conjoncture),
       echeance: t.dureeMois > 0 ? index + t.dureeMois : null,
     });
-    ecritureSimple(ent.livre, `Placement : ${t.nom}`, 'placements', 'encaisse', m, 'placementsNets');
+    ecritureSimple(
+      ent.livre,
+      `Placement : ${t.nom}`,
+      'placements',
+      'encaisse',
+      m,
+      'placementsNets',
+    );
   });
 }
 
 /** Retirer un placement (seulement le compte d'épargne ou un CPG échu). */
-export function retirerPlacement(etat: EtatPartie, entrepriseId: string, placementId: string): EtatPartie {
+export function retirerPlacement(
+  etat: EtatPartie,
+  entrepriseId: string,
+  placementId: string,
+): EtatPartie {
   return action(etat, entrepriseId, (ent, e) => {
     const p = ent.finance.placements.find((x) => x.id === placementId);
     if (!p || (p.echeance !== null && p.echeance > indexCourant(e))) return;
-    ecritureSimple(ent.livre, `Retrait du placement : ${typePlacement(p.typeId).nom}`, 'encaisse', 'placements', p.montant, 'placementsNets');
+    ecritureSimple(
+      ent.livre,
+      `Retrait du placement : ${typePlacement(p.typeId).nom}`,
+      'encaisse',
+      'placements',
+      p.montant,
+      'placementsNets',
+    );
     ent.finance.placements = ent.finance.placements.filter((x) => x.id !== placementId);
   });
 }
@@ -643,17 +817,35 @@ export function valorisationEnCours(ent: Entreprise): number {
 }
 
 /** Investisseur providentiel en cours de partie (société par actions seulement). */
-export function accueillirInvestisseur(etat: EtatPartie, entrepriseId: string, montant: number): EtatPartie {
+export function accueillirInvestisseur(
+  etat: EtatPartie,
+  entrepriseId: string,
+  montant: number,
+): EtatPartie {
   return action(etat, entrepriseId, (ent) => {
     if (!estSocieteActions(ent.formeJuridique)) return;
     const m = Math.round(borner(montant, 10_000, 250_000));
     const pre = valorisationEnCours(ent);
     const part = m / (pre + m);
-    const totalAutres = ent.finance.actionnaires.filter((a) => a.type === 'ange').reduce((a, x) => a + x.part, 0);
+    const totalAutres = ent.finance.actionnaires
+      .filter((a) => a.type === 'ange')
+      .reduce((a, x) => a + x.part, 0);
     if (part + totalAutres * (1 - part) > 0.49) return;
-    for (const a of ent.finance.actionnaires) a.part = Math.round(a.part * (1 - part) * 10000) / 10000;
-    ent.finance.actionnaires.push({ nom: 'Investisseur providentiel', part: Math.round(part * 10000) / 10000, type: 'ange' });
-    ecritureSimple(ent.livre, 'Émission d’actions à un investisseur providentiel', 'encaisse', 'capitalActions', versCents(m), 'apportsProprietaire');
+    for (const a of ent.finance.actionnaires)
+      a.part = Math.round(a.part * (1 - part) * 10000) / 10000;
+    ent.finance.actionnaires.push({
+      nom: 'Investisseur providentiel',
+      part: Math.round(part * 10000) / 10000,
+      type: 'ange',
+    });
+    ecritureSimple(
+      ent.livre,
+      'Émission d’actions à un investisseur providentiel',
+      'encaisse',
+      'capitalActions',
+      versCents(m),
+      'apportsProprietaire',
+    );
   });
 }
 
@@ -691,7 +883,14 @@ export function regulariserDemarche(
     if (id === 'mapaq') ent.rh.gestionnaireHygiene = true;
     const cout = coutDemarche(id, ent.formeJuridique);
     if (cout > 0)
-      ecritureSimple(ent.livre, `Régularisation : ${demarche(id).nom}`, 'droitsPermis', 'encaisse', versCents(cout), 'droitsEtAmendes');
+      ecritureSimple(
+        ent.livre,
+        `Régularisation : ${demarche(id).nom}`,
+        'droitsPermis',
+        'encaisse',
+        versCents(cout),
+        'droitsEtAmendes',
+      );
   });
 }
 

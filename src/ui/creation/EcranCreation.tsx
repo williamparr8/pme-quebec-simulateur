@@ -4,8 +4,6 @@
  */
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { SECTEURS, VILLES, secteurParId, villeParId } from '../../data';
-import { tauxPreferentiel, conjonctureInitiale } from '../../engine/economy';
-import { versementMensuel } from '../../engine/loans';
 import { graineDepuisTexte } from '../../engine/rng';
 import {
   DEMARCHES,
@@ -14,13 +12,12 @@ import {
   fraisImmatriculation,
 } from '../../engine/conformite';
 import type { FormeJuridique } from '../../engine/types';
+import { EtapeFinancement } from './EtapeFinancement';
 import { FORMES } from './formes';
 import {
   REGLES_FINANCEMENT,
   coutsDemarrage,
   loyerMensuelInitial,
-  apportTotal,
-  pretMaximum,
   validerDemarrage,
   type ErreurDemarrage,
 } from '../../engine/simulation';
@@ -30,7 +27,7 @@ import {
   type DureePartie,
   type ParametresDemarrage,
 } from '../../engine/types';
-import { argent, argentRond, pourcentage } from '../../i18n/format';
+import { argentRond, pourcentage } from '../../i18n/format';
 import { DIFFICULTES_TEXTE } from '../../i18n/fr-CA';
 import { useJeu } from '../../store/jeu';
 import { Bouton } from '../composants/Bouton';
@@ -78,6 +75,8 @@ const MESSAGES_ERREUR: Record<ErreurDemarrage, string> = {
   pretTropEleve: `La banque prête au plus ${REGLES_FINANCEMENT.multipleApportMax} $ pour chaque dollar que tu investis.`,
   financementInsuffisant: `Tes sources de financement ne couvrent pas les coûts de démarrage plus un fonds de roulement minimal de ${argentRond(REGLES_FINANCEMENT.fondsRoulementMin)}.`,
   associeRequis: 'Une société de personnes exige un associé qui investit dans l’entreprise.',
+  sourceInvalide:
+    'Une de tes sources de financement ne respecte pas ses conditions (étape 6 : âge, plan d’affaires, mise de fonds ou forme juridique).',
 };
 
 export function EcranCreation() {
@@ -100,6 +99,11 @@ export function EcranCreation() {
     apportAssocie: 0,
     demarches: [...IDS_DEMARCHES],
     inscritTaxes: true,
+    typeTauxPret: 'fixe',
+    ageProprietaire: 20,
+    financements: {},
+    planAffaires: null,
+    methodeInventaire: 'coutMoyen',
   });
   const [secteurId, setSecteurId] = useState('cafe');
   const [villeId, setVilleId] = useState('montreal');
@@ -115,16 +119,6 @@ export function EcranCreation() {
   const maj = (c: Partial<ParametresDemarrage>) => setParams((p) => ({ ...p, ...c }));
   const couts = coutsDemarrage(params, secteur, ville);
   const erreurs = validerDemarrage(params, secteur, ville);
-  const tauxPret = tauxPreferentiel(conjonctureInitiale()) + REGLES_FINANCEMENT.ecartTauxPret;
-  const versement =
-    versementMensuel(
-      Math.round(params.montantPret * 100),
-      tauxPret,
-      REGLES_FINANCEMENT.dureePretMois,
-    ) / 100;
-  const apports = apportTotal(params);
-  const maxPret = pretMaximum(apports);
-  const fondsRoulement = apports + params.montantPret - couts.total;
 
   useEffect(() => titre.current?.focus(), [etape]);
 
@@ -228,6 +222,22 @@ export function EcranCreation() {
                   onChange={(e) => maj({ nomProprietaire: e.target.value })}
                   className="w-full rounded-md border border-bordure bg-surface-2 px-3 py-2"
                 />
+              </label>
+              <label className="space-y-1">
+                <span className="block font-semibold">Ton âge</span>
+                <input
+                  type="number"
+                  min={18}
+                  max={75}
+                  value={params.ageProprietaire}
+                  onChange={(e) =>
+                    maj({ ageProprietaire: Math.round(Number(e.target.value) || 18) })
+                  }
+                  className="chiffres w-28 rounded-md border border-bordure bg-surface-2 px-3 py-2"
+                />
+                <span className="block text-sm text-doux">
+                  Certains programmes (Futurpreneur, Créavenir) sont réservés aux 18 à 39 ans.
+                </span>
               </label>
             </div>
             <fieldset className="mt-4">
@@ -516,91 +526,13 @@ export function EcranCreation() {
         )}
 
         {etape === 5 && (
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Carte titre="Tes sources de financement">
-              <div className="space-y-5">
-                <Curseur
-                  libelle="Mise de fonds personnelle"
-                  valeur={params.apportPersonnel}
-                  min={5_000}
-                  max={100_000}
-                  decimales={0}
-                  format={argentRond}
-                  // Le prêt demandé ne peut pas dépasser le maximum permis par la banque.
-                  onChange={(v) =>
-                    maj({
-                      apportPersonnel: v,
-                      montantPret: Math.min(
-                        params.montantPret,
-                        pretMaximum(apportTotal({ ...params, apportPersonnel: v })),
-                      ),
-                    })
-                  }
-                  aide="Ton épargne investie dans l’entreprise. C’est ton capital : tu risques de le perdre."
-                />
-                <Curseur
-                  libelle="Prêt bancaire de démarrage"
-                  valeur={params.montantPret}
-                  min={0}
-                  max={Math.max(1, maxPret)}
-                  decimales={0}
-                  format={argentRond}
-                  terme="pretTerme"
-                  onChange={(v) => maj({ montantPret: Math.min(v, maxPret) })}
-                  aide={`Maximum : ${argentRond(maxPret)} (3 $ par dollar investi). Taux fixe de ${pourcentage(tauxPret, 2)} (préférentiel + 2,5 %) sur 5 ans : ${argent(versement)} par mois.`}
-                />
-              </div>
-            </Carte>
-            <Carte titre="Coûts de démarrage">
-              <table className="chiffres w-full text-sm">
-                <tbody>
-                  {[
-                    ['Équipement', couts.equipement],
-                    ['Aménagement (améliorations locatives)', couts.amenagement],
-                    [
-                      `Dépôt de garantie (${REGLES_FINANCEMENT.moisDepotGarantie} mois de loyer)`,
-                      couts.depotGarantie,
-                    ],
-                    ['Stock initial', couts.stockInitial],
-                    ['Enseigne, inauguration, frais juridiques', couts.fraisDemarrage],
-                    ['Immatriculation, permis et démarches', couts.fraisJuridiques],
-                    [
-                      params.inscritTaxes
-                        ? 'TPS et TVQ sur les achats (récupérables)'
-                        : 'TPS et TVQ sur les achats (non récupérables)',
-                      couts.taxes,
-                    ],
-                  ].map(([nom, montant]) => (
-                    <tr key={nom as string} className="border-b border-bordure">
-                      <td className="py-1">{nom}</td>
-                      <td className="py-1 text-right">{argentRond(montant as number)}</td>
-                    </tr>
-                  ))}
-                  <tr className="font-bold">
-                    <td className="py-1">Total des coûts</td>
-                    <td className="py-1 text-right">{argentRond(couts.total)}</td>
-                  </tr>
-                  <tr>
-                    <td className="py-1">Mises de fonds + prêt</td>
-                    <td className="py-1 text-right">{argentRond(apports + params.montantPret)}</td>
-                  </tr>
-                  <tr
-                    className={`font-bold ${fondsRoulement < REGLES_FINANCEMENT.fondsRoulementMin ? 'text-danger' : 'text-succes'}`}
-                  >
-                    <td className="py-1">
-                      Encaisse à l’ouverture (<Terme id="fondsRoulement">fonds de roulement</Terme>)
-                    </td>
-                    <td className="py-1 text-right">{argentRond(fondsRoulement)}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <p className="mt-3 text-sm text-doux">
-                Prévois un coussin : les premiers mois, les ventes ne couvrent pas encore le loyer,
-                la paie et le remboursement du prêt. Une marge de crédit d’urgence est aussi offerte
-                par la banque.
-              </p>
-            </Carte>
-          </div>
+          <EtapeFinancement
+            params={params}
+            maj={maj}
+            secteur={secteur}
+            ville={ville}
+            couts={couts}
+          />
         )}
 
         {etape === 6 && (

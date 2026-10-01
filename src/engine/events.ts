@@ -173,7 +173,8 @@ export const CONDITIONS: Record<string, (ent: Entreprise, c: ContexteConditions)
   employes3: (ent) => ent.employes.length >= 3,
   decembre: (ent, c) => c.mois === 12 && ent.employes.length >= 2,
   surcharge: (ent, c) => ent.employes.length >= 1 && (c.derniere?.indicateurs.utilisation ?? 0) > 1,
-  employeCompetent: (ent) => ent.employes.some((e) => e.competence >= 1.02 && e.moisAnciennete >= 4),
+  employeCompetent: (ent) =>
+    ent.employes.some((e) => e.competence >= 1.02 && e.moisAnciennete >= 4),
 };
 
 export function choisirConcerne(

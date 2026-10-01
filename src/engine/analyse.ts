@@ -95,16 +95,31 @@ export function analyserMois(
       params: { perdues: i.perduesRupture, lignes: lignes.join(',') },
     });
   }
-  if (i.perduesCuisine > 0 && i.chiffreAffaires > 0) {
-    m.push({ code: 'cuisineInsuffisante', niveau: 'alerte', params: { perdues: i.perduesCuisine } });
+  const aCuisinier = ent.employes.some(
+    (e) => e.posteId === 'cuisinier' || e.posteId === 'aideCuisine',
+  );
+  if (aCuisinier && i.perduesCuisine >= 20 && i.chiffreAffaires > 0) {
+    m.push({
+      code: 'cuisineInsuffisante',
+      niveau: 'alerte',
+      params: { perdues: i.perduesCuisine },
+    });
   }
   const cmv = (archive.mouvements.coutMarchandises ?? 0) / 100;
   const perimes = (archive.mouvements.pertesStocks ?? 0) / 100;
   if (cmv > 0 && perimes / cmv > 0.04) {
-    m.push({ code: 'pertesPeremption', niveau: 'alerte', params: { montant: perimes, pct: perimes / cmv } });
+    m.push({
+      code: 'pertesPeremption',
+      niveau: 'alerte',
+      params: { montant: perimes, pct: perimes / cmv },
+    });
   }
   if (i.tauxDefauts > 0.06) {
-    m.push({ code: 'defautsEleves', niveau: 'alerte', params: { taux: i.tauxDefauts, plaintes: i.plaintes } });
+    m.push({
+      code: 'defautsEleves',
+      niveau: 'alerte',
+      params: { taux: i.tauxDefauts, plaintes: i.plaintes },
+    });
   }
 
   // Prévision (budget) : écart entre le prévu et le réel
@@ -120,6 +135,20 @@ export function analyserMois(
         beneficePrevu: archive.prevision.benefice,
         beneficeReel: i.beneficeNet,
       },
+    });
+  }
+
+  // Livraison quand le commerce est déjà plein : elle remplace des ventes en magasin plus rentables.
+  if (
+    d.livraison &&
+    i.ventesLivraison > 0 &&
+    i.demande > 0 &&
+    i.perduesCapacite / i.demande > 0.05
+  ) {
+    m.push({
+      code: 'livraisonCapacite',
+      niveau: 'info',
+      params: { livraison: i.ventesLivraison, perdues: i.perduesCapacite },
     });
   }
 

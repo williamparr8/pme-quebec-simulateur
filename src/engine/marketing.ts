@@ -42,7 +42,12 @@ export function segmentsMarche(secteur: Secteur): SegmentMarche[] {
   }
   return secteur.segments.map((s) => {
     const p = personaParId(s.personaId);
-    return { id: s.personaId, part: s.part, sensibilites: p.sensibilites, panier: paniers[s.personaId] };
+    return {
+      id: s.personaId,
+      part: s.part,
+      sensibilites: p.sensibilites,
+      panier: paniers[s.personaId],
+    };
   });
 }
 

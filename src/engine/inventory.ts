@@ -22,13 +22,18 @@ export const TAUX_POSSESSION = 0.25;
 export const COUT_INTERNE_COMMANDE = 15;
 /** Niveau de service visé pour le stock de sécurité (95 % : z = 1,65). */
 const Z_SERVICE = 1.65;
+/** Frais de petite commande sous le minimum du fournisseur (proportion du minimum). */
+export const FRAIS_PETITE_COMMANDE = 0.15;
+
+/** Coût total d'une commande, incluant la livraison et les frais de petite commande ($). */
+export function coutCommande(quantite: number, coutUnitaire: number, f: Fournisseur): number {
+  const marchandises = quantite * coutUnitaire;
+  const petite = marchandises < f.minimumCommande ? FRAIS_PETITE_COMMANDE * f.minimumCommande : 0;
+  return marchandises + f.fraisCommande + petite;
+}
 
 /** Coût unitaire d'une marchandise chez un fournisseur, avec le taux de change ($ CA). */
-export function coutChezFournisseur(
-  coutBase: number,
-  f: Fournisseur,
-  tauxChange: number,
-): number {
+export function coutChezFournisseur(coutBase: number, f: Fournisseur, tauxChange: number): number {
   const change = f.devise === 'USD' ? tauxChange / TAUX_CHANGE.reference : 1;
   return coutBase * f.indicePrix * change;
 }
@@ -71,18 +76,29 @@ export function politiqueRecommandee(
   const ecartJour = demandeJour * 0.2 * precision;
   const delaiEffectif = f.delaiJours + (1 - f.fiabilite) * 4;
   const stockSecurite = Z_SERVICE * ecartJour * Math.sqrt(Math.max(1, delaiEffectif));
-  const pointCommande = Math.ceil(demandeJour * f.delaiJours + stockSecurite);
+  // Si on vend moins d'une unité pendant la durée de conservation, on ne garde pas de stock.
+  const pointCommande =
+    demandeJour * conservationJours < 1
+      ? 0
+      : Math.max(1, Math.ceil(demandeJour * f.delaiJours + stockSecurite));
   const qec = quantiteEconomique(
     demandeJour * 360,
     f.fraisCommande + COUT_INTERNE_COMMANDE,
     coutUnitaire * TAUX_POSSESSION,
   );
-  const quantiteMaxPeremption = Math.max(1, Math.floor(demandeJour * Math.max(1, conservationJours - 1)));
+  const quantiteMaxPeremption = Math.max(
+    1,
+    Math.floor(demandeJour * Math.max(1, conservationJours - 1)),
+  );
   const quantiteMinFournisseur = coutUnitaire > 0 ? Math.ceil(f.minimumCommande / coutUnitaire) : 0;
+  const optimale = Math.round(Math.min(Math.max(qec, demandeJour), quantiteMaxPeremption));
+  // On atteint le minimum du fournisseur seulement si la marchandise ne périme pas avant
+  // d'être vendue; sinon, on paie les frais de petite commande.
   const quantite = Math.max(
     1,
-    quantiteMinFournisseur,
-    Math.round(Math.min(Math.max(qec, demandeJour), quantiteMaxPeremption)),
+    quantiteMinFournisseur <= quantiteMaxPeremption
+      ? Math.max(optimale, quantiteMinFournisseur)
+      : optimale,
   );
   return {
     demandeJour,
@@ -207,15 +223,16 @@ export function simulerStockLigne(
     pointCommande: p.pointCommande,
     quantite: p.quantite,
   };
-  const poids = Array.from({ length: JOURS_PAR_MOIS }, () => Math.max(0.2, 1 + rng.normal(0, 0.15)));
+  const poids = Array.from({ length: JOURS_PAR_MOIS }, () =>
+    Math.max(0.2, 1 + rng.normal(0, 0.15)),
+  );
   const demandeJours = repartir(Math.max(0, Math.round(p.demande)), poids);
   const capaciteJours = Number.isFinite(p.capacitePreparation)
     ? repartir(Math.max(0, Math.floor(p.capacitePreparation)), poids)
     : null;
   const f = p.fournisseur;
-  const minUnites = p.coutUnitaire > 0 ? Math.ceil(f.minimumCommande / p.coutUnitaire) : 0;
   let pointCommande = p.pointCommande;
-  let quantiteCommande = Math.max(1, Math.round(p.quantite), minUnites);
+  let quantiteCommande = Math.max(1, Math.round(p.quantite));
   let estimationJour = (stock.demandeRecente || p.demande) / JOURS_PAR_MOIS;
   let vouluesSemaine = 0;
   const cmp = p.methode === 'coutMoyen';
@@ -236,7 +253,11 @@ export function simulerStockLigne(
         enMain + c.quantite > 0
           ? (enMain * stock.coutMoyen + c.cout) / (enMain + c.quantite)
           : coutUnitaire;
-      stock.lots.push({ quantite: c.quantite, cout: coutUnitaire, joursRestants: p.conservationJours });
+      stock.lots.push({
+        quantite: c.quantite,
+        cout: coutUnitaire,
+        joursRestants: p.conservationJours,
+      });
       r.receptions.push({ quantite: c.quantite, cout: c.cout, conditions: f.conditions });
     }
     stock.commandes = stock.commandes.filter((x) => x.jours > 0);
@@ -282,13 +303,13 @@ export function simulerStockLigne(
       quantiteCommande = Math.max(1, calcul.quantite);
     }
 
-    // 5. Commande si la position de stock atteint le point de commande
+    // 5. Commande si la position de stock atteint le point de commande (0 : ne plus commander)
     const enCommande = stock.commandes.reduce((a, c) => a + c.quantite, 0);
-    if (unitesEnStock(stock) + enCommande <= pointCommande) {
+    if (pointCommande > 0 && unitesEnStock(stock) + enCommande <= pointCommande) {
       const retard = rng.chance(f.fiabilite) ? 0 : rng.int(1, 3);
       stock.commandes.push({
         quantite: quantiteCommande,
-        cout: quantiteCommande * p.coutUnitaire + f.fraisCommande,
+        cout: coutCommande(quantiteCommande, p.coutUnitaire, f),
         jours: Math.max(1, f.delaiJours + retard),
       });
       r.commandes += 1;

@@ -99,7 +99,14 @@ export function acheterMarchandises(
   const detaxe = Math.round((montant - taxable) * 100) / 100;
   const flux: FluxId | undefined =
     contrepartie === 'encaisse' ? 'paiementsFournisseurs' : undefined;
-  ecritureSimple(L, `${libelle} – aliments détaxés`, 'stocks', contrepartie, versCents(detaxe), flux);
+  ecritureSimple(
+    L,
+    `${libelle} – aliments détaxés`,
+    'stocks',
+    contrepartie,
+    versCents(detaxe),
+    flux,
+  );
   if (ent.fiscal.inscritTaxes) {
     payer(
       L,

@@ -273,8 +273,7 @@ export const DPA = {
    * règle de la demi-année) pour les biens prêts à être mis en service avant 2030. De 2030 à
    * 2033, seule la règle de la demi-année est suspendue; ensuite, elle s'applique de nouveau.
    */
-  facteurPremiereAnnee: (annee: number): number =>
-    annee <= 2029 ? 1.5 : annee <= 2033 ? 1 : 0.5,
+  facteurPremiereAnnee: (annee: number): number => (annee <= 2029 ? 1.5 : annee <= 2033 ? 1 : 0.5),
   source: {
     url: 'https://www.mccarthy.ca/fr/references/blogues/consumer-markets-perspectives/le-budget-2025-comprend-des-incitatifs-fiscaux-appeles-superdeduction-a-la-productivite-et-l-elimination-de-la-taxe-de-luxe-sur-certains-aeronefs-et-navires',
     verifie: '2026-10-01',

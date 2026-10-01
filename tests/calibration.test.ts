@@ -69,8 +69,18 @@ describe.runIf(actif)('calibration', () => {
       { nom: 'Gestionnaire actif', decisions: {}, multPrix: 1, gerer: true },
       { nom: 'Actif, prix +15 %', decisions: {}, multPrix: 1.15, gerer: true },
       { nom: 'Actif, prix −15 %', decisions: {}, multPrix: 0.85, gerer: true },
-      { nom: 'Actif, qualité supérieure +8 %', decisions: { qualiteId: 'superieure' }, multPrix: 1.08, gerer: true },
-      { nom: 'Actif, économique −10 %', decisions: { qualiteId: 'economique' }, multPrix: 0.9, gerer: true },
+      {
+        nom: 'Actif, qualité supérieure +8 %',
+        decisions: { qualiteId: 'superieure' },
+        multPrix: 1.08,
+        gerer: true,
+      },
+      {
+        nom: 'Actif, économique −10 %',
+        decisions: { qualiteId: 'economique' },
+        multPrix: 0.9,
+        gerer: true,
+      },
       { nom: 'Actif, sans pub', decisions: { publicite: {} }, multPrix: 1, gerer: true },
       { nom: 'Actif, pub 5000', decisions: { publicite: pub(5000) }, multPrix: 1, gerer: true },
       {
@@ -81,8 +91,26 @@ describe.runIf(actif)('calibration', () => {
         chaqueMois: (e, i) => (i === 0 ? augmentationGenerale(e, e.entreprises[0].id, 0.1) : e),
       },
       {
+        nom: 'Actif, fidélité seule',
+        decisions: { programmeFidelite: true },
+        multPrix: 1,
+        gerer: true,
+      },
+      { nom: 'Actif, livraison seule', decisions: { livraison: true }, multPrix: 1, gerer: true },
+      {
+        nom: 'Actif, éco (emballages + compost) + Panier Bleu',
+        decisions: { initiativesEco: ['emballages', 'compost'], panierBleu: true },
+        multPrix: 1,
+        gerer: true,
+      },
+      {
         nom: 'Actif, fidélité + livraison + éco',
-        decisions: { programmeFidelite: true, livraison: true, initiativesEco: ['emballages', 'compost'], panierBleu: true },
+        decisions: {
+          programmeFidelite: true,
+          livraison: true,
+          initiativesEco: ['emballages', 'compost'],
+          panierBleu: true,
+        },
         multPrix: 1,
         gerer: true,
       },
@@ -123,7 +151,10 @@ describe.runIf(actif)('calibration', () => {
               `  m${a.index + 1}: CA ${Math.round(i.chiffreAffaires)} (liv ${Math.round(i.ventesLivraison)} b2b ${Math.round(i.ventesB2B)}) BN ${Math.round(i.beneficeNet)} part ${(i.partMarche * 100).toFixed(1)}% notor ${(i.notoriete * 100).toFixed(0)}% note ${i.note.toFixed(2)} sat ${(i.satisfaction * 100).toFixed(0)} NPS ${i.nps} visites/j ${Math.round(i.servies / 30)} perdues ${i.perduesCapacite}/${i.perduesRupture}/${i.perduesCuisine} util ${(i.utilisation * 100).toFixed(0)}% MB ${(i.tauxMargeBrute * 100).toFixed(1)}% MO ${(i.tauxMainOeuvre * 100).toFixed(1)}% encaisse ${Math.round(i.encaisse)} marge ${Math.round(i.margeCreditUtilisee)} moral ${Math.round(i.moral)} emp ${i.nbEmployes} déf ${(i.tauxDefauts * 100).toFixed(1)}% CAC ${Math.round(i.cac)} CLV ${Math.round(i.clv)}`,
             );
           }
-          const pertes = ent.archives.reduce((x, a) => x + (a.mouvements.pertesStocks ?? 0) / 100, 0);
+          const pertes = ent.archives.reduce(
+            (x, a) => x + (a.mouvements.pertesStocks ?? 0) / 100,
+            0,
+          );
           lignes.push(`  pertes de stocks cumulées ${Math.round(pertes)} $`);
           const c = etat.concurrents.map(
             (x) =>
@@ -132,7 +163,9 @@ describe.runIf(actif)('calibration', () => {
           lignes.push('  ' + c.join(' | '));
         }
       }
-      console.log(`\n=== ${s.nom} : BN cumulé moyen ${Math.round(total / 10)} $, faillites ${faillites}/10\n${lignes.join('\n')}`);
+      console.log(
+        `\n=== ${s.nom} : BN cumulé moyen ${Math.round(total / 10)} $, faillites ${faillites}/10\n${lignes.join('\n')}`,
+      );
     }
   });
 });

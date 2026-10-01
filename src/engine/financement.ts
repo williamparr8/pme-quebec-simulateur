@@ -202,7 +202,11 @@ export function validerSources(
 }
 
 /** Taux annuel d'une source au démarrage. */
-export function tauxSource(id: IdSourceFinancement | 'banque', conj: Conjoncture, variable = false) {
+export function tauxSource(
+  id: IdSourceFinancement | 'banque',
+  conj: Conjoncture,
+  variable = false,
+) {
   const s = sourceFinancementParId(id);
   if (s.ecartTaux === null) return s.tauxFixe ?? 0;
   const ecart = id === 'banque' && variable ? s.ecartTaux - 0.005 : s.ecartTaux;
@@ -299,5 +303,8 @@ export function typePlacement(id: string) {
 }
 
 export function tauxPlacement(id: string, conj: Conjoncture): number {
-  return Math.max(0.0025, Math.round((conj.tauxDirecteur + typePlacement(id).ecart) * 10000) / 10000);
+  return Math.max(
+    0.0025,
+    Math.round((conj.tauxDirecteur + typePlacement(id).ecart) * 10000) / 10000,
+  );
 }

@@ -136,8 +136,11 @@ describe('segments et livraison', () => {
   it('les étudiants réagissent plus au prix et à l’écoresponsabilité que les professionnels', () => {
     const vert = offre('vert', { eco: 0.8, notoriete: 0.5 });
     const r = simulerMarche([offre('base'), vert], cafe, 30_000, 1, { segments });
-    const gainEtudiants = r.resultats.vert.parSegment.etudiants.demande / r.resultats.base.parSegment.etudiants.demande;
-    const gainPros = r.resultats.vert.parSegment.professionnels.demande / r.resultats.base.parSegment.professionnels.demande;
+    const gainEtudiants =
+      r.resultats.vert.parSegment.etudiants.demande / r.resultats.base.parSegment.etudiants.demande;
+    const gainPros =
+      r.resultats.vert.parSegment.professionnels.demande /
+      r.resultats.base.parSegment.professionnels.demande;
     expect(gainEtudiants).toBeGreaterThan(gainPros);
   });
 });
