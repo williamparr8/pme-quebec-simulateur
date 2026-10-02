@@ -1,11 +1,18 @@
 /** Mode histoire et croissance (étapes A1 à A5 du plan de la suite). */
 import { describe, expect, it } from 'vitest';
 import { secteurParId } from '../src/data';
+import { ecritureSimple, totalBalance } from '../src/engine/accounting';
+import type { EtatPartie } from '../src/engine/types';
+import { versCents } from '../src/engine/util';
 import { demarchesSecteur, estObligatoire } from '../src/engine/conformite';
 import { evaluerCredit } from '../src/engine/financement';
 import {
   FORMATIONS_PROPRIETAIRE,
+  affecterEmploye,
   creerPartie,
+  fermerSuccursale,
+  nbEtablissements,
+  ouvrirSuccursale,
   embaucher,
   evoluerPalier,
   facteurAchatsPalier,
@@ -151,5 +158,60 @@ describe('A4 : paliers de croissance', () => {
     ent.croissance = { palier: 'pme', depuis: 0 };
     expect(evoluerPalier(ent, 5)).toBeNull();
     expect(palier(ent)).toBe('pme');
+  });
+});
+
+describe('A5 : succursales', () => {
+  /** Ajoute de l'argent (apport du propriétaire) pour pouvoir ouvrir une succursale. */
+  const avecApport = (etat: EtatPartie, montant: number): EtatPartie => {
+    const e = structuredClone(etat);
+    ecritureSimple(e.entreprises[0].livre, 'Apport (test)', 'encaisse', 'capital', versCents(montant), 'apportsProprietaire');
+    return e;
+  };
+
+  it('il faut assez d’encaisse pour ouvrir une succursale', () => {
+    const etat = jouerMois(partie(), 2);
+    const apres = ouvrirSuccursale(etat, 'joueur-1', 'residentiel');
+    expect(apres.entreprises[0].succursales ?? []).toHaveLength(0);
+  });
+
+  it('ouvre une succursale avec son équipe, ses actifs et un bilan équilibré', () => {
+    const etat = avecApport(jouerMois(partie(), 2), 250_000);
+    const avant = etat.entreprises[0];
+    const apres = ouvrirSuccursale(etat, 'joueur-1', 'residentiel', 'Café du Coin – Rosemont');
+    const ent = apres.entreprises[0];
+    expect(ent.succursales).toHaveLength(1);
+    const s = ent.succursales![0];
+    expect(s.nom).toBe('Café du Coin – Rosemont');
+    const equipe = secteurParId('cafe').equipeDepart.reduce((a, x) => a + x.nombre, 0);
+    expect(ent.employes.filter((e) => e.site === s.id)).toHaveLength(equipe);
+    expect(ent.immobilisations.length).toBe(avant.immobilisations.length + 2);
+    expect(totalBalance(ent.livre.soldes)).toBe(0);
+    expect(nbEtablissements(ent)).toBe(2);
+  });
+
+  it('la succursale vend aussi : résultats par établissement et ventes totales plus élevées', () => {
+    const base = avecApport(jouerMois(partie(), 2), 250_000);
+    const avec = simulerMois(ouvrirSuccursale(base, 'joueur-1', 'rue'));
+    const sans = simulerMois(base);
+    const a = avec.entreprises[0].archives.at(-1)!;
+    expect(a.sites).toHaveLength(2);
+    const total = a.sites!.reduce((t, x) => t + x.servies, 0);
+    expect(Math.abs(total - a.indicateurs.servies)).toBeLessThanOrEqual(2);
+    expect(a.indicateurs.servies).toBeGreaterThan(sans.entreprises[0].archives.at(-1)!.indicateurs.servies);
+    expect(totalBalance(avec.entreprises[0].livre.soldes)).toBe(0);
+  });
+
+  it('fermer une succursale mute l’équipe et coûte une pénalité de bail', () => {
+    const ouverte = ouvrirSuccursale(avecApport(partie(), 250_000), 'joueur-1', 'residentiel');
+    const s = ouverte.entreprises[0].succursales![0];
+    const emp = ouverte.entreprises[0].employes.find((e) => e.site === s.id)!;
+    const mute = affecterEmploye(ouverte, 'joueur-1', emp.id, null);
+    expect(mute.entreprises[0].employes.find((e) => e.id === emp.id)!.site).toBeUndefined();
+    const fermee = fermerSuccursale(ouverte, 'joueur-1', s.id);
+    const ent = fermee.entreprises[0];
+    expect(ent.succursales).toHaveLength(0);
+    expect(ent.employes.every((e) => !e.site)).toBe(true);
+    expect(ent.livre.soldes.encaisse).toBeLessThan(ouverte.entreprises[0].livre.soldes.encaisse);
   });
 });

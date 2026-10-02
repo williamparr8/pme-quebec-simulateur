@@ -160,7 +160,7 @@ export const BORNES_DECISIONS = {
 
 /** Bail commercial de 5 ans, indexé de 2,5 % par année. */
 export const DUREE_BAIL_MOIS = 60;
-const INDEXATION_BAIL = 0.025;
+export const INDEXATION_BAIL = 0.025;
 /** Part du potentiel du marché qu'un nouveau commerce sert le premier mois (premières commandes). */
 const PART_VISITES_ESTIMEES = 0.07;
 

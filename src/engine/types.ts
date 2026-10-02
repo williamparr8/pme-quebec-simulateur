@@ -262,6 +262,8 @@ export interface Employe {
   trait: string;
   formations: string[];
   moisAnciennete: number;
+  /** Succursale où travaille l’employé (absent : le premier commerce). */
+  site?: string;
   /** Salaire brut cumulé depuis le 1er janvier (pour les plafonds de cotisation). */
   cumulBrutAnnee: number;
   /** Index du mois de la dernière évaluation (null : jamais). */
@@ -642,6 +644,14 @@ export interface MoisArchive {
   concurrents: { id: string; part: number; prixIndice: number; note: number; notoriete: number }[];
   /** Résumé des décisions du mois (sert au rapport de fin : meilleures et pires décisions). */
   resume?: ResumeDecisions;
+  /** Résultats par établissement (quand l'entreprise a des succursales). */
+  sites?: {
+    id: string;
+    nom: string;
+    servies: number;
+    perduesCapacite: number;
+    chiffreAffaires: number;
+  }[];
 }
 
 /** Résumé chiffré des décisions d'un mois, comparé d'un mois à l'autre. */

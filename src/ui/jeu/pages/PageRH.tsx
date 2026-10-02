@@ -19,6 +19,7 @@ import {
 import { coutAnnuelEmploye, salaireMensuel } from '../../../engine/payroll';
 import {
   BORNES_DECISIONS,
+  affecterEmploye,
   afficherPoste,
   augmentationGenerale,
   congedier,
@@ -70,7 +71,7 @@ function BarreMoral({ moral }: { moral: number }) {
 // ---------------------------------------------------------------------------
 
 function LigneEmploye({ e }: { e: Employe }) {
-  const { etat, secteur } = useJeuCourant();
+  const { etat, ent, secteur } = useJeuCourant();
   const agir = useJeu((s) => s.agir);
   const [formation, setFormation] = useState('');
   const poste = posteParId(e.posteId);
@@ -90,6 +91,25 @@ function LigneEmploye({ e }: { e: Employe }) {
         <p className="text-xs text-doux" title={trait.description}>
           {poste.nom} · {trait.nom}
         </p>
+        {(ent.succursales?.length ?? 0) > 0 && (
+          <label className="mt-1 flex items-center gap-1 text-xs">
+            <span className="text-doux">Établissement</span>
+            <select
+              value={e.site ?? ''}
+              onChange={(ev) =>
+                agir((s, id) => affecterEmploye(s, id, e.id, ev.target.value || null))
+              }
+              className="rounded border border-bordure bg-surface-2 px-1 py-0.5"
+            >
+              <option value="">{ent.nom}</option>
+              {ent.succursales?.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.nom}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         {e.formations.length > 0 && (
           <p className="text-xs text-doux">
             Formé :{' '}

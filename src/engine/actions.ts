@@ -31,8 +31,11 @@ import {
 import {
   BORNES_DECISIONS,
   DIFFICULTES,
+  DUREE_BAIL_MOIS,
+  INDEXATION_BAIL,
   amenagementDe,
   dateDuMois,
+  equipementDe,
   facteurMarcheEquipes,
   parId,
   politiqueParDefaut,
@@ -41,6 +44,7 @@ import {
 } from './creation';
 import { FORMATIONS_PROPRIETAIRE, gagnerCompetence, niveauCompetence } from './competences';
 import { corrigerQuiz, utiliserRabais } from './quiz';
+import { MAX_SUCCURSALES, MOIS_PENALITE_FERMETURE, coutsSuccursale } from './succursales';
 import type { IdTypeEtude, LigneProduit } from './data-types';
 import { chomageVille, conjonctureInitiale, tauxPreferentiel } from './economy';
 import { payer } from './ecritures';
@@ -455,6 +459,7 @@ export function embaucher(
   entrepriseId: string,
   heuresSemaine?: number,
   posteId?: string,
+  site?: string,
 ): EtatPartie {
   return action(etat, entrepriseId, (ent, e) => {
     const secteur = secteurParId(e.config.secteurId);
@@ -472,7 +477,9 @@ export function embaucher(
       e.salaireMinimum,
       salaireMarchePoste(poste, ville.indiceSalaires, e.conjoncture.indicePrix),
     );
-    ent.employes.push(genererEmploye(nouvelId(ent, 'emp'), poste, heures, salaire, rng));
+    const employe = genererEmploye(nouvelId(ent, 'emp'), poste, heures, salaire, rng);
+    if (site && ent.succursales?.some((s) => s.id === site)) employe.site = site;
+    ent.employes.push(employe);
     payer(
       ent.livre,
       ent,
@@ -1254,5 +1261,151 @@ export function formerProprietaire(
     );
     ent.formationsProprietaire.push(f.id);
     gagnerCompetence(ent, f.domaine, f.gain);
+  });
+}
+
+/**
+ * Ouvre une succursale dans la même ville : même équipement et même aménagement que le premier
+ * commerce, nouveau bail, dépôt de garantie et frais d'ouverture. L'encaisse doit couvrir le
+ * coût (sinon, il faut d'abord emprunter). L'équipe de départ du secteur y est embauchée.
+ */
+export function ouvrirSuccursale(
+  etat: EtatPartie,
+  entrepriseId: string,
+  emplacementId: string,
+  nom?: string,
+): EtatPartie {
+  let nouveau: string | null = null;
+  const apres = action(etat, entrepriseId, (ent, e) => {
+    const secteur = secteurParId(e.config.secteurId);
+    const ville = villeParId(e.config.villeId);
+    if ((ent.succursales?.length ?? 0) >= MAX_SUCCURSALES) return;
+    if (!secteur.emplacements.includes(emplacementId)) return;
+    const couts = coutsSuccursale(ent, secteur, ville, emplacementId);
+    if (ent.livre.soldes.encaisse / 100 < couts.total) return;
+    const index = indexCourant(e);
+    const id = nouvelId(ent, 'succ');
+    const numero = (ent.succursales?.length ?? 0) + 2;
+    const libelle = nom?.trim() || `${ent.nom} (succursale ${numero})`;
+    const equipement = equipementDe(secteur, ent.equipementId);
+    const amenagement = amenagementDe(secteur, ent.amenagementId);
+    for (const [bien, type, classe, duree] of [
+      [
+        equipement,
+        equipement.type ?? 'equipement',
+        equipement.classeDpa ?? '8',
+        equipement.dureeVieMois,
+      ],
+      [
+        amenagement,
+        amenagement.type ?? 'ameliorations',
+        amenagement.classeDpa ?? '13',
+        amenagement.dureeVieMois ?? DUREE_BAIL_MOIS,
+      ],
+    ] as const) {
+      const compte = COMPTES_IMMOBILISATIONS[type].actif;
+      const avant = ent.livre.soldes[compte];
+      payer(
+        ent.livre,
+        ent,
+        `${libelle} : ${bien.nom}`,
+        compte,
+        bien.cout,
+        true,
+        'acquisitionImmobilisations',
+      );
+      const cout = versDollars(ent.livre.soldes[compte] - avant);
+      ent.immobilisations.push({
+        id: nouvelId(ent, 'immo'),
+        nom: `${bien.nom} (${libelle})`,
+        type,
+        classeDpa: classe,
+        cout,
+        dureeVieMois: duree,
+        acquisition: index,
+        amortCumule: 0,
+      });
+      ajouterAcquisition(ent.fiscal, classe, cout);
+    }
+    ecritureSimple(
+      ent.livre,
+      `Dépôt de garantie du bail : ${libelle}`,
+      'depotGarantie',
+      'encaisse',
+      versCents(couts.depotGarantie),
+      'depotGarantie',
+    );
+    payer(
+      ent.livre,
+      ent,
+      `Frais d’ouverture : ${libelle}`,
+      'fraisDemarrage',
+      couts.fraisOuverture,
+      true,
+      'fraisDemarrage',
+    );
+    ent.succursales = [
+      ...(ent.succursales ?? []),
+      {
+        id,
+        nom: libelle,
+        emplacementId,
+        ouverture: index,
+        bail: {
+          loyerMensuel: versCents(couts.loyerMensuel),
+          dureeMois: DUREE_BAIL_MOIS,
+          indexation: INDEXATION_BAIL,
+        },
+      },
+    ];
+    nouveau = id;
+  });
+  if (!nouveau) return apres;
+  let resultat = apres;
+  const secteur = secteurParId(etat.config.secteurId);
+  for (const eq of secteur.equipeDepart)
+    for (let k = 0; k < eq.nombre; k++)
+      resultat = embaucher(resultat, entrepriseId, undefined, eq.posteId, nouveau);
+  return resultat;
+}
+
+/**
+ * Ferme une succursale : pénalité de résiliation du bail, et son équipe est mutée au premier
+ * commerce (on pourra ensuite réduire l'équipe). L'équipement reste à l'entreprise.
+ */
+export function fermerSuccursale(
+  etat: EtatPartie,
+  entrepriseId: string,
+  succursaleId: string,
+): EtatPartie {
+  return action(etat, entrepriseId, (ent) => {
+    const s = ent.succursales?.find((x) => x.id === succursaleId);
+    if (!s) return;
+    payer(
+      ent.livre,
+      ent,
+      `Résiliation du bail : ${s.nom}`,
+      'loyer',
+      versDollars(s.bail.loyerMensuel) * MOIS_PENALITE_FERMETURE,
+      true,
+      'loyerEtFrais',
+    );
+    for (const e of ent.employes) if (e.site === s.id) delete e.site;
+    ent.succursales = (ent.succursales ?? []).filter((x) => x.id !== s.id);
+  });
+}
+
+/** Mute un employé dans un autre établissement (null : le premier commerce). */
+export function affecterEmploye(
+  etat: EtatPartie,
+  entrepriseId: string,
+  employeId: string,
+  site: string | null,
+): EtatPartie {
+  return action(etat, entrepriseId, (ent) => {
+    const e = ent.employes.find((x) => x.id === employeId);
+    if (!e) return;
+    if (site && ent.succursales?.some((s) => s.id === site)) e.site = site;
+    else delete e.site;
   });
 }

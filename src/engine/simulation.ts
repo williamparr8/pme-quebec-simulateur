@@ -86,6 +86,7 @@ import {
   validerDecisions,
 } from './creation';
 import { resumeDecisions } from './bilan';
+import { fusionnerResultats } from './succursales';
 import { evoluerPalier, facteurAchatsPalier, honorairesPalier } from './croissance';
 import {
   bonusCapaciteGestion,
@@ -213,6 +214,7 @@ export { conformeHygiene } from './hr';
 export * from './bilan';
 export * from './competences';
 export * from './conseiller';
+export * from './succursales';
 export * from './croissance';
 export * from './dialogues';
 export * from './quiz';
@@ -284,6 +286,8 @@ interface ContexteMois {
 
 interface Preparation {
   offre: Offre;
+  /** Offres des succursales (même marque, autre local et autre équipe). */
+  sites?: { id: string; nom: string; capacite: number; offre: Offre }[];
   capacite: number;
   /** Minutes de production disponibles ce mois-ci. */
   minutesProduction: number;
@@ -619,7 +623,66 @@ export function minutesLigne(ligne: LigneProduit, secteur: Secteur): number {
   return ligne.production ? (ligne.minutesProduction ?? secteur.minutesProductionDefaut) : 0;
 }
 
+/** Offre du premier commerce, puis une offre par succursale. */
 function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]): Preparation {
+  const prep = preparerOffrePrincipale(ent, ctx, messages);
+  if (!ent.succursales?.length) return prep;
+  const { secteur } = ctx;
+  const d = ent.decisions;
+  const ouvert = 1 - borner(ent.joursFermeture / 30, 0, 1);
+  const facteurMois = ent.effetsMois.capacite * modificateur(ent, 'capacite');
+  const avantages =
+    ent.employes.length > 0
+      ? ent.employes.reduce(
+          (a, e) => a + effetsAvantages(d.avantages, e.heuresSemaine).capacite,
+          0,
+        ) / ent.employes.length
+      : 0;
+  prep.sites = ent.succursales.map((s) => {
+    let service = 0;
+    let heures = 0;
+    for (const e of ent.employes) {
+      if (e.site !== s.id) continue;
+      const poste = posteParId(e.posteId);
+      const h = e.heuresSemaine * (1 - e.absenteisme);
+      service +=
+        h *
+        e.competence *
+        facteurMoral(e.moral) *
+        facteurIntegration(e.moisAnciennete) *
+        poste.productiviteService;
+      if (poste.productiviteService >= 0.25) heures += e.heuresSemaine;
+    }
+    const capacite = Math.floor(
+      service *
+        SEMAINES_PAR_MOIS *
+        secteur.transactionsParHeureEmploye *
+        ouvert *
+        facteurMois *
+        (1 + prep.effets.capaciteService + avantages + bonusCapaciteGestion(ent)),
+    );
+    const emplacement = emplacementDe(ctx.ville, s.emplacementId);
+    return {
+      id: s.id,
+      nom: s.nom,
+      capacite,
+      offre: {
+        ...prep.offre,
+        id: `${ent.id}@${s.id}`,
+        capaciteVisites: capacite,
+        heuresOuverture: Math.min(d.heuresOuverture, heures),
+        bonusEmplacement: secteur.importanceEmplacement * Math.log(emplacement.achalandage),
+      },
+    };
+  });
+  return prep;
+}
+
+function preparerOffrePrincipale(
+  ent: Entreprise,
+  ctx: ContexteMois,
+  messages: Message[],
+): Preparation {
   const d = ent.decisions;
   const { secteur, conj } = ctx;
   const emplacement = emplacementDe(ctx.ville, ent.emplacementId);
@@ -655,10 +718,12 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
     const poste = posteParId(e.posteId);
     const h = e.heuresSemaine * (1 - e.absenteisme);
     const prod = h * e.competence * facteurMoral(e.moral) * facteurIntegration(e.moisAnciennete);
-    service += prod * poste.productiviteService;
     production += prod * poste.productiviteProduction;
-    if (poste.productiviteService >= 0.25) heuresService += e.heuresSemaine;
     if (poste.role === 'production' && poste.productiviteProduction > 0) producteurs += 1;
+    // Les employés des succursales servent les clients de leur succursale.
+    if (e.site) continue;
+    service += prod * poste.productiviteService;
+    if (poste.productiviteService >= 0.25) heuresService += e.heuresSemaine;
   }
   const sansProducteur = producteurs === 0;
   // Sans employé de production, l'équipe de service dépanne un peu (ex. sandwichs au comptoir).
@@ -1518,6 +1583,20 @@ function simulerEntreprise(
     true,
     'loyerEtFrais',
   );
+  for (const s of ent.succursales ?? []) {
+    // Bail de la succursale indexé à chaque anniversaire de son ouverture.
+    if (ctx.index > s.ouverture && (ctx.index - s.ouverture) % 12 === 0)
+      s.bail.loyerMensuel = Math.round(s.bail.loyerMensuel * (1 + s.bail.indexation));
+    payer(
+      L,
+      ent,
+      `Loyer et frais communs : ${s.nom}`,
+      'loyer',
+      versDollars(s.bail.loyerMensuel),
+      true,
+      'loyerEtFrais',
+    );
+  }
   const commis = Math.min(1, heuresPoste(ent, 'administration') / 10);
   for (const [cle, montant] of Object.entries(secteur.fraisFixesMensuels) as [
     keyof FraisFixesMensuels,
@@ -1525,7 +1604,8 @@ function simulerEntreprise(
   ][]) {
     const { compte, libelle, taxable } = COMPTES_FRAIS_FIXES[cle];
     if (cle === 'assurances' && !ent.demarches.assurances) continue;
-    let base = montant;
+    // Chaque succursale a ses propres frais d'exploitation (le comptable reste le même).
+    let base = cle === 'comptable' ? montant : montant * (1 + (ent.succursales?.length ?? 0));
     if (cle === 'comptable') {
       base += fraisComptablesForme(ent.formeJuridique);
       if (!ent.demarches.compteBancaire)
@@ -2339,7 +2419,10 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
     preparations.set(ent.id, preparerOffre(ent, ctx, debut));
   }
   const offres: Offre[] = [
-    ...actives.map((e) => (preparations.get(e.id) as Preparation).offre),
+    ...actives.flatMap((e) => {
+      const p = preparations.get(e.id) as Preparation;
+      return [p.offre, ...(p.sites ?? []).map((s) => s.offre)];
+    }),
     ...etat.concurrents.filter((c) => c.actif).map(offreConcurrent),
   ];
   const marche = simulerMarche(offres, secteur, potentiel, conj.indicePrix, {
@@ -2369,8 +2452,32 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
   // 6. Résultats et comptabilité de chaque entreprise des joueurs
   for (const ent of actives) {
     const prep = preparations.get(ent.id) as Preparation;
-    simulerEntreprise(ent, prep, marche.resultats[ent.id] ?? resultatVide(), ctx);
+    const principal = marche.resultats[ent.id] ?? resultatVide();
+    const sites = (prep.sites ?? []).map((s) => ({
+      s,
+      r: marche.resultats[s.offre.id] ?? resultatVide(),
+    }));
+    let resultat = principal;
+    for (const { s, r } of sites) {
+      resultat = fusionnerResultats(resultat, r);
+      prep.capacite += s.capacite;
+    }
+    simulerEntreprise(ent, prep, resultat, ctx);
     const archive = ent.archives.at(-1) as MoisArchive;
+    // Ventes par établissement, ramenées au total réel (après les ruptures de stock).
+    const totalServies = principal.servies + sites.reduce((t, x) => t + x.r.servies, 0);
+    const k = totalServies > 0 ? archive.indicateurs.servies / totalServies : 0;
+    if (sites.length > 0)
+      archive.sites = [
+        { id: 'principal', nom: ent.nom, r: principal },
+        ...sites.map(({ s, r }) => ({ id: s.id, nom: s.nom, r })),
+      ].map(({ id, nom, r }) => ({
+        id,
+        nom,
+        servies: Math.round(r.servies * k),
+        perduesCapacite: r.perduesCapacite,
+        chiffreAffaires: Math.round(r.chiffreAffaires * k),
+      }));
     archive.resume = resumeDecisions(ent, archive);
     progresserCompetences(ent, archive, (defId) => dilemmeParId(defId).categorie);
     const palier = evoluerPalier(ent, archive.index);
