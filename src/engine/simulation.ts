@@ -212,6 +212,7 @@ export { conformeHygiene } from './hr';
 export * from './bilan';
 export * from './competences';
 export * from './conseiller';
+export * from './dialogues';
 export * from './quiz';
 export * from './scenarios';
 

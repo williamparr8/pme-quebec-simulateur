@@ -11,6 +11,7 @@ import { TitrePage } from '../../composants/TitrePage';
 import { useJeuCourant, variation } from '../contexte';
 import { CarteConseiller, CarteObjectifs, CarteQuiz } from '../Conseiller';
 import { CarteDilemmes } from '../Dilemmes';
+import { CarteEntourage } from '../Entourage';
 import { CarteNouvelles } from '../Nouvelles';
 import { posteParId } from '../../../data';
 
@@ -72,6 +73,7 @@ export function PageTableau() {
       <CarteObjectifs />
       <CarteDilemmes />
       <CarteConseiller />
+      <CarteEntourage />
       <CarteQuiz />
       {(ent.b2b.appels.some((a) => a.soumission === null) ||
         ent.rh.candidats.some((c) => c.statut === 'disponible')) && (

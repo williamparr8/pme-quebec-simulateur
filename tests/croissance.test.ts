@@ -4,6 +4,7 @@ import { evaluerCredit } from '../src/engine/financement';
 import {
   FORMATIONS_PROPRIETAIRE,
   creerPartie,
+  dialoguesDuMois,
   facteurFraisComptables,
   formerProprietaire,
   maitrise,
@@ -11,6 +12,7 @@ import {
   questionsQuiz,
   repondreQuiz,
 } from '../src/engine/simulation';
+import { REPLIQUES } from '../src/i18n/messages-croissance';
 import { configTest, demarrageSecteur, jouerMois } from './helpers';
 
 const partie = (profil?: 'gestion' | 'finance' | 'marketing' | 'rh' | 'fiscalite', graine = 3) =>
@@ -73,5 +75,38 @@ describe('A1 : compétences du propriétaire', () => {
     const total = (e: typeof ent) => Object.values(e.competences ?? {}).reduce((a, x) => a + x, 0);
     etat = repondreQuiz(etat, ent.id, Object.fromEntries(questions.map((q) => [q.id, q.bonne])));
     expect(total(etat.entreprises[0])).toBeGreaterThan(total(ent));
+  });
+});
+
+describe('A2 : personnages récurrents et dialogues', () => {
+  it('la mentore accueille le joueur au premier mois', () => {
+    const etat = partie();
+    expect(dialoguesDuMois(etat, etat.entreprises[0])[0]).toMatchObject({
+      personnage: 'mentore',
+      code: 'mentoreBienvenue',
+    });
+  });
+
+  it('chaque réplique a un texte, au plus 3 par mois, un personnage à la fois', () => {
+    let etat = partie();
+    for (let m = 0; m < 30 && !etat.terminee; m++) {
+      const r = dialoguesDuMois(etat, etat.entreprises[0]);
+      expect(r.length).toBeLessThanOrEqual(3);
+      expect(new Set(r.map((x) => x.personnage)).size).toBe(r.length);
+      for (const x of r) expect(REPLIQUES[x.code]?.(x.params ?? {}).length).toBeGreaterThan(20);
+      etat = jouerMois(etat, 1);
+    }
+  });
+
+  it('la banquière réagit à la marge de crédit et le comptable aux taxes', () => {
+    const etat = structuredClone(jouerMois(partie(), 3));
+    const ent = etat.entreprises[0];
+    const i = ent.archives.at(-1)!.indicateurs;
+    i.margeCreditUtilisee = 0.9 * (ent.margeCredit.limite / 100);
+    ent.fiscal.doitSInscrire = true;
+    ent.fiscal.inscritTaxes = false;
+    const codes = dialoguesDuMois(etat, ent).map((x) => x.code);
+    expect(codes).toContain('banquiereMarge');
+    expect(codes).toContain('comptableTaxes');
   });
 });

@@ -1,0 +1,40 @@
+{
+  "_source": "Personnages fictifs du jeu (toute ressemblance avec une personne réelle serait fortuite).",
+  "personnages": [
+    {
+      "id": "mentore",
+      "nom": "Monique Gagnon",
+      "role": "Ta mentore, ancienne propriétaire d’une quincaillerie",
+      "couleur": "#7c3aed",
+      "description": "Elle a tenu un commerce pendant 30 ans. Franche, chaleureuse, elle a tout vu."
+    },
+    {
+      "id": "banquiere",
+      "nom": "Sophie Lavoie",
+      "role": "Directrice de compte, Caisse du Faubourg",
+      "couleur": "#0f766e",
+      "description": "Prudente et précise. Elle te vouvoie et regarde d’abord tes ratios."
+    },
+    {
+      "id": "comptable",
+      "nom": "Karim Benali",
+      "role": "CPA, Benali et associés",
+      "couleur": "#b45309",
+      "description": "Ton comptable. Il connaît les dates limites par cœur et déteste les surprises."
+    },
+    {
+      "id": "rival",
+      "nom": "Jean-François Roy",
+      "role": "Propriétaire d’un commerce concurrent",
+      "couleur": "#b91c1c",
+      "description": "Ambitieux et un brin arrogant. Il surveille tout ce que tu fais."
+    },
+    {
+      "id": "fournisseur",
+      "nom": "Isabelle Côté",
+      "role": "Représentante de ton fournisseur principal",
+      "couleur": "#1d4ed8",
+      "description": "Toujours de bonne humeur, mais elle tient à ses délais de paiement."
+    }
+  ]
+}
