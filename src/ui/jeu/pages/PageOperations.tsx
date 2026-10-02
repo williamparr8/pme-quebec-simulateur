@@ -20,11 +20,12 @@ import { ChoixCartes } from '../../composants/ChoixCartes';
 import { Curseur } from '../../composants/Curseur';
 import { Indicateur } from '../../composants/Indicateur';
 import { SousOnglets } from '../../composants/SousOnglets';
+import { VueCroissance } from './Croissance';
 import { Terme } from '../../composants/Terme';
 import { TitrePage } from '../../composants/TitrePage';
 import { useJeuCourant } from '../contexte';
 
-type Vue = 'capacite' | 'approvisionnement' | 'stocks';
+type Vue = 'capacite' | 'approvisionnement' | 'stocks' | 'croissance';
 
 const CONDITIONS: Record<string, string> = {
   comptant: 'payé à la livraison',
@@ -466,11 +467,13 @@ export function PageOperations() {
           { id: 'capacite', nom: 'Capacité et qualité' },
           { id: 'approvisionnement', nom: 'Fournisseurs et commandes' },
           { id: 'stocks', nom: 'Stocks' },
+          { id: 'croissance', nom: 'Croissance et succursales' },
         ]}
       >
         {vue === 'capacite' && <VueCapacite />}
         {vue === 'approvisionnement' && <VueApprovisionnement />}
         {vue === 'stocks' && <VueStocks />}
+        {vue === 'croissance' && <VueCroissance />}
       </SousOnglets>
     </div>
   );

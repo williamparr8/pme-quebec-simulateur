@@ -1,9 +1,17 @@
 /** Mode histoire et croissance (étapes A1 à A5 du plan de la suite). */
 import { describe, expect, it } from 'vitest';
+import { secteurParId } from '../src/data';
+import { demarchesSecteur, estObligatoire } from '../src/engine/conformite';
 import { evaluerCredit } from '../src/engine/financement';
 import {
   FORMATIONS_PROPRIETAIRE,
   creerPartie,
+  embaucher,
+  evoluerPalier,
+  facteurAchatsPalier,
+  honorairesPalier,
+  palier,
+  simulerMois,
   dialoguesDuMois,
   facteurFraisComptables,
   formerProprietaire,
@@ -108,5 +116,40 @@ describe('A2 : personnages récurrents et dialogues', () => {
     const codes = dialoguesDuMois(etat, ent).map((x) => x.code);
     expect(codes).toContain('banquiereMarge');
     expect(codes).toContain('comptableTaxes');
+  });
+});
+
+describe('A4 : paliers de croissance', () => {
+  it('une petite entreprise devient PME en dépassant le seuil d’employés', () => {
+    let etat = jouerMois(partie(), 2);
+    expect(palier(etat.entreprises[0])).toBe('petite');
+    for (let k = 0; k < 14; k++) etat = embaucher(etat, 'joueur-1');
+    const limite = etat.entreprises[0].margeCredit.limite;
+    etat = simulerMois(etat);
+    const ent = etat.entreprises[0];
+    expect(palier(ent)).toBe('pme');
+    expect(ent.margeCredit.limite).toBe(limite * 2);
+    expect(ent.archives.at(-1)!.messages.some((m) => m.code === 'palierAtteint')).toBe(true);
+    expect(facteurAchatsPalier(ent)).toBeCloseTo(0.97);
+    expect(honorairesPalier(ent)).toBe(400);
+  });
+
+  it('les obligations liées au nombre d’employés s’appliquent au bon seuil', () => {
+    const secteur = secteurParId('cafe');
+    expect(estObligatoire('equiteSalariale', secteur, 9)).toBe(false);
+    expect(estObligatoire('equiteSalariale', secteur, 10)).toBe(true);
+    expect(estObligatoire('comiteSst', secteur, 20)).toBe(true);
+    expect(estObligatoire('francisationOqlf', secteur, 24)).toBe(false);
+    // Elles ne font pas partie des démarches de démarrage.
+    const ent = partie().entreprises[0];
+    expect(ent.demarches.equiteSalariale).toBe(false);
+    expect(demarchesSecteur(secteur).some((d) => d.id === 'comiteSst')).toBe(false);
+  });
+
+  it('on ne redescend pas de palier', () => {
+    const ent = structuredClone(partie().entreprises[0]);
+    ent.croissance = { palier: 'pme', depuis: 0 };
+    expect(evoluerPalier(ent, 5)).toBeNull();
+    expect(palier(ent)).toBe('pme');
   });
 });

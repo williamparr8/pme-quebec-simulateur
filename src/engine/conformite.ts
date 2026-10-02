@@ -8,7 +8,8 @@ import type { Secteur } from './data-types';
 import type { FormeJuridique, IdDemarche } from './types';
 import { FORMES_SOCIETE_ACTIONS, FORMES_SOCIETE_PERSONNES } from './types';
 
-export type Obligation = 'toujours' | 'employes' | 'alimentation' | 'secteur' | 'facultative';
+export type Obligation =
+  'toujours' | 'employes' | 'alimentation' | 'secteur' | 'facultative' | 'seuilEmployes';
 
 export interface Demarche {
   id: IdDemarche;
@@ -23,6 +24,8 @@ export interface Demarche {
   organisme: string;
   sinistre?: [number, number];
   fraisComptablesSupplementaires?: number;
+  /** Nombre d’employés à partir duquel l’obligation s’applique. */
+  seuilEmployes?: number;
 }
 
 export const DEMARCHES: readonly Demarche[] = demarchesJson.demarches as Demarche[];
@@ -85,7 +88,12 @@ export function estApplicable(id: IdDemarche, secteur: Secteur): boolean {
 
 /** Démarches de démarrage du secteur. */
 export function demarchesSecteur(secteur: Secteur): Demarche[] {
-  return DEMARCHES.filter((d) => estApplicable(d.id, secteur));
+  return DEMARCHES.filter((d) => estApplicable(d.id, secteur) && d.obligation !== 'seuilEmployes');
+}
+
+/** Obligations qui s'ajoutent quand l'entreprise grandit (selon le nombre d'employés). */
+export function demarchesCroissance(): Demarche[] {
+  return DEMARCHES.filter((d) => d.obligation === 'seuilEmployes');
 }
 
 /** La démarche est-elle obligatoire maintenant? */
@@ -100,6 +108,8 @@ export function estObligatoire(id: IdDemarche, secteur: Secteur, nbEmployes: num
       return secteur.alimentation;
     case 'secteur':
       return secteur.permis.includes(id);
+    case 'seuilEmployes':
+      return nbEmployes >= (d.seuilEmployes ?? Infinity);
     default:
       return false;
   }

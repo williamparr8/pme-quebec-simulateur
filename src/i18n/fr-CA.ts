@@ -10,6 +10,7 @@ import { MESSAGES_JALON2 } from './messages-jalon2';
 import { MESSAGES_JALON3 } from './messages-jalon3';
 import { MESSAGES_JALON4 } from './messages-jalon4';
 import { MESSAGES_JALON5 } from './messages-jalon5';
+import { MESSAGES_CROISSANCE } from './messages-croissance';
 
 export interface TexteMessage {
   titre: string;
@@ -233,7 +234,8 @@ export function texteMessage(m: Message): TexteMessage {
     MESSAGES_JALON2[m.code] ??
     MESSAGES_JALON3[m.code] ??
     MESSAGES_JALON4[m.code] ??
-    MESSAGES_JALON5[m.code];
+    MESSAGES_JALON5[m.code] ??
+    MESSAGES_CROISSANCE[m.code];
   return f ? f(m.params ?? {}) : { titre: m.code, texte: '' };
 }
 

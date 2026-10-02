@@ -127,6 +127,42 @@
       "amende": 3000,
       "joursFermeture": 0,
       "organisme": "Commission d'accès à l'information et Office de la protection du consommateur"
+    },
+    {
+      "id": "equiteSalariale",
+      "nom": "Exercice d’équité salariale",
+      "description": "Obligatoire dès 10 salariés (Loi sur l’équité salariale) : comparer les emplois à prédominance féminine et masculine, corriger les écarts et afficher les résultats, puis refaire l’évaluation du maintien tous les 5 ans.",
+      "cout": 1500,
+      "obligation": "seuilEmployes",
+      "seuilEmployes": 10,
+      "probabiliteDetection": 0.06,
+      "amende": 3000,
+      "joursFermeture": 0,
+      "organisme": "CNESST"
+    },
+    {
+      "id": "comiteSst",
+      "nom": "Comité de santé et de sécurité du travail",
+      "description": "Dès 20 travailleurs, la loi modernisant le régime de santé et de sécurité du travail exige un comité de santé et de sécurité et un programme de prévention.",
+      "cout": 800,
+      "obligation": "seuilEmployes",
+      "seuilEmployes": 20,
+      "probabiliteDetection": 0.08,
+      "amende": 2500,
+      "joursFermeture": 0,
+      "organisme": "CNESST"
+    },
+    {
+      "id": "francisationOqlf",
+      "nom": "Inscription à l’Office québécois de la langue française",
+      "description": "Dès 25 employés, l’entreprise doit s’inscrire auprès de l’OQLF et analyser l’usage du français dans l’entreprise (démarche de francisation, Charte de la langue française).",
+      "cout": 500,
+      "obligation": "seuilEmployes",
+      "seuilEmployes": 25,
+      "probabiliteDetection": 0.06,
+      "amende": 3000,
+      "joursFermeture": 0,
+      "organisme": "OQLF"
     }
   ]
 }

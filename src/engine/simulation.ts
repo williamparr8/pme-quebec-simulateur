@@ -86,6 +86,7 @@ import {
   validerDecisions,
 } from './creation';
 import { resumeDecisions } from './bilan';
+import { evoluerPalier, facteurAchatsPalier, honorairesPalier } from './croissance';
 import {
   bonusCapaciteGestion,
   bonusConversionMarketing,
@@ -212,6 +213,7 @@ export { conformeHygiene } from './hr';
 export * from './bilan';
 export * from './competences';
 export * from './conseiller';
+export * from './croissance';
 export * from './dialogues';
 export * from './quiz';
 export * from './scenarios';
@@ -689,7 +691,8 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
   const proprietaireProduit = secteur.productionProprietaire >= 0.5 && heuresProprietaire > 0;
   const qualiteLignes: Record<string, number> = {};
   const coutLignes: Record<string, number> = {};
-  const facteurCouts = modificateur(ent, 'couts');
+  // Rabais de volume des fournisseurs pour une PME ou une grande entreprise.
+  const facteurCouts = modificateur(ent, 'couts') * facteurAchatsPalier(ent);
   for (const ligne of lignesStock(ent, secteur)) {
     const politique = d.approvisionnement[ligne.id];
     const fournisseurId =
@@ -1531,6 +1534,8 @@ function simulerEntreprise(
       base *= 1 - 0.6 * commis;
       // Un propriétaire qui maîtrise la fiscalité fait lui-même une partie du travail.
       base *= facteurFraisComptables(ent);
+      // Examen (PME) ou audit (grande entreprise) des états financiers exigé par les prêteurs.
+      base += honorairesPalier(ent);
     }
     payer(L, ent, libelle, compte, base * conj.indicePrix, taxable, 'loyerEtFrais');
   }
@@ -2368,6 +2373,8 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
     const archive = ent.archives.at(-1) as MoisArchive;
     archive.resume = resumeDecisions(ent, archive);
     progresserCompetences(ent, archive, (defId) => dilemmeParId(defId).categorie);
+    const palier = evoluerPalier(ent, archive.index);
+    if (palier) archive.messages.push(palier);
     archive.concurrents = etat.concurrents
       .filter((c) => c.statut !== 'aVenir')
       .map((c) => ({

@@ -50,3 +50,20 @@ export const NOMS_PALIERS: Record<string, string> = {
   pme: 'PME',
   grande: 'Grande entreprise',
 };
+
+/** Messages du rapport mensuel liés à la croissance. */
+export const MESSAGES_CROISSANCE: Record<string, (p: Params) => { titre: string; texte: string }> =
+  {
+    palierAtteint: (p) =>
+      s(p, 'palier') === 'grande'
+        ? {
+            titre: 'Ton entreprise devient une grande entreprise!',
+            texte:
+              'À l’échelle du jeu, tu diriges maintenant une grande entreprise : tes fournisseurs t’accordent 6 % de rabais de volume, mais tes prêteurs exigent un audit de tes états financiers (environ 1 500 $ par mois). Un audit donne une assurance raisonnable que les états financiers sont fiables.',
+          }
+        : {
+            titre: 'Ton entreprise devient une PME!',
+            texte:
+              'Tes fournisseurs t’accordent 3 % de rabais de volume et ta marge de crédit double. En contrepartie, ta banque exige une mission d’examen de tes états financiers (environ 400 $ par mois). Surveille aussi tes nouvelles obligations : équité salariale dès 10 employés, comité de santé et de sécurité dès 20, inscription à l’OQLF dès 25 (J).',
+          },
+  };

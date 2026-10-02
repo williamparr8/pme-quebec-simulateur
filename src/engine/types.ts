@@ -99,7 +99,10 @@ export type IdDemarche =
   | 'francisation'
   | 'racj'
   | 'pesticides'
-  | 'confidentialite';
+  | 'confidentialite'
+  | 'equiteSalariale'
+  | 'comiteSst'
+  | 'francisationOqlf';
 
 export type FrequenceTaxes = 'mensuelle' | 'trimestrielle' | 'annuelle';
 
@@ -739,6 +742,20 @@ export interface Entreprise {
   /** Compétences du propriétaire (0 à 100) et formations qu'il a suivies. */
   competences?: Record<'gestion' | 'finance' | 'marketing' | 'rh' | 'fiscalite', number>;
   formationsProprietaire?: string[];
+  /** Palier de croissance atteint (petite entreprise, PME, grande entreprise). */
+  croissance?: { palier: 'petite' | 'pme' | 'grande'; depuis: number };
+  /** Succursales (établissements en plus du premier commerce). */
+  succursales?: Succursale[];
+}
+
+/** Succursale : un établissement de plus, dans la même ville, avec son local et son équipe. */
+export interface Succursale {
+  id: string;
+  nom: string;
+  emplacementId: string;
+  /** Mois (index) d'ouverture. */
+  ouverture: number;
+  bail: Bail;
 }
 
 export interface EtatPartie {

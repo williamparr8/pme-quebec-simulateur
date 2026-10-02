@@ -698,7 +698,10 @@ function creerEntreprise(
 
   const demarches = {} as Record<IdDemarche, boolean>;
   for (const id of IDS_DEMARCHES)
-    demarches[id] = estApplicable(id, secteur) && params.demarches.includes(id);
+    demarches[id] =
+      estApplicable(id, secteur) &&
+      demarche(id).obligation !== 'seuilEmployes' &&
+      params.demarches.includes(id);
   if (immatriculationObligatoire(forme)) demarches.req = true;
 
   const employes = secteur.equipeDepart.flatMap((eq) => {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { IMPOT_SOCIETES, TAXES_VENTE } from '../../../data/fiscalite';
 import {
+  demarchesCroissance,
   demarchesSecteur,
   coutDemarche,
   estObligatoire,
@@ -104,7 +105,7 @@ function CarteDemarches() {
       sousTitre="Une démarche obligatoire oubliée peut être découverte chaque mois."
     >
       <ul className="space-y-2 text-sm">
-        {demarchesSecteur(secteur).map((d) => {
+        {[...demarchesSecteur(secteur), ...demarchesCroissance()].map((d) => {
           const fait = ent.demarches[d.id];
           const obligatoire = estObligatoire(d.id, secteur, ent.employes.length);
           const cout = coutDemarche(d.id, ent.formeJuridique);
@@ -121,7 +122,9 @@ function CarteDemarches() {
                     ? 'Fait'
                     : obligatoire
                       ? `Obligatoire, non faite : risque d’amende de ${argentRond(d.amende)}`
-                      : 'Facultative, non faite'}
+                      : d.seuilEmployes
+                        ? `Obligatoire dès ${d.seuilEmployes} employés (tu en as ${ent.employes.length})`
+                        : 'Facultative, non faite'}
                 </span>
               </span>
               {!fait && (

@@ -3,6 +3,8 @@ import { argentRond, moisAnnee } from '../../i18n/format';
 import { ONGLETS, useJeu, type Onglet } from '../../store/jeu';
 import { Bouton } from '../composants/Bouton';
 import { ChoixTheme } from '../composants/ChoixTheme';
+import { palier } from '../../engine/simulation';
+import { NOMS_PALIERS } from '../../i18n/messages-croissance';
 import { FORMES } from '../creation/formes';
 import { useJeuCourant } from './contexte';
 import { Modales } from './Modales';
@@ -64,6 +66,7 @@ function EnTete() {
             </p>
             <p className="text-sm text-doux">
               {secteur.nom} · {ville.nom} · {FORMES.find((x) => x.id === ent.formeJuridique)?.nom}
+              {` · ${NOMS_PALIERS[palier(ent)]}`}
             </p>
           </div>
         </div>
