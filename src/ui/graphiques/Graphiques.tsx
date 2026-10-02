@@ -164,7 +164,10 @@ export function GraphiqueVentesBenefice({ archives }: { archives: MoisArchive[] 
           {axes(c, abregerArgent)}
           <ReferenceLine y={0} stroke={c.axe} />
           <Tooltip formatter={(v) => argentRond(Number(v))} {...styleInfobulle(c)} />
-          <Legend wrapperStyle={{ color: c.texte, fontSize: 13 }} />
+          <Legend
+            wrapperStyle={{ color: c.texte, fontSize: 13 }}
+            formatter={(valeur: string) => <span style={{ color: c.texte }}>{valeur}</span>}
+          />
           <Line
             type="monotone"
             dataKey="ventes"
@@ -265,7 +268,10 @@ export function GraphiquePartsMarche({
         <LineChart data={donnees} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
           {axes(c, (v) => pourcentage(v, 0))}
           <Tooltip formatter={(v) => pourcentage(Number(v), 1)} {...styleInfobulle(c)} />
-          <Legend wrapperStyle={{ color: c.texte, fontSize: 13 }} />
+          <Legend
+            wrapperStyle={{ color: c.texte, fontSize: 13 }}
+            formatter={(valeur: string) => <span style={{ color: c.texte }}>{valeur}</span>}
+          />
           <Line
             type="monotone"
             dataKey="joueur"
@@ -340,7 +346,10 @@ export function GraphiqueSeuil({ seuil }: { seuil: SeuilRentabilite }) {
             labelFormatter={(v) => `Ventes : ${argentRond(Number(v))}`}
             {...styleInfobulle(c)}
           />
-          <Legend wrapperStyle={{ color: c.texte, fontSize: 13 }} />
+          <Legend
+            wrapperStyle={{ color: c.texte, fontSize: 13 }}
+            formatter={(valeur: string) => <span style={{ color: c.texte }}>{valeur}</span>}
+          />
           {seuil.seuil !== null && (
             <ReferenceLine
               x={seuil.seuil}

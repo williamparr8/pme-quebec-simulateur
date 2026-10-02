@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ComponentType, type KeyboardEvent } from 'react';
+import { lazy, Suspense, useEffect, useRef, type ComponentType, type KeyboardEvent } from 'react';
 import { argentRond, moisAnnee } from '../../i18n/format';
 import { ONGLETS, useJeu, type Onglet } from '../../store/jeu';
 import { Bouton } from '../composants/Bouton';
@@ -8,14 +8,25 @@ import { useJeuCourant } from './contexte';
 import { Modales } from './Modales';
 import { EcranPassage } from './Passage';
 import { PanneauTutoriel } from './Tutoriel';
-import { PageFinance } from './pages/PageFinance';
-import { PageJuridique } from './pages/PageJuridique';
-import { PageMarketing } from './pages/PageMarketing';
-import { PageOperations } from './pages/PageOperations';
-import { PageRH } from './pages/PageRH';
 import { PageTableau } from './pages/PageTableau';
-import { PageVentes } from './pages/PageVentes';
 import { useRaccourcis } from './useRaccourcis';
+
+const PageFinance = lazy(() =>
+  import('./pages/PageFinance').then((m) => ({ default: m.PageFinance })),
+);
+const PageJuridique = lazy(() =>
+  import('./pages/PageJuridique').then((m) => ({ default: m.PageJuridique })),
+);
+const PageMarketing = lazy(() =>
+  import('./pages/PageMarketing').then((m) => ({ default: m.PageMarketing })),
+);
+const PageOperations = lazy(() =>
+  import('./pages/PageOperations').then((m) => ({ default: m.PageOperations })),
+);
+const PageRH = lazy(() => import('./pages/PageRH').then((m) => ({ default: m.PageRH })));
+const PageVentes = lazy(() =>
+  import('./pages/PageVentes').then((m) => ({ default: m.PageVentes })),
+);
 
 const PAGES: Record<Onglet, ComponentType> = {
   tableau: PageTableau,
@@ -224,7 +235,15 @@ function Jeu() {
       <Navigation />
       <main id="contenu" className="mx-auto w-full max-w-7xl flex-1 px-4 py-5">
         <div id="panneau-departement" role="tabpanel" aria-labelledby={`onglet-${onglet}`}>
-          <Page />
+          <Suspense
+            fallback={
+              <p className="text-doux" role="status">
+                Chargement…
+              </p>
+            }
+          >
+            <Page />
+          </Suspense>
         </div>
       </main>
       <BarreFinMois />

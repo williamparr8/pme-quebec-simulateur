@@ -83,7 +83,9 @@ export function Modale({ titre, onFermer, children, taille = 'md', pied }: Props
             <span aria-hidden="true">✕</span>
           </button>
         </header>
-        <div className="max-h-[70vh] overflow-y-auto px-5 py-4">{children}</div>
+        <div tabIndex={0} className="max-h-[70vh] overflow-y-auto px-5 py-4">
+          {children}
+        </div>
         {pied && (
           <footer className="flex flex-wrap justify-end gap-2 border-t border-bordure px-5 py-3">
             {pied}

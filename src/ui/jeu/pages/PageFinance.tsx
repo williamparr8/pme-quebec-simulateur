@@ -277,7 +277,12 @@ function VueJournal({ archive }: { archive: MoisArchive | undefined }) {
   const { ent } = useJeuCourant();
   const ecritures = archive ? archive.ecritures : ent.livre.ecrituresMois;
   return (
-    <div className="overflow-x-auto">
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label="Tableau (défilement horizontal possible)"
+      className="overflow-x-auto"
+    >
       <table className="chiffres w-full min-w-[640px] text-sm">
         <caption className="mb-2 text-left font-bold">
           Journal général{' '}

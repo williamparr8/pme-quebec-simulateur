@@ -284,7 +284,12 @@ function VueEquipe() {
             Aucun employé : tu travailles seul. Recrute (onglet Recrutement).
           </p>
         ) : (
-          <div className="overflow-x-auto">
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label="Tableau (défilement horizontal possible)"
+            className="overflow-x-auto"
+          >
             <table className="w-full min-w-[920px] text-left text-sm">
               <thead>
                 <tr className="border-b border-bordure text-doux">

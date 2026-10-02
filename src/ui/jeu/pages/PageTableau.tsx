@@ -95,11 +95,13 @@ export function PageTableau() {
         nom={ent.nom}
         couleur={ent.couleur}
         mois={date.mois}
+        secteurId={secteur.id}
         clientsParJour={i ? i.servies / 30 : 25}
+        perdusParJour={i ? i.perduesCapacite / 30 : 0}
         nbEmployes={ent.employes.length}
         concurrents={etat.concurrents
-          .filter((c) => c.actif)
-          .map((c) => ({ nom: c.nom, couleur: c.couleur }))}
+          .filter((c) => c.statut !== 'aVenir')
+          .map((c) => ({ nom: c.nom, couleur: c.couleur, ferme: !c.actif }))}
       />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

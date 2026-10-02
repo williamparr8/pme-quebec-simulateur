@@ -1,17 +1,36 @@
-import { useEffect } from 'react';
-import { appliquerTheme, usePreferences } from '../store/preferences';
+import { lazy, Suspense, useEffect } from 'react';
+import { appliquerAnimations, appliquerTheme, usePreferences } from '../store/preferences';
 import { useJeu } from '../store/jeu';
 import { Infobulle } from './composants/Terme';
 import { EcranAccueil } from './accueil/EcranAccueil';
-import { EcranClassement } from './accueil/EcranClassement';
-import { EcranScenarios } from './accueil/EcranScenarios';
-import { EcranCreation } from './creation/EcranCreation';
-import { EcranJeu } from './jeu/EcranJeu';
+
+const EcranClassement = lazy(() =>
+  import('./accueil/EcranClassement').then((m) => ({ default: m.EcranClassement })),
+);
+const EcranScenarios = lazy(() =>
+  import('./accueil/EcranScenarios').then((m) => ({ default: m.EcranScenarios })),
+);
+const EcranCreation = lazy(() =>
+  import('./creation/EcranCreation').then((m) => ({ default: m.EcranCreation })),
+);
+const EcranJeu = lazy(() => import('./jeu/EcranJeu').then((m) => ({ default: m.EcranJeu })));
+
+/** Affiché pendant le chargement d'un écran (quelques dixièmes de seconde). */
+export function Chargement() {
+  return (
+    <p className="p-6 text-center text-doux" role="status">
+      Chargement…
+    </p>
+  );
+}
 
 export default function App() {
   const ecran = useJeu((s) => s.ecran);
   const annonce = useJeu((s) => s.annonce);
   const theme = usePreferences((s) => s.theme);
+  const animations = usePreferences((s) => s.animations);
+
+  useEffect(() => appliquerAnimations(animations), [animations]);
 
   // Suit le thème du système d'exploitation quand le joueur a choisi « Système ».
   useEffect(() => {
@@ -31,10 +50,12 @@ export default function App() {
         Aller au contenu principal
       </a>
       {ecran === 'accueil' && <EcranAccueil />}
-      {ecran === 'scenarios' && <EcranScenarios />}
-      {ecran === 'classement' && <EcranClassement />}
-      {ecran === 'creation' && <EcranCreation />}
-      {ecran === 'jeu' && <EcranJeu />}
+      <Suspense fallback={<Chargement />}>
+        {ecran === 'scenarios' && <EcranScenarios />}
+        {ecran === 'classement' && <EcranClassement />}
+        {ecran === 'creation' && <EcranCreation />}
+        {ecran === 'jeu' && <EcranJeu />}
+      </Suspense>
       <Infobulle />
       <div className="sr-only" role="status" aria-live="polite">
         {annonce}

@@ -4,6 +4,7 @@
  * Le localStorage peut être indisponible (navigation privée) : toutes les opérations
  * sont protégées et le jeu reste jouable sans lui.
  */
+import { compressToUTF16, decompressFromUTF16 } from 'lz-string';
 import { VERSION_ETAT, type EtatPartie } from '../engine/types';
 
 export type IdEmplacement = 'auto' | '1' | '2' | '3';
@@ -29,9 +30,29 @@ interface FichierSauvegarde {
   etat: EtatPartie;
 }
 
+/**
+ * Les sauvegardes sont compressées (lz-string) : une partie de 60 mois en équipes peut
+ * dépasser 2 Mo en JSON, alors que le navigateur ne garde qu'environ 5 Mo par site.
+ * Les anciennes sauvegardes non compressées restent lisibles.
+ */
+const MARQUE_COMPRESSION = 'lz16:';
+
+/** Compresse un texte pour le stockage du navigateur. */
+export function compresser(texte: string): string {
+  return MARQUE_COMPRESSION + compressToUTF16(texte);
+}
+
+/** Décompresse un texte stocké (ou le retourne tel quel s'il n'était pas compressé). */
+export function decompresser(brut: string): string | null {
+  return brut.startsWith(MARQUE_COMPRESSION)
+    ? decompressFromUTF16(brut.slice(MARQUE_COMPRESSION.length))
+    : brut;
+}
+
 function lire(cle: string): string | null {
   try {
-    return window.localStorage.getItem(cle);
+    const brut = window.localStorage.getItem(cle);
+    return brut === null ? null : decompresser(brut);
   } catch {
     return null;
   }
@@ -39,7 +60,7 @@ function lire(cle: string): string | null {
 
 function ecrire(cle: string, valeur: string): boolean {
   try {
-    window.localStorage.setItem(cle, valeur);
+    window.localStorage.setItem(cle, compresser(valeur));
     return true;
   } catch {
     return false;

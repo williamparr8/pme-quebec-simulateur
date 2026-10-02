@@ -3,6 +3,7 @@
  * pires décisions, choix devant les événements, comparaison avec le marché et bilan.
  * Imprimable en PDF (window.print() avec la feuille de style d'impression).
  */
+import { useEffect } from 'react';
 import { rapportFinPartie, scenarioParId } from '../../engine/simulation';
 import { argentRond, decimal, nombre, pourcentage } from '../../i18n/format';
 import {
@@ -16,6 +17,7 @@ import {
 import { useJeu } from '../../store/jeu';
 import { Bouton } from '../composants/Bouton';
 import { Modale } from '../composants/Modale';
+import { jouerSon } from '../sons';
 import { useJeuCourant } from './contexte';
 import type { DecisionMarquante } from '../../engine/bilan';
 
@@ -71,6 +73,8 @@ export function RapportFin() {
   const b = r.bilan;
   const scenario = etat.config.scenarioId ? scenarioParId(etat.config.scenarioId) : null;
   const raison = ent.enFaillite ? 'faillite' : ent.vente ? 'vente' : 'duree';
+  const reussi = r.note >= 60;
+  useEffect(() => jouerSon(reussi ? 'reussite' : 'perte'), [reussi]);
 
   const lignes: [string, string][] = [
     ['Ventes cumulées', argentRond(b.ventesCumulees)],
@@ -238,7 +242,12 @@ export function RapportFin() {
         )}
 
         <Section titre="Comparaison avec le marché">
-          <div className="overflow-x-auto">
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label="Tableau (défilement horizontal possible)"
+            className="overflow-x-auto"
+          >
             <table className="chiffres w-full text-sm">
               <thead>
                 <tr className="border-b border-bordure text-left">

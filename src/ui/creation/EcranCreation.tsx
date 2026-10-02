@@ -523,7 +523,12 @@ export function EcranCreation() {
                   />
                 </div>
               )}
-              <div className="overflow-x-auto">
+              <div
+                tabIndex={0}
+                role="region"
+                aria-label="Tableau (défilement horizontal possible)"
+                className="overflow-x-auto"
+              >
                 <table className="w-full min-w-[720px] text-left text-sm">
                   <caption className="mb-2 text-left font-bold">
                     Comparatif des formes juridiques

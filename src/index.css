@@ -154,6 +154,114 @@ input[type='range'] {
   animation: tomber var(--duree, 6s) linear infinite;
 }
 
+/* Scène animée (Jalon 6) */
+@keyframes visite {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  4% {
+    opacity: 1;
+  }
+  40% {
+    transform: translateX(var(--vers-porte, 0px));
+    opacity: 1;
+  }
+  44%,
+  60% {
+    transform: translateX(var(--vers-porte, 0px));
+    opacity: 0;
+  }
+  64% {
+    transform: translateX(var(--vers-porte, 0px));
+    opacity: 1;
+  }
+  96% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(var(--sortie, 0px));
+    opacity: 0;
+  }
+}
+@keyframes passer {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  5%,
+  95% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(var(--sortie, 0px));
+    opacity: 0;
+  }
+}
+@keyframes rouler {
+  from {
+    transform: translateX(-180px);
+  }
+  to {
+    transform: translateX(980px);
+  }
+}
+@keyframes fumee {
+  0% {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-14px);
+    opacity: 0;
+  }
+}
+@keyframes poteau {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-16px);
+  }
+}
+@keyframes nuage {
+  from {
+    transform: translateX(-160px);
+  }
+  to {
+    transform: translateX(900px);
+  }
+}
+.anim-visite {
+  animation: visite var(--duree, 18s) linear infinite;
+  animation-delay: var(--delai, 0s);
+}
+.anim-passer {
+  animation: passer var(--duree, 18s) linear infinite;
+  animation-delay: var(--delai, 0s);
+}
+.anim-rouler {
+  animation: rouler var(--duree, 10s) linear infinite;
+  animation-delay: var(--delai, 0s);
+}
+.anim-fumee {
+  animation: fumee 2.4s ease-out infinite;
+}
+.anim-poteau {
+  animation: poteau 1.2s linear infinite;
+}
+.anim-nuage {
+  animation: nuage 70s linear infinite;
+}
+
+/* Préférence du jeu « Animations désactivées » (en plus de prefers-reduced-motion) */
+.sans-animation *,
+.sans-animation *::before,
+.sans-animation *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -4,6 +4,7 @@ import { questionsQuiz, repondreQuiz } from '../../engine/simulation';
 import { useJeu } from '../../store/jeu';
 import { Bouton } from '../composants/Bouton';
 import { Modale } from '../composants/Modale';
+import { jouerSon } from '../sons';
 import { useJeuCourant } from './contexte';
 
 export function ModaleQuiz() {
@@ -21,6 +22,7 @@ export function ModaleQuiz() {
   const corriger = () => {
     agir((e, id) => repondreQuiz(e, id, reponses));
     setCorrige(true);
+    jouerSon(bonnes >= 2 ? 'reussite' : 'erreur');
     annoncer(`${bonnes} bonne${bonnes > 1 ? 's' : ''} réponse${bonnes > 1 ? 's' : ''} sur 3.`);
   };
 

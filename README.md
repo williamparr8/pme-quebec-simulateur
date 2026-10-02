@@ -10,7 +10,7 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
 
 ---
 
-## Ce que le jeu permet (Jalons 1 à 5)
+## Ce que le jeu permet (version 1.0)
 
 - **Créer son entreprise** : nom, emplacement (rue commerciale, centre commercial, quartier résidentiel), équipement,
   aménagement et financement (mise de fonds et prêt bancaire, avec le ratio exigé par la banque).
@@ -105,6 +105,17 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
 - **Classement local** des meilleures parties (note, valeur de l’entreprise, profit cumulé, satisfaction des
   employés et des clients) et **glossaire** consultable avec recherche (touche `G`).
 
+### Finition (Jalon 6)
+
+- **Scène 2D animée** : les clients entrent et sortent du commerce (leur nombre reflète l’achalandage réel), une
+  file d’attente se forme quand la capacité manque, le décor change selon le secteur (comptoir, présentoirs,
+  entrepôt et fourgons de livraison, camion ou chasse-neige…) et la saison, et un concurrent fermé affiche « À louer ».
+- **Sons générés** (Web Audio) : caisse enregistreuse, perte, passation du clavier, quiz; case « Sons » pour les couper.
+- **Équilibrage** vérifié sur plus de 1 000 parties automatiques : aucune stratégie ne gagne toujours, et une bonne
+  gestion est récompensée (voir DECISIONS.md).
+- **Accessibilité** : audit WCAG 2.1 AA (axe-core) sans violation, case « Animations » en plus de
+  `prefers-reduced-motion`. **Performance** : chargement découpé par écran, sauvegardes compressées.
+
 ## Jouer au clavier
 
 Le jeu est entièrement jouable sans souris.
@@ -160,7 +171,7 @@ src/
 │            scenarios)
 ├─ store/    état de l’interface (Zustand) et sauvegardes (localStorage)
 ├─ ui/       composants React par écran et par département
-├─ scene/    scène 2D du commerce (SVG en blocs; PixiJS prévu au Jalon 6)
+├─ scene/    scène 2D animée du commerce (SVG en blocs et animations CSS)
 └─ i18n/     textes en français québécois et formatage (1 234,56 $, JJ/MM/AAAA)
 tests/       tests Vitest (bilan équilibré sur 100 parties de 60 mois dans tous les secteurs et toutes
              les villes, 36 mois par secteur, paie, prêts, stocks, B2B, événements, concurrents,
@@ -176,7 +187,7 @@ Stack : Vite, React 18, TypeScript (strict), Zustand, Tailwind CSS, Recharts, Vi
 3. ✅ **Départements complets** : marketing détaillé, RH, opérations et stocks, financement.
 4. ✅ **Monde vivant** : 7 secteurs, 8 villes, 5 concurrents, 73 événements, conjoncture économique.
 5. ✅ **Multijoueur local et pédagogie** : équipes en alternance, scénarios, conseiller, tutoriel, quiz, rapport de fin, classement.
-6. **Finition** : scène animée, sons, équilibrage sur 1 000 parties, accessibilité et performance.
+6. ✅ **Finition** : scène animée, sons, équilibrage sur 1 000 parties, accessibilité et performance.
 
 ## Avertissement
 

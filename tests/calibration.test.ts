@@ -5,65 +5,21 @@
  * VILLES=1 (gestionnaire actif dans les 8 villes), PARTIES=10 (nombre de graines).
  */
 import { describe, it } from 'vitest';
-import { SECTEURS, VILLES, dilemmeParId, posteParId, secteurParId } from '../src/data';
+import { SECTEURS, VILLES, secteurParId } from '../src/data';
 import { etatsFinanciers } from '../src/engine/rapports';
 import {
   augmentationGenerale,
-  congedier,
-  embaucher,
   lancerProduit,
   modifierDecisions,
-  repondreDilemme,
   simulerMois,
   soumettre,
 } from '../src/engine/simulation';
 import type { Decisions, EtatPartie } from '../src/engine/types';
 import { configScenario, creerPartie, rapportFinPartie, SCENARIOS } from '../src/engine/simulation';
-import { demarrageSecteur, nouvellePartie } from './helpers';
+import { demarrageSecteur, gererPersonnel, nouvellePartie } from './helpers';
 
 const actif = process.env.CALIBRATION === '1';
 const N = Number(process.env.PARTIES ?? 10);
-
-/**
- * Gestion de base du personnel : embaucher si des clients sont perdus (service) ou si la
- * production déborde; réduire l'équipe quand elle est sous-utilisée (saison creuse). Les
- * événements sont tranchés avec le choix par défaut.
- */
-function gererPersonnel(etat: EtatPartie, idx = 0): EtatPartie {
-  const ent = etat.entreprises[idx];
-  if (ent.enFaillite || ent.vente) return etat;
-  const i = ent.archives.at(-1)?.indicateurs;
-  if (!i || etat.terminee) return etat;
-  const secteur = secteurParId(etat.config.secteurId);
-  const service = secteur.postes.find((p) => posteParId(p).role === 'service');
-  const production = secteur.postes.find((p) => posteParId(p).role === 'production');
-  let e = etat;
-  for (const d of ent.dilemmes)
-    e = repondreDilemme(e, ent.id, d.id, dilemmeParId(d.defId).choixParDefaut);
-  const de = (poste?: string) => e.entreprises[idx].employes.filter((x) => x.posteId === poste);
-  if (service && i.demande > 0 && i.perduesCapacite / i.demande > 0.02) {
-    const n = i.perduesCapacite / i.demande > 0.15 ? 2 : 1;
-    for (let k = 0; k < n; k++) e = embaucher(e, ent.id, undefined, service);
-    return e;
-  }
-  if (production && i.demandeProduction > i.capaciteProduction * 1.03 && i.perduesProduction > 0) {
-    // Embaucher assez de personnel pour combler l'écart (jusqu'à 4 à la fois en haute saison).
-    const parEmploye = posteParId(production).heuresSemaineDefaut * 4.33 * 0.9;
-    const n = Math.min(4, Math.ceil((i.demandeProduction - i.capaciteProduction) / parEmploye));
-    for (let k = 0; k < n; k++) e = embaucher(e, ent.id, undefined, production);
-    return e;
-  }
-  if (production && i.demandeProduction < 0.6 * i.capaciteProduction && de(production).length > 1) {
-    // Saison creuse : mises à pied (jusqu'à 2 à la fois).
-    e = congedier(e, ent.id, de(production)[0].id);
-    if (i.demandeProduction < 0.4 * i.capaciteProduction && de(production).length > 1)
-      e = congedier(e, ent.id, de(production)[0].id);
-    return e;
-  }
-  if (service && i.utilisation < 0.5 && de(service).length > 1)
-    return congedier(e, ent.id, de(service)[0].id);
-  return e;
-}
 
 interface Strategie {
   nom: string;

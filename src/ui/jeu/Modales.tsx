@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { indicePrixOffre } from '../../engine/market';
 import { totalPublicite } from '../../engine/marketing';
 import { estimerMois } from '../../engine/previsions';
@@ -10,6 +10,7 @@ import { GestionSauvegardes } from '../composants/GestionSauvegardes';
 import { ListeMessages } from '../composants/ListeMessages';
 import { Modale } from '../composants/Modale';
 import { ModaleGlossaire } from '../composants/ModaleGlossaire';
+import { jouerSon } from '../sons';
 import { useJeuCourant } from './contexte';
 import { ModaleQuiz } from './Quiz';
 import { RapportFin } from './RapportFin';
@@ -162,6 +163,9 @@ function Rapport() {
   const { etat, derniere, precedente } = useJeuCourant();
   const fermer = useJeu((s) => s.fermerModale);
   const ouvrirModale = useJeu((s) => s.ouvrirModale);
+  const benefice = derniere?.indicateurs.beneficeNet ?? 0;
+  // Caisse enregistreuse si le mois est rentable, notes descendantes sinon.
+  useEffect(() => jouerSon(benefice >= 0 ? 'caisse' : 'perte'), [benefice]);
   if (!derniere) return null;
   const i = derniere.indicateurs;
   const p = precedente?.indicateurs;

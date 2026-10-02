@@ -323,7 +323,7 @@ comme le revenu d’entreprise. Les sauvegardes du Jalon 2 ne peuvent pas être 
   (150 % au-delà de 40 h) sont déjà calculées. L’indemnité de préavis n’entraîne pas de cotisations dans ce jalon.
 - **Stocks** : réapprovisionnement automatique vers un stock cible en jours (remplacé au Jalon 3 par la gestion au
   jour le jour avec point de commande, QEC, fournisseurs et taux de change).
-- **Scène 2D** en SVG plutôt qu’en PixiJS (plus léger, suffisant pour ce jalon). PixiJS est prévu au Jalon 6.
+- **Scène 2D** en SVG animé par CSS plutôt qu’en PixiJS (voir « Finition (Jalon 6) »).
 - La forme juridique est fixée à l’**entreprise individuelle**; les autres formes arrivent au Jalon 2.
 
 ### Modèle de marché
@@ -449,12 +449,60 @@ Scénarios (5 graines, gestionnaire actif) : le robot survit dans presque tous l
 les objectifs de qualité (note en ligne, satisfaction, moral) : ils demandent d’investir dans la qualité, les
 salaires ou la formation. « David contre Goliath » (expert) reste le plus difficile (2 survies sur 5).
 
+## Finition (Jalon 6)
+
+- **Scène 2D en SVG animé (CSS) plutôt qu’en PixiJS** : PixiJS ajouterait environ 500 Ko au jeu et un rendu WebGL
+  inaccessible aux lecteurs d’écran. La scène SVG reste légère, nette à toutes les tailles, décrite par un texte
+  (`role="img"`) qui donne les vrais chiffres, et ses animations CSS s’arrêtent avec `prefers-reduced-motion` ou la
+  case « Animations ». Le nombre de personnages croît avec le logarithme de l’achalandage (2,2 × ln(1 + clients/4),
+  12 au plus) pour rester lisible; une file d’attente apparaît quand des clients repartent faute de capacité.
+- **Sons** générés par la Web Audio API (aucun fichier) : caisse enregistreuse quand le mois est rentable, notes
+  descendantes après une perte, carillon à la passation du clavier, sons de réussite ou d’erreur au quiz. Volume bas;
+  la case « Sons » les coupe (préférence conservée).
+- **Sauvegardes compressées** (lz-string, environ 8 à 10 fois plus petites) : une partie de 60 mois pèse environ
+  720 Ko en JSON par entreprise, et le navigateur ne garde qu’environ 5 Mo par site (sauvegarde automatique,
+  3 emplacements et le mode à 4 équipes auraient dépassé cette limite). Les anciennes sauvegardes restent lisibles.
+- **Performance** : un mois se simule en environ 10 ms et une décision en environ 10 ms (copie immuable de l’état)
+  même au mois 60. Les écrans et les départements sont chargés au besoin : le paquet principal passe de 898 Ko à
+  503 Ko (151 Ko compressé), React est dans un paquet séparé mis en cache.
+- **Accessibilité** : audit automatique axe-core (WCAG 2.1 A et AA) de tous les écrans, en thème clair et sombre
+  (accueil, création, 7 départements, fenêtres, quiz, rapport de fin, scénarios, classement, passation du clavier) :
+  0 violation après corrections (zones de défilement atteignables au clavier, texte des légendes de graphiques dans
+  la couleur du texte plutôt que celle de la série). L’audit se relance en développement avec
+  `await auditAccessibilite()` dans la console.
+
+## Équilibrage (Jalon 6)
+
+`EQUILIBRAGE=1 npx vitest run tests/equilibrage.test.ts --silent=false` : 9 stratégies automatiques jouent dans
+112 mondes (secteur, ville et difficulté variés), soit 1 008 parties de 36 mois (environ 4 minutes). La
+« victoire » revient à la meilleure note de gestion dans chaque monde.
+
+| Stratégie                                           | Note moyenne | Bénéfice cumulé moyen | Faillites | Victoires |
+| --------------------------------------------------- | ------------ | --------------------- | --------- | --------- |
+| Aucune gestion                                      | 66,3         | 47 522 $              | 30/112    | 0 %       |
+| Gestion du personnel                                | 82,0         | 94 269 $              | 9/112     | 3 %       |
+| Prix bas (−15 %)                                    | 71,5         | 39 469 $              | 31/112    | 33 %      |
+| Prix élevés (+15 %)                                 | 61,5         | 43 630 $              | 38/112    | 0 %       |
+| Qualité supérieure (+8 %)                           | 85,3         | 140 498 $             | 9/112     | 16 %      |
+| Publicité doublée                                   | 68,6         | 54 437 $              | 33/112    | 0 %       |
+| Fidélité et écoresponsabilité                       | 87,5         | 119 070 $             | 3/112     | 9 %       |
+| Salaires +10 %                                      | 82,3         | 96 081 $              | 11/112    | 4 %       |
+| Gestion complète (qualité, fidélité, salaires +5 %) | 89,7         | 171 203 $             | 2/112     | 35 %      |
+
+Lecture : aucune stratégie ne gagne plus de 35 % des mondes, et une bonne gestion est nettement récompensée
+(note, profit et survie). Les prix bas gagnent souvent dans les villes sensibles aux prix (part de marché et
+satisfaction élevées), mais ils mènent aussi à beaucoup de faillites : c’est une stratégie risquée, pas dominante.
+À noter : la note de gestion est généreuse quand l’entreprise survit 3 ans (la composante financière plafonne vite);
+elle sépare quand même clairement les stratégies. Un test rapide (3 mondes, 24 mois) vérifie à chaque déploiement
+qu’une gestion active fait mieux que l’absence de gestion.
+
 ## Accessibilité
 
 - Toutes les actions sont accessibles au clavier; le focus est toujours visible (anneau orange foncé en mode clair,
   ambre en mode sombre, contraste ≥ 3:1) et distinct de la couleur d’accent.
 - Les statuts (danger, attention, succès) sont toujours accompagnés d’une icône et d’un libellé, jamais de la couleur seule.
 - Les graphiques utilisent une palette validée pour le daltonisme, une légende et un tableau de données.
-- Les animations respectent `prefers-reduced-motion`.
+- Les animations respectent `prefers-reduced-motion` et la case « Animations »; les sons se coupent avec la case « Sons ».
+- Les tableaux larges et le corps des fenêtres défilent au clavier (zones focalisables).
 - La barre d’espace termine le mois seulement si aucun bouton n’a le focus (sinon, elle active le bouton, comme le
   veut la norme d’accessibilité); une fenêtre de confirmation évite les fins de mois accidentelles.

@@ -132,9 +132,9 @@ export function EcranAccueil() {
             </Bouton>
           </div>
           <p className="mt-3 text-sm text-doux">
-            Version Jalon 5 : mode équipes, scénarios, conseillère virtuelle, tutoriel, quiz entre
-            les trimestres, rapport de fin de partie imprimable et classement. 7 secteurs, 8 villes
-            du Québec, 5 concurrents et plus de 70 événements.
+            Version 1.0 (Jalon 6) : scène animée, sons, mode équipes, scénarios, conseillère,
+            tutoriel, quiz, rapport de fin et classement. 7 secteurs, 8 villes du Québec, 5
+            concurrents et plus de 70 événements.
           </p>
         </Carte>
       </div>

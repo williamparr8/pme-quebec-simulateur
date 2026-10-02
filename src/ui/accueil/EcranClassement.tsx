@@ -60,7 +60,12 @@ export function EcranClassement() {
       {triee.length === 0 ? (
         <p>Aucune partie terminée pour l’instant. Termine une partie pour y apparaître!</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-bordure bg-surface">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Tableau (défilement horizontal possible)"
+          className="overflow-x-auto rounded-xl border border-bordure bg-surface"
+        >
           <table className="chiffres w-full text-sm">
             <thead>
               <tr className="border-b border-bordure text-left">

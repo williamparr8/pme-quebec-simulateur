@@ -389,7 +389,12 @@ function VueStocks() {
         titre="Stocks en main"
         sousTitre={`Valeur totale : ${argentRond(total)} (méthode : ${d.methodeInventaire === 'peps' ? 'PEPS' : 'coût moyen'})`}
       >
-        <div className="overflow-x-auto">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Tableau (défilement horizontal possible)"
+          className="overflow-x-auto"
+        >
           <table className="chiffres w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b border-bordure text-left text-doux">

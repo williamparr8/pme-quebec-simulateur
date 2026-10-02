@@ -7,13 +7,17 @@ import { moisAnnee } from '../../i18n/format';
 import { useJeu } from '../../store/jeu';
 import { Bouton } from '../composants/Bouton';
 import { Logo } from '../composants/Logo';
+import { jouerSon } from '../sons';
 import { useJeuCourant } from './contexte';
 
 export function EcranPassage() {
   const { etat, ent, date } = useJeuCourant();
   const commencerTour = useJeu((s) => s.commencerTour);
   const bouton = useRef<HTMLButtonElement>(null);
-  useEffect(() => bouton.current?.focus(), [ent.id]);
+  useEffect(() => {
+    bouton.current?.focus();
+    jouerSon('passage');
+  }, [ent.id]);
   const index = etat.entreprises.findIndex((e) => e.id === ent.id);
 
   return (

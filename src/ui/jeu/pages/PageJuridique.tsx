@@ -308,7 +308,12 @@ function Declaration({ d }: { d: DeclarationAnnuelle }) {
         )}
       </dl>
       {d.feuillets.length > 0 && (
-        <div className="mt-3 overflow-x-auto">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Tableau (défilement horizontal possible)"
+          className="mt-3 overflow-x-auto"
+        >
           <table className="chiffres w-full min-w-[620px] text-xs">
             <caption className="mb-1 text-left font-semibold">
               Relevés T4 (fédéral) et RL-1 (Québec)
@@ -433,7 +438,12 @@ function OutilRemuneration() {
           onChange={setPartSalaire}
         />
       </div>
-      <div className="overflow-x-auto">
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label="Tableau (défilement horizontal possible)"
+        className="overflow-x-auto"
+      >
         <table className="chiffres w-full min-w-[560px] text-sm">
           <thead>
             <tr className="border-b border-bordure text-left text-doux">

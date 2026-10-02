@@ -125,7 +125,12 @@ export function VueBudget() {
               : undefined
           }
         >
-          <div className="overflow-x-auto">
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label="Tableau (défilement horizontal possible)"
+            className="overflow-x-auto"
+          >
             <table className="chiffres w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-bordure text-left text-doux">
@@ -369,7 +374,12 @@ export function VueInvestissements() {
         )}
       </Carte>
       <Carte titre="Registre des immobilisations (comptabilité)">
-        <div className="overflow-x-auto">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Tableau (défilement horizontal possible)"
+          className="overflow-x-auto"
+        >
           <table className="chiffres w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b border-bordure text-left text-doux">
