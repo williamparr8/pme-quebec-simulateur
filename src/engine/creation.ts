@@ -38,6 +38,7 @@ import type {
 import { conjonctureInitiale, type Conjoncture } from './economy';
 import { appliquerScenario, scenarioParId } from './scenarios';
 import { competencesInitiales } from './competences';
+import { PARAMETRES_FRANCHISE, banniere } from './franchise';
 import { COMPTES_IMMOBILISATIONS } from './immobilisations';
 import { saisonLigne, type Offre } from './market';
 import { payer } from './ecritures';
@@ -224,11 +225,13 @@ export interface CoutsDemarrage {
   fraisJuridiques: number;
   /** TPS et TVQ payées sur les achats de démarrage (récupérables si l'entreprise est inscrite). */
   taxes: number;
+  /** Droit d'entrée d'une franchise (0 pour un commerce indépendant). */
+  droitFranchise: number;
   total: number;
 }
 
 type ParamsCouts = Pick<ParametresDemarrage, 'emplacementId' | 'equipementId' | 'amenagementId'> &
-  Partial<Pick<ParametresDemarrage, 'formeJuridique' | 'demarches'>>;
+  Partial<Pick<ParametresDemarrage, 'formeJuridique' | 'demarches' | 'franchise'>>;
 
 export function coutsDemarrage(
   params: ParamsCouts,
@@ -248,7 +251,9 @@ export function coutsDemarrage(
   const fraisJuridiques = [...demarches].reduce((a, id) => a + coutDemarche(id, forme), 0);
   const taxable = equipement + amenagement + fraisDemarrage + stock * secteur.partAchatsTaxables;
   const taxes = taxesSur(taxable).total;
+  const droitFranchise = params.franchise ? PARAMETRES_FRANCHISE.droitEntree : 0;
   return {
+    droitFranchise,
     equipement,
     amenagement,
     depotGarantie,
@@ -264,7 +269,8 @@ export function coutsDemarrage(
           stock +
           fraisDemarrage +
           fraisJuridiques +
-          taxes) *
+          taxes +
+          droitFranchise) *
           100,
       ) / 100,
   };
@@ -856,6 +862,23 @@ function creerEntreprise(
     competences: competencesInitiales(params.profil),
     formationsProprietaire: [],
   };
+  if (params.franchise) {
+    // Franchisé : la bannière est déjà connue et bien notée.
+    const pf = PARAMETRES_FRANCHISE;
+    entreprise.franchise = {
+      banniere: banniere(secteur.id),
+      redevance: pf.redevance,
+      fondsPublicitaire: pf.fondsPublicitaire,
+    };
+    entreprise.clientele.notoriete = Math.max(entreprise.clientele.notoriete, pf.notorieteDepart);
+    for (const k of Object.keys(entreprise.marketing.notorieteSegments))
+      entreprise.marketing.notorieteSegments[k] = Math.max(
+        entreprise.marketing.notorieteSegments[k],
+        pf.notorieteDepart,
+      );
+    entreprise.clientele.note = pf.noteDepart;
+    entreprise.clientele.nbAvis = pf.nbAvisDepart;
+  }
 
   // Financement : mise de fonds (capital, parts d'associés ou actions).
   ecritureSimple(
@@ -1025,6 +1048,16 @@ function creerEntreprise(
     true,
     'fraisDemarrage',
   );
+  if (entreprise.franchise)
+    payer(
+      livre,
+      entreprise,
+      `Droit d’entrée de la franchise ${entreprise.franchise.banniere}`,
+      'fraisDemarrage',
+      PARAMETRES_FRANCHISE.droitEntree,
+      false,
+      'fraisDemarrage',
+    );
   for (const id of IDS_DEMARCHES) {
     if (!demarches[id]) continue;
     const cout = coutDemarche(id, forme);

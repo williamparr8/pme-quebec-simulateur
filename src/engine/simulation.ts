@@ -87,6 +87,7 @@ import {
 } from './creation';
 import { resumeDecisions } from './bilan';
 import { fusionnerResultats } from './succursales';
+import { facteurAchatsFranchise, gererFranchise } from './franchise';
 import { evoluerPalier, facteurAchatsPalier, honorairesPalier } from './croissance';
 import {
   bonusCapaciteGestion,
@@ -214,6 +215,7 @@ export { conformeHygiene } from './hr';
 export * from './bilan';
 export * from './competences';
 export * from './conseiller';
+export * from './franchise';
 export * from './succursales';
 export * from './croissance';
 export * from './dialogues';
@@ -757,7 +759,8 @@ function preparerOffrePrincipale(
   const qualiteLignes: Record<string, number> = {};
   const coutLignes: Record<string, number> = {};
   // Rabais de volume des fournisseurs pour une PME ou une grande entreprise.
-  const facteurCouts = modificateur(ent, 'couts') * facteurAchatsPalier(ent);
+  const facteurCouts =
+    modificateur(ent, 'couts') * facteurAchatsPalier(ent) * facteurAchatsFranchise(ent);
   for (const ligne of lignesStock(ent, secteur)) {
     const politique = d.approvisionnement[ligne.id];
     const fournisseurId =
@@ -1597,6 +1600,15 @@ function simulerEntreprise(
       'loyerEtFrais',
     );
   }
+  messages.push(
+    ...gererFranchise(L, ent, {
+      index: ctx.index,
+      rng: ctx.rng,
+      phase: ctx.conj.phase,
+      ventesMois: ventesBrutes,
+      etablissements: 1 + (ent.succursales?.length ?? 0),
+    }),
+  );
   const commis = Math.min(1, heuresPoste(ent, 'administration') / 10);
   for (const [cle, montant] of Object.entries(secteur.fraisFixesMensuels) as [
     keyof FraisFixesMensuels,

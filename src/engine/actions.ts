@@ -44,6 +44,7 @@ import {
 } from './creation';
 import { FORMATIONS_PROPRIETAIRE, gagnerCompetence, niveauCompetence } from './competences';
 import { corrigerQuiz, utiliserRabais } from './quiz';
+import { PARAMETRES_RESEAU, peutLancerReseau } from './franchise';
 import { MAX_SUCCURSALES, MOIS_PENALITE_FERMETURE, coutsSuccursale } from './succursales';
 import type { IdTypeEtude, LigneProduit } from './data-types';
 import { chomageVille, conjonctureInitiale, tauxPreferentiel } from './economy';
@@ -1407,5 +1408,34 @@ export function affecterEmploye(
     if (!e) return;
     if (site && ent.succursales?.some((s) => s.id === site)) e.site = site;
     else delete e.site;
+  });
+}
+
+/** Lance un réseau de franchises (manuel d'exploitation, contrat type, document d'information). */
+export function lancerReseauFranchise(etat: EtatPartie, entrepriseId: string): EtatPartie {
+  return action(etat, entrepriseId, (ent, e) => {
+    if (!peutLancerReseau(ent)) return;
+    payer(
+      ent.livre,
+      ent,
+      'Lancement du réseau de franchises (avocat, manuel d’exploitation, document d’information)',
+      'honoraires',
+      PARAMETRES_RESEAU.coutLancement,
+      true,
+      'loyerEtFrais',
+    );
+    ent.reseau = { lance: indexCourant(e), objectif: 3, franchises: [], fermees: 0 };
+  });
+}
+
+/** Nombre de franchisés visé (le réseau recrute jusqu'à ce nombre). */
+export function objectifFranchises(
+  etat: EtatPartie,
+  entrepriseId: string,
+  objectif: number,
+): EtatPartie {
+  return action(etat, entrepriseId, (ent) => {
+    if (!ent.reseau) return;
+    ent.reseau.objectif = Math.round(borner(objectif, 0, PARAMETRES_RESEAU.maximum));
   });
 }

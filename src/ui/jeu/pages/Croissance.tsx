@@ -12,6 +12,7 @@ import { argentRond, nombre, pourcentage } from '../../../i18n/format';
 import { NOMS_PALIERS } from '../../../i18n/messages-croissance';
 import { Astuce, Carte } from '../../composants/Carte';
 import { useJeuCourant } from '../contexte';
+import { CarteFranchise } from './Franchise';
 import { CarteSuccursales } from './Succursales';
 
 function Progres({
@@ -110,6 +111,7 @@ export function VueCroissance() {
         </Astuce>
       </Carte>
       <CarteSuccursales />
+      <CarteFranchise />
     </div>
   );
 }

@@ -5,6 +5,7 @@
  * sont protégées et le jeu reste jouable sans lui.
  */
 import { compressToUTF16, decompressFromUTF16 } from 'lz-string';
+import { COMPTES } from '../engine/accounting';
 import { VERSION_ETAT, type EtatPartie } from '../engine/types';
 
 export type IdEmplacement = 'auto' | '1' | '2' | '3';
@@ -108,6 +109,8 @@ export function analyserFichier(texte: string): EtatPartie {
       );
     throw new Error('Ce fichier ne contient pas une partie de PME Québec.');
   }
+  // Comptes ajoutés depuis la création de la partie (ex. franchise) : solde de départ nul.
+  for (const ent of etat.entreprises) for (const c of COMPTES) ent.livre.soldes[c] ??= 0;
   return etat;
 }
 

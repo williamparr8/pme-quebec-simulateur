@@ -1,0 +1,33 @@
+{
+  "_source": "Ordres de grandeur de la franchise au Québec et au Canada (droits d’entrée de 20 000 $ à 50 000 $, redevances de 4 % à 8 % des ventes, fonds publicitaire de 1 % à 3 %), Conseil québécois de la franchise et Association canadienne de la franchise, vérifiés le 01/10/2026 (À VÉRIFIER). Les bannières sont fictives.",
+  "franchise": {
+    "droitEntree": 30000,
+    "redevance": 0.06,
+    "fondsPublicitaire": 0.02,
+    "notorieteDepart": 0.35,
+    "noteDepart": 4.1,
+    "nbAvisDepart": 40,
+    "rabaisAchats": 0.04
+  },
+  "reseau": {
+    "coutLancement": 30000,
+    "droitEntree": 25000,
+    "formationInitiale": 4000,
+    "redevance": 0.05,
+    "fondsPublicitaire": 0.02,
+    "soutienMensuel": 500,
+    "noteMinimale": 4.0,
+    "probabiliteCandidat": 0.35,
+    "probabiliteFermeture": 0.008,
+    "maximum": 20
+  },
+  "bannieres": {
+    "cafe": "Café Boréal",
+    "vetements": "Boutiques Laurentide",
+    "enLigne": "Colis Nordik",
+    "coiffure": "Salons Éclat",
+    "paysagement": "Verdure Pro",
+    "atelier": "Ateliers Bois d’Ici",
+    "epicerie": "Marché Fraîcheur"
+  }
+}

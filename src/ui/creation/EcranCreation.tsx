@@ -16,6 +16,8 @@ import { EtapeFinancement } from './EtapeFinancement';
 import { FORMES } from './formes';
 import {
   INFOS_DOMAINES,
+  PARAMETRES_FRANCHISE,
+  banniere,
   PROFILS_PROPRIETAIRE,
   REGLES_FINANCEMENT,
   configScenario,
@@ -458,6 +460,31 @@ export function EcranCreation() {
                 clients.
               </Astuce>
             </div>
+          </Carte>
+        )}
+
+        {etape === 1 && (
+          <Carte>
+            <ChoixCartes
+              legende="Indépendant ou franchisé?"
+              nom="franchise"
+              valeur={params.franchise ? 'franchise' : 'independant'}
+              onChange={(id) => maj({ franchise: id === 'franchise' })}
+              options={[
+                {
+                  id: 'independant',
+                  titre: 'Commerce indépendant',
+                  description:
+                    'Ta marque, tes règles. Tout est à bâtir : notoriété, avis, fournisseurs.',
+                },
+                {
+                  id: 'franchise',
+                  titre: `Franchise ${banniere(secteurId)}`,
+                  description: `Droit d’entrée de ${argentRond(PARAMETRES_FRANCHISE.droitEntree)}, puis ${pourcentage(PARAMETRES_FRANCHISE.redevance, 0)} des ventes en redevances et ${pourcentage(PARAMETRES_FRANCHISE.fondsPublicitaire, 0)} au fonds publicitaire.`,
+                  detail: 'Marque connue et bien notée dès l’ouverture, achats groupés (−4 %).',
+                },
+              ]}
+            />
           </Carte>
         )}
 

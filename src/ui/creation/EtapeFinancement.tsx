@@ -191,6 +191,9 @@ export function EtapeFinancement({ params, maj, secteur, ville, couts }: Props) 
                 ['Stock initial', couts.stockInitial],
                 ['Enseigne, inauguration, frais juridiques', couts.fraisDemarrage],
                 ['Immatriculation, permis et démarches', couts.fraisJuridiques],
+                ...(couts.droitFranchise > 0
+                  ? [['Droit d’entrée de la franchise', couts.droitFranchise] as const]
+                  : []),
                 [
                   params.inscritTaxes
                     ? 'TPS et TVQ sur les achats (récupérables)'

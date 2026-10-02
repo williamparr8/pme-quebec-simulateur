@@ -204,6 +204,12 @@ export const PLAN_COMPTABLE = {
     classe: 'produit',
     groupe: 'autresProduits',
   },
+  revenusFranchise: {
+    numero: '4650',
+    nom: 'Revenus de franchise (droits d’entrée et redevances)',
+    classe: 'produit',
+    groupe: 'autresProduits',
+  },
   autresRevenus: {
     numero: '4700',
     nom: 'Autres revenus (indemnités d’assurance, cachets, locations)',
@@ -324,6 +330,12 @@ export const PLAN_COMPTABLE = {
   fraisExpedition: {
     numero: '5335',
     nom: 'Frais d’expédition et de déplacement',
+    classe: 'charge',
+    groupe: 'exploitation',
+  },
+  redevances: {
+    numero: '5485',
+    nom: 'Redevances de franchise et fonds publicitaire',
     classe: 'charge',
     groupe: 'exploitation',
   },

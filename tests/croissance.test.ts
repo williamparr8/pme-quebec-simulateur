@@ -8,7 +8,11 @@ import { demarchesSecteur, estObligatoire } from '../src/engine/conformite';
 import { evaluerCredit } from '../src/engine/financement';
 import {
   FORMATIONS_PROPRIETAIRE,
+  PARAMETRES_FRANCHISE,
   affecterEmploye,
+  lancerReseauFranchise,
+  objectifFranchises,
+  peutLancerReseau,
   creerPartie,
   fermerSuccursale,
   nbEtablissements,
@@ -161,14 +165,21 @@ describe('A4 : paliers de croissance', () => {
   });
 });
 
-describe('A5 : succursales', () => {
-  /** Ajoute de l'argent (apport du propriétaire) pour pouvoir ouvrir une succursale. */
-  const avecApport = (etat: EtatPartie, montant: number): EtatPartie => {
-    const e = structuredClone(etat);
-    ecritureSimple(e.entreprises[0].livre, 'Apport (test)', 'encaisse', 'capital', versCents(montant), 'apportsProprietaire');
-    return e;
-  };
+/** Ajoute de l'argent (apport du propriétaire) pour les tests de croissance. */
+const avecApport = (etat: EtatPartie, montant: number): EtatPartie => {
+  const e = structuredClone(etat);
+  ecritureSimple(
+    e.entreprises[0].livre,
+    'Apport (test)',
+    'encaisse',
+    'capital',
+    versCents(montant),
+    'apportsProprietaire',
+  );
+  return e;
+};
 
+describe('A5 : succursales', () => {
   it('il faut assez d’encaisse pour ouvrir une succursale', () => {
     const etat = jouerMois(partie(), 2);
     const apres = ouvrirSuccursale(etat, 'joueur-1', 'residentiel');
@@ -198,7 +209,9 @@ describe('A5 : succursales', () => {
     expect(a.sites).toHaveLength(2);
     const total = a.sites!.reduce((t, x) => t + x.servies, 0);
     expect(Math.abs(total - a.indicateurs.servies)).toBeLessThanOrEqual(2);
-    expect(a.indicateurs.servies).toBeGreaterThan(sans.entreprises[0].archives.at(-1)!.indicateurs.servies);
+    expect(a.indicateurs.servies).toBeGreaterThan(
+      sans.entreprises[0].archives.at(-1)!.indicateurs.servies,
+    );
     expect(totalBalance(avec.entreprises[0].livre.soldes)).toBe(0);
   });
 
@@ -213,5 +226,54 @@ describe('A5 : succursales', () => {
     expect(ent.succursales).toHaveLength(0);
     expect(ent.employes.every((e) => !e.site)).toBe(true);
     expect(ent.livre.soldes.encaisse).toBeLessThan(ouverte.entreprises[0].livre.soldes.encaisse);
+  });
+});
+
+describe('A6 : franchise', () => {
+  const franchise = () =>
+    creerPartie(configTest(4, 36), {
+      ...demarrageSecteur('cafe'),
+      franchise: true,
+      apportPersonnel: 80_000,
+    });
+
+  it('un franchisé part avec une marque connue et paie un droit d’entrée', () => {
+    const ent = franchise().entreprises[0];
+    const independant = partie().entreprises[0];
+    expect(ent.franchise?.banniere).toBe('Café Boréal');
+    expect(ent.clientele.notoriete).toBeGreaterThanOrEqual(0.35);
+    expect(ent.clientele.note).toBe(4.1);
+    expect(ent.livre.soldes.fraisDemarrage - independant.livre.soldes.fraisDemarrage).toBe(
+      versCents(PARAMETRES_FRANCHISE.droitEntree),
+    );
+    expect(totalBalance(ent.livre.soldes)).toBe(0);
+  });
+
+  it('le franchisé verse ses redevances chaque mois', () => {
+    const etat = jouerMois(franchise(), 1);
+    const ent = etat.entreprises[0];
+    const i = ent.archives[0].indicateurs;
+    const redevances = (ent.archives[0].mouvements.redevances ?? 0) / 100;
+    expect(redevances).toBeCloseTo((i.ventesMagasin + i.ventesLivraison) * 0.08, -1);
+  });
+
+  it('une PME bien notée lance un réseau et recrute des franchisés', () => {
+    let etat = structuredClone(avecApport(jouerMois(partie(), 3), 100_000));
+    const ent = etat.entreprises[0];
+    expect(peutLancerReseau(ent)).toBe(false);
+    ent.croissance = { palier: 'pme', depuis: 3 };
+    ent.clientele.note = 4.6;
+    ent.clientele.notoriete = 0.6;
+    etat = objectifFranchises(lancerReseauFranchise(etat, 'joueur-1'), 'joueur-1', 6);
+    expect(etat.entreprises[0].reseau?.objectif).toBe(6);
+    etat = jouerMois(etat, 12);
+    const r = etat.entreprises[0].reseau!;
+    expect(r.franchises.length + r.fermees).toBeGreaterThan(0);
+    const revenus = etat.entreprises[0].archives.reduce(
+      (s, a) => s + (a.mouvements.revenusFranchise ?? 0),
+      0,
+    );
+    expect(revenus).toBeLessThan(0); // les produits sont au crédit
+    expect(totalBalance(etat.entreprises[0].livre.soldes)).toBe(0);
   });
 });

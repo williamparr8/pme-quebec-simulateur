@@ -72,6 +72,8 @@ export interface ParametresDemarrage {
   methodeInventaire: MethodeInventaire;
   /** Nom de l'équipe (mode équipes en alternance). */
   nomEquipe?: string;
+  /** Ouvrir sous une bannière de franchise (franchisé). */
+  franchise?: boolean;
   /** Parcours du propriétaire (compétences de départ). */
   profil?: 'gestion' | 'finance' | 'marketing' | 'rh' | 'fiscalite';
 }
@@ -756,6 +758,16 @@ export interface Entreprise {
   croissance?: { palier: 'petite' | 'pme' | 'grande'; depuis: number };
   /** Succursales (établissements en plus du premier commerce). */
   succursales?: Succursale[];
+  /** Franchisé : bannière, redevance et fonds publicitaire (proportions des ventes). */
+  franchise?: { banniere: string; redevance: number; fondsPublicitaire: number };
+  /** Franchiseur : réseau de franchisés de la marque. */
+  reseau?: {
+    lance: number;
+    objectif: number;
+    franchises: { id: string; nom: string; ouverture: number; facteur: number }[];
+    fermees: number;
+    dernierRevenu?: number;
+  };
 }
 
 /** Succursale : un établissement de plus, dans la même ville, avec son local et son équipe. */
