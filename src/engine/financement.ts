@@ -6,6 +6,7 @@
 import { SOURCES_FINANCEMENT, TYPES_PLACEMENTS, sourceFinancementParId } from '../data';
 import type { Emplacement, IdSourceFinancement, Secteur, Ville } from './data-types';
 import { tauxPreferentiel, type Conjoncture } from './economy';
+import { rabaisTauxFinance } from './competences';
 import { versementMensuel } from './loans';
 import { cumulerMouvements, etatResultats, bilan } from './statements';
 import type { Entreprise, FormeJuridique, ParametresDemarrage, PlanAffaires } from './types';
@@ -257,7 +258,10 @@ export function evaluerCredit(
     b.totalActif + montant > 0 ? (b.totalPassif + montant) / (b.totalActif + montant) : 1;
   const taux =
     Math.round(
-      (tauxPreferentiel(conj) + (type === 'fixe' ? 0.025 : 0.02) + (endettement > 0.6 ? 0.01 : 0)) *
+      (tauxPreferentiel(conj) +
+        (type === 'fixe' ? 0.025 : 0.02) +
+        (endettement > 0.6 ? 0.01 : 0) -
+        rabaisTauxFinance(ent)) *
         10000,
     ) / 10000;
   const versement = versementMensuel(versCents(montant), taux, dureeMois) / 100;

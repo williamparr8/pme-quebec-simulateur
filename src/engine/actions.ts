@@ -39,6 +39,7 @@ import {
   validerDecisions,
   visitesEstimees,
 } from './creation';
+import { FORMATIONS_PROPRIETAIRE, gagnerCompetence, niveauCompetence } from './competences';
 import { corrigerQuiz, utiliserRabais } from './quiz';
 import type { IdTypeEtude, LigneProduit } from './data-types';
 import { chomageVille, conjonctureInitiale, tauxPreferentiel } from './economy';
@@ -1227,5 +1228,31 @@ export function repondreQuiz(
 ): EtatPartie {
   return action(etat, entrepriseId, (ent, e) => {
     corrigerQuiz(e, ent, reponses);
+  });
+}
+
+/** Le propriétaire suit une formation : sa compétence progresse (une seule fois par formation). */
+export function formerProprietaire(
+  etat: EtatPartie,
+  entrepriseId: string,
+  formationId: string,
+): EtatPartie {
+  return action(etat, entrepriseId, (ent) => {
+    const f = FORMATIONS_PROPRIETAIRE.find((x) => x.id === formationId);
+    if (!f) return;
+    ent.formationsProprietaire ??= [];
+    if (ent.formationsProprietaire.includes(f.id)) return;
+    if (niveauCompetence(ent, f.domaine) < f.niveauRequis) return;
+    payer(
+      ent.livre,
+      ent,
+      `Formation du propriétaire : ${f.nom}`,
+      'formation',
+      utiliserRabais(ent, f.cout),
+      true,
+      'formationAvantages',
+    );
+    ent.formationsProprietaire.push(f.id);
+    gagnerCompetence(ent, f.domaine, f.gain);
   });
 }

@@ -37,6 +37,7 @@ import type {
 } from './data-types';
 import { conjonctureInitiale, type Conjoncture } from './economy';
 import { appliquerScenario, scenarioParId } from './scenarios';
+import { competencesInitiales } from './competences';
 import { COMPTES_IMMOBILISATIONS } from './immobilisations';
 import { saisonLigne, type Offre } from './market';
 import { payer } from './ecritures';
@@ -849,6 +850,8 @@ function creerEntreprise(
     joursFermeture: 0,
     modificateurs: [],
     vente: null,
+    competences: competencesInitiales(params.profil),
+    formationsProprietaire: [],
   };
 
   // Financement : mise de fonds (capital, parts d'associés ou actions).

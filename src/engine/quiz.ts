@@ -4,6 +4,7 @@
  */
 import { QUESTIONS_QUIZ } from '../data';
 import type { QuestionQuiz } from './data-types';
+import { domaineDeCategorie, gagnerCompetence } from './competences';
 import { Rng, graineDepuisTexte } from './rng';
 import type { Entreprise, EtatPartie } from './types';
 
@@ -61,6 +62,8 @@ export function corrigerQuiz(
   if (!quizDisponible(etat, ent)) return 0;
   const questions = questionsQuiz(etat, ent);
   const bonnes = questions.filter((q) => reponses[q.id] === q.bonne).length;
+  for (const q of questions)
+    if (reponses[q.id] === q.bonne) gagnerCompetence(ent, domaineDeCategorie(q.categorie), 3);
   ent.pedagogie ??= { quiz: [], rabais: 0 };
   ent.pedagogie.quiz.push({
     index: etat.moisCourant,

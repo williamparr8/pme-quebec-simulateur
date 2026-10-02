@@ -15,6 +15,8 @@ import type { FormeJuridique } from '../../engine/types';
 import { EtapeFinancement } from './EtapeFinancement';
 import { FORMES } from './formes';
 import {
+  INFOS_DOMAINES,
+  PROFILS_PROPRIETAIRE,
   REGLES_FINANCEMENT,
   configScenario,
   coutsDemarrage,
@@ -363,6 +365,23 @@ export function EcranCreation() {
                 société de personnes ou société par actions) à l’étape 4.
               </Astuce>
             </div>
+          </Carte>
+        )}
+
+        {etape === 0 && (
+          <Carte>
+            <ChoixCartes
+              legende="Ton parcours (compétences de départ)"
+              nom="profil"
+              valeur={params.profil ?? 'gestion'}
+              onChange={(id) => maj({ profil: id as ParametresDemarrage['profil'] })}
+              options={PROFILS_PROPRIETAIRE.map((p) => ({
+                id: p.id,
+                titre: p.nom,
+                description: p.description,
+                detail: `Point fort : ${INFOS_DOMAINES.find((d) => d.id === p.id)?.nom ?? p.id}`,
+              }))}
+            />
           </Carte>
         )}
 

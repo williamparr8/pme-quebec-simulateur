@@ -1,0 +1,149 @@
+{
+  "_source": "Paramètres de conception du jeu (compétences du propriétaire). Les coûts des formations sont des ordres de grandeur d’ateliers de formation continue pour entrepreneurs au Québec (300 $ à 1 200 $), vérifiés le 01/10/2026. Les organismes sont fictifs.",
+  "domaines": [
+    {
+      "id": "gestion",
+      "nom": "Gestion",
+      "description": "Organiser le travail, planifier, décider.",
+      "effet": "Augmente la capacité de service et de production (jusqu’à +6 %)."
+    },
+    {
+      "id": "finance",
+      "nom": "Finance",
+      "description": "Lire ses états financiers, gérer la trésorerie et le crédit.",
+      "effet": "Les banques te prêtent à meilleur taux (jusqu’à −0,75 point)."
+    },
+    {
+      "id": "marketing",
+      "nom": "Marketing",
+      "description": "Connaître ses clients, communiquer, bâtir sa marque.",
+      "effet": "Ta publicité convertit mieux (jusqu’à +20 % d’effet)."
+    },
+    {
+      "id": "rh",
+      "nom": "Ressources humaines",
+      "description": "Recruter, motiver et garder son équipe.",
+      "effet": "Le moral de ton équipe est meilleur (jusqu’à +10 points visés)."
+    },
+    {
+      "id": "fiscalite",
+      "nom": "Fiscalité",
+      "description": "Taxes, retenues à la source, impôts et obligations.",
+      "effet": "Moins d’honoraires comptables (jusqu’à −25 %) et moins d’ennuis fiscaux."
+    }
+  ],
+  "profils": [
+    {
+      "id": "gestion",
+      "nom": "DEC en gestion de commerce",
+      "description": "Tu connais un peu de tout : vente, gestion, marketing.",
+      "niveaux": { "gestion": 55, "finance": 30, "marketing": 40, "rh": 30, "fiscalite": 25 }
+    },
+    {
+      "id": "finance",
+      "nom": "DEC en techniques de comptabilité et de gestion",
+      "description": "Les chiffres, c’est ton fort.",
+      "niveaux": { "gestion": 35, "finance": 55, "marketing": 20, "rh": 25, "fiscalite": 45 }
+    },
+    {
+      "id": "marketing",
+      "nom": "Expérience en vente et en marketing",
+      "description": "Tu sais attirer les clients et parler de ton produit.",
+      "niveaux": { "gestion": 35, "finance": 20, "marketing": 55, "rh": 35, "fiscalite": 20 }
+    },
+    {
+      "id": "rh",
+      "nom": "Ancien gérant d’équipe",
+      "description": "Tu as déjà dirigé une équipe dans un commerce.",
+      "niveaux": { "gestion": 45, "finance": 25, "marketing": 25, "rh": 55, "fiscalite": 20 }
+    },
+    {
+      "id": "fiscalite",
+      "nom": "Formation en fiscalité",
+      "description": "TPS, TVQ, impôts : tu as fait tes classes.",
+      "niveaux": { "gestion": 30, "finance": 45, "marketing": 20, "rh": 20, "fiscalite": 55 }
+    }
+  ],
+  "formations": [
+    {
+      "id": "gestion1",
+      "domaine": "gestion",
+      "nom": "Atelier : gérer une PME au quotidien",
+      "cout": 450,
+      "gain": 10,
+      "niveauRequis": 0
+    },
+    {
+      "id": "gestion2",
+      "domaine": "gestion",
+      "nom": "Programme de mentorat d’affaires (un an)",
+      "cout": 900,
+      "gain": 15,
+      "niveauRequis": 45
+    },
+    {
+      "id": "finance1",
+      "domaine": "finance",
+      "nom": "Lire et comprendre ses états financiers",
+      "cout": 400,
+      "gain": 10,
+      "niveauRequis": 0
+    },
+    {
+      "id": "finance2",
+      "domaine": "finance",
+      "nom": "Finance d’entreprise : trésorerie et financement",
+      "cout": 1100,
+      "gain": 15,
+      "niveauRequis": 45
+    },
+    {
+      "id": "marketing1",
+      "domaine": "marketing",
+      "nom": "Marketing numérique pour les PME",
+      "cout": 500,
+      "gain": 10,
+      "niveauRequis": 0
+    },
+    {
+      "id": "marketing2",
+      "domaine": "marketing",
+      "nom": "Stratégie de marque et expérience client",
+      "cout": 1000,
+      "gain": 15,
+      "niveauRequis": 45
+    },
+    {
+      "id": "rh1",
+      "domaine": "rh",
+      "nom": "Recruter et diriger une petite équipe",
+      "cout": 450,
+      "gain": 10,
+      "niveauRequis": 0
+    },
+    {
+      "id": "rh2",
+      "domaine": "rh",
+      "nom": "Normes du travail, santé et sécurité",
+      "cout": 800,
+      "gain": 15,
+      "niveauRequis": 45
+    },
+    {
+      "id": "fiscalite1",
+      "domaine": "fiscalite",
+      "nom": "TPS, TVQ et retenues à la source",
+      "cout": 400,
+      "gain": 10,
+      "niveauRequis": 0
+    },
+    {
+      "id": "fiscalite2",
+      "domaine": "fiscalite",
+      "nom": "Fiscalité de la PME : incorporation, salaire ou dividendes",
+      "cout": 1200,
+      "gain": 15,
+      "niveauRequis": 45
+    }
+  ]
+}

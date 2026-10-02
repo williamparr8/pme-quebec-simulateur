@@ -44,8 +44,9 @@ import { Terme } from '../../composants/Terme';
 import { TitrePage } from '../../composants/TitrePage';
 import { useJeuCourant } from '../contexte';
 import { CarteDilemmes } from '../Dilemmes';
+import { VuePersonnages } from './Personnages';
 
-type Vue = 'equipe' | 'recrutement' | 'conditions' | 'cout';
+type Vue = 'equipe' | 'personnages' | 'recrutement' | 'conditions' | 'cout';
 
 const CHAMP = 'chiffres rounded-md border border-bordure bg-surface-2 px-2 py-1';
 
@@ -713,12 +714,14 @@ export function PageRH() {
         onChange={setVue}
         onglets={[
           { id: 'equipe', nom: 'Équipe' },
+          { id: 'personnages', nom: 'Personnages' },
           { id: 'recrutement', nom: 'Recrutement', badge: disponibles },
           { id: 'conditions', nom: 'Conditions de travail' },
           { id: 'cout', nom: 'Vrai coût d’un employé' },
         ]}
       >
         {vue === 'equipe' && <VueEquipe />}
+        {vue === 'personnages' && <VuePersonnages />}
         {vue === 'recrutement' && <VueRecrutement />}
         {vue === 'conditions' && <VueConditions />}
         {vue === 'cout' && <VueCout />}

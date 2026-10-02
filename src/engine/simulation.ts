@@ -86,6 +86,14 @@ import {
   validerDecisions,
 } from './creation';
 import { resumeDecisions } from './bilan';
+import {
+  bonusCapaciteGestion,
+  bonusConversionMarketing,
+  bonusMoralRh,
+  facteurFraisComptables,
+  facteurRisqueFiscal,
+  progresserCompetences,
+} from './competences';
 import { noteCible, noteDuMois, nouvelleNote, satisfactionClients } from './customers';
 import type { FraisFixesMensuels, LigneProduit, Secteur, Ville } from './data-types';
 import {
@@ -202,6 +210,7 @@ export * from './creation';
 export * from './actions';
 export { conformeHygiene } from './hr';
 export * from './bilan';
+export * from './competences';
 export * from './conseiller';
 export * from './quiz';
 export * from './scenarios';
@@ -653,7 +662,13 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
   if (sansProducteur) production += service * secteur.productionSansPersonnel;
   production += heuresProprietaire * partProduction;
   const multiplicateur =
-    ouvert * facteurMois * (1 + effets.capaciteService + capaciteAvantages + (gerant ? 0.04 : 0));
+    ouvert *
+    facteurMois *
+    (1 +
+      effets.capaciteService +
+      capaciteAvantages +
+      (gerant ? 0.04 : 0) +
+      bonusCapaciteGestion(ent));
   const capacite = Math.floor(
     service * SEMAINES_PAR_MOIS * secteur.transactionsParHeureEmploye * multiplicateur,
   );
@@ -763,7 +778,10 @@ function preparerOffre(ent: Entreprise, ctx: ContexteMois, messages: Message[]):
     ambiance,
     eco,
     local,
-    bonusConversion: 0.25 * Math.min(1, heuresMarketing / 15),
+    bonusConversion: Math.max(
+      -0.05,
+      0.25 * Math.min(1, heuresMarketing / 15) + bonusConversionMarketing(ent),
+    ),
     promotionsRecentes: recentes,
     messages,
     offre: {
@@ -1510,6 +1528,8 @@ function simulerEntreprise(
         base += demarche('compteBancaire').fraisComptablesSupplementaires ?? 0;
       // Un commis comptable à l'interne fait une partie du travail du comptable externe.
       base *= 1 - 0.6 * commis;
+      // Un propriétaire qui maîtrise la fiscalité fait lui-même une partie du travail.
+      base *= facteurFraisComptables(ent);
     }
     payer(L, ent, libelle, compte, base * conj.indicePrix, taxable, 'loyerEtFrais');
   }
@@ -1847,7 +1867,7 @@ function simulerEntreprise(
         moisDepuisAugmentation:
           ctx.index - (emp.derniereAugmentation ?? ctx.index - emp.moisAnciennete),
         moisAnciennete: emp.moisAnciennete,
-      }),
+      }) + bonusMoralRh(ent),
       rng,
     );
     emp.competence = progressionCompetence(emp);
@@ -2099,7 +2119,7 @@ function preparerMoisSuivant(ent: Entreprise, etat: EtatPartie, ctx: ContexteMoi
       usure: usureEquipement(ent),
       importateur,
       poidsNature: diff.poidsNature,
-      poidsFiscal: diff.poidsFiscal,
+      poidsFiscal: diff.poidsFiscal * facteurRisqueFiscal(ent),
     },
     ctx.rng,
   );
@@ -2346,6 +2366,7 @@ export function simulerMois(etatInitial: EtatPartie): EtatPartie {
     simulerEntreprise(ent, prep, marche.resultats[ent.id] ?? resultatVide(), ctx);
     const archive = ent.archives.at(-1) as MoisArchive;
     archive.resume = resumeDecisions(ent, archive);
+    progresserCompetences(ent, archive, (defId) => dilemmeParId(defId).categorie);
     archive.concurrents = etat.concurrents
       .filter((c) => c.statut !== 'aVenir')
       .map((c) => ({

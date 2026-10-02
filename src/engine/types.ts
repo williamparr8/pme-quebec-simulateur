@@ -72,6 +72,8 @@ export interface ParametresDemarrage {
   methodeInventaire: MethodeInventaire;
   /** Nom de l'équipe (mode équipes en alternance). */
   nomEquipe?: string;
+  /** Parcours du propriétaire (compétences de départ). */
+  profil?: 'gestion' | 'finance' | 'marketing' | 'rh' | 'fiscalite';
 }
 
 /**
@@ -734,6 +736,9 @@ export interface Entreprise {
   equipe?: string;
   journalChoix?: ChoixJournal[];
   pedagogie?: EtatPedagogie;
+  /** Compétences du propriétaire (0 à 100) et formations qu'il a suivies. */
+  competences?: Record<'gestion' | 'finance' | 'marketing' | 'rh' | 'fiscalite', number>;
+  formationsProprietaire?: string[];
 }
 
 export interface EtatPartie {

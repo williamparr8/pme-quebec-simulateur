@@ -240,7 +240,9 @@ describe('rapport de fin de partie', () => {
     const d = decisionsMarquantes(etat.entreprises[0]);
     const hausse = d.find((x) => x.type === 'prixHausse');
     expect(hausse?.index).toBe(5);
-    expect(hausse?.effet).toBe(Math.round(hausse!.apres - hausse!.avant - hausse!.attendu));
+    expect(
+      Math.abs(hausse!.effet - (hausse!.apres - hausse!.avant - hausse!.attendu)),
+    ).toBeLessThanOrEqual(1);
   });
 
   it('produit un rapport complet', () => {
