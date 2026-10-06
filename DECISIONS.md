@@ -529,6 +529,24 @@ Hypothèses :
   clients paient au taux de change du mois (pas de gain ou de perte de change entre la facture et le paiement), le
   taux EUR/USD est fixe (1,08) et la TVH des ventes en Ontario n’est pas simulée.
 
+## Mode chef de département
+
+- **Principe** : le joueur dirige un seul département et fait lui-même les calculs à partir de documents sources,
+  qui indiquent comment l’information a été obtenue. Les autres onglets sont en lecture seule et des collègues
+  gèrent le personnel (embauches quand des clients repartent, mises à pied quand l’équipe est sous-utilisée).
+- **Bonnes réponses** : calculées par le moteur à partir des chiffres affichés dans les documents (arrondis au
+  cent), pour que le calcul du joueur tombe juste. Tolérance : 1 % (plancher de 1 $, 0,15 point ou 0,02).
+- **Aide et rapports selon le niveau** : Facile (formule, indices, rapport chaque mois), Réaliste (formule, rapport
+  chaque trimestre), Expert (aucune aide, lignes inutiles dans les documents, rapport tous les 6 mois).
+- **Conséquences** immédiates à tous les niveaux : confiance de la direction (+3 par bonne réponse, −6 par erreur,
+  départ à 50) et frais de 150 $ (enjeu moyen) ou de 400 $ (enjeu élevé) passés en frais divers. Ces montants sont
+  des paramètres de conception. La confiance affichée ne tient compte que des rapports déjà lus.
+- **Titres** : commis (moins de 40), analyste, chef de département (70 et plus), directeur (90 et plus).
+- **Rapprochement bancaire** : les chèques en circulation et le dépôt en transit sont tirés de façon reproductible
+  (graine et mois); ils servent à l’exercice et ne changent pas les livres.
+- Premier département offert : Finance et comptabilité (10 mandats, 3 par mois en rotation). Les autres
+  départements sont décrits dans PLAN-DEPARTEMENTS.md.
+
 ## Accessibilité
 
 - Toutes les actions sont accessibles au clavier; le focus est toujours visible (anneau orange foncé en mode clair,

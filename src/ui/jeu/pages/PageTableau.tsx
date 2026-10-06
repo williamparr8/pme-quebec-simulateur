@@ -12,6 +12,7 @@ import { useJeuCourant, variation } from '../contexte';
 import { CarteConseiller, CarteObjectifs, CarteQuiz } from '../Conseiller';
 import { CarteDilemmes } from '../Dilemmes';
 import { CarteEntourage } from '../Entourage';
+import { CarteMandats } from '../Mandats';
 import { CarteNouvelles } from '../Nouvelles';
 import { posteParId } from '../../../data';
 
@@ -71,6 +72,7 @@ export function PageTableau() {
       </TitrePage>
 
       <CarteObjectifs />
+      <CarteMandats />
       <CarteDilemmes />
       <CarteConseiller />
       <CarteEntourage />

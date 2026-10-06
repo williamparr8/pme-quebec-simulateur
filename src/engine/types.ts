@@ -1,4 +1,5 @@
 /** Types de l'état d'une partie. Tout l'état est sérialisable en JSON (sauvegarde). */
+import type { DepartementChef, EtatChef } from './mandats-types';
 import type { GrandLivre, Ecriture, Mouvements, MouvementsFlux, Soldes } from './accounting';
 import type { Concurrent } from './ai-competitors';
 import type { ClasseDpa, IdSourceFinancement, IdTypeEtude, TypeImmobilisation } from './data-types';
@@ -27,6 +28,8 @@ export interface ConfigPartie {
   tutoriel?: boolean;
   /** Scénario choisi (mode Prof / Scénario), avec ses objectifs. */
   scenarioId?: string;
+  /** Mode chef de département : le département que dirige le joueur. */
+  chefDepartement?: DepartementChef;
 }
 
 /** Mini plan d'affaires présenté aux prêteurs. */
@@ -760,6 +763,8 @@ export interface Entreprise {
   succursales?: Succursale[];
   /** Franchisé : bannière, redevance et fonds publicitaire (proportions des ventes). */
   franchise?: { banniere: string; redevance: number; fondsPublicitaire: number };
+  /** Mode chef de département : mandats du mois, historique et confiance de la direction. */
+  chef?: EtatChef;
   /** Marchés d'exportation ouverts et résultats du dernier mois. */
   exportations?: {
     marches: { id: string; ouverture: number }[];

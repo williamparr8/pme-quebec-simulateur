@@ -33,6 +33,11 @@ function ConfirmerMois() {
     avertissements.push('Ton personnel ne couvre pas toutes les heures d’ouverture.');
   if (ent.livre.soldes.encaisse / 100 < 5000)
     avertissements.push('Ton encaisse est basse : vérifie que tu peux payer le loyer et la paie.');
+  const sansReponse = (ent.chef?.mandats ?? []).filter((m) => m.reponse === null).length;
+  if (sansReponse > 0)
+    avertissements.push(
+      `${sansReponse} mandat${sansReponse > 1 ? 's' : ''} sans réponse (T) : une réponse manquante compte comme une erreur.`,
+    );
   if (ent.dilemmes.length > 0)
     avertissements.push(
       'Une décision t’attend (R) : sans réponse, le choix par défaut s’appliquera.',

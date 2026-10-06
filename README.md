@@ -125,6 +125,14 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
 - **Succursales** (jusqu’à 4), **franchise** (franchisé ou franchiseur) et **exportation** (Ontario, États-Unis,
   Europe, avec le taux de change).
 
+### Mode chef de département
+
+Dirige un seul département et fais toi-même les calculs à partir de documents sources (relevé bancaire, lettre
+d’offre de prêt, extrait du bilan…). Chaque document indique d’où vient l’information. En Facile, tu as la formule
+et des indices, et tes erreurs te sont expliquées chaque mois; en Réaliste, la formule seulement et un rapport par
+trimestre; en Expert, aucune aide, des données inutiles à écarter et un rapport tous les 6 mois. Une erreur coûte
+tout de suite des frais et de la confiance. Premier département : **Finance et comptabilité** (10 mandats).
+
 ## Jouer au clavier
 
 Le jeu est entièrement jouable sans souris.

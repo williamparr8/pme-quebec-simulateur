@@ -34,6 +34,8 @@ import {
 } from '../../engine/types';
 import { argentRond, nombre, pourcentage } from '../../i18n/format';
 import { DIFFICULTES_TEXTE } from '../../i18n/fr-CA';
+import { DEPARTEMENTS_DISPONIBLES, type DepartementChef } from '../../engine/mandats';
+import { DESCRIPTIONS_DEPARTEMENTS, NOMS_DEPARTEMENTS } from '../../i18n/mandats';
 import { useJeu } from '../../store/jeu';
 import { Bouton } from '../composants/Bouton';
 import { Astuce, Carte } from '../composants/Carte';
@@ -109,7 +111,8 @@ export function EcranCreation() {
   // (ou le scénario les impose).
   const verrouille = scenario !== null || equipeIndex > 0;
   const secteurInitial = scenario?.secteurId ?? 'cafe';
-  const [tutoriel, setTutoriel] = useState(nbEquipes === 1);
+  const [tutoriel, setTutoriel] = useState(nbEquipes === 1 && mode.type !== 'chef');
+  const [departement, setDepartement] = useState<DepartementChef>(DEPARTEMENTS_DISPONIBLES[0]);
   const [etape, setEtape] = useState(0);
   const titre = useRef<HTMLHeadingElement>(null);
 
@@ -205,6 +208,7 @@ export function EcranCreation() {
             villeId,
             anneeDepart: 2027,
             tutoriel,
+            ...(mode.type === 'chef' ? { chefDepartement: departement } : {}),
           };
       demarrer(config, nbEquipes > 1 ? [...equipesCreees, params] : params);
     }
@@ -236,6 +240,12 @@ export function EcranCreation() {
         }
       }}
     >
+      {mode.type === 'chef' && (
+        <p className="mb-3 rounded-lg bg-accent-doux px-3 py-2 font-semibold text-accent">
+          Mode chef de département : crée d’abord l’entreprise, puis choisis ton département à la
+          dernière étape.
+        </p>
+      )}
       {(scenario || nbEquipes > 1) && (
         <p className="mb-3 rounded-lg bg-accent-doux px-3 py-2 font-semibold text-accent">
           {scenario
@@ -729,6 +739,27 @@ export function EcranCreation() {
                       description: `${d / 12} exercice${d > 12 ? 's' : ''} financier${d > 12 ? 's' : ''}`,
                     }))}
                   />
+                </>
+              )}
+              {mode.type === 'chef' && (
+                <>
+                  <ChoixCartes
+                    legende="Ton département"
+                    nom="departement"
+                    valeur={departement}
+                    onChange={(id) => setDepartement(id as DepartementChef)}
+                    options={DEPARTEMENTS_DISPONIBLES.map((id) => ({
+                      id,
+                      titre: NOMS_DEPARTEMENTS[id],
+                      description: DESCRIPTIONS_DEPARTEMENTS[id],
+                    }))}
+                  />
+                  <p className="text-sm text-doux">
+                    Le niveau de difficulté fixe aussi ton aide : en Facile, tu as la formule et des
+                    indices, et tes erreurs te sont expliquées chaque mois. En Réaliste, la formule
+                    seulement, avec un rapport chaque trimestre. En Expert, aucune aide, des données
+                    inutiles à écarter et un rapport tous les 6 mois.
+                  </p>
                 </>
               )}
               {equipeIndex === 0 && (

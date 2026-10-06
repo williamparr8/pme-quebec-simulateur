@@ -24,6 +24,7 @@ import type {
   IdDemarche,
   ParametresDemarrage,
 } from '../engine/types';
+import { initialiserChef, terminerMoisChef } from '../engine/mandats';
 import { enregistrerClassement } from './classement';
 import { sauvegarder, type IdEmplacement } from './sauvegarde';
 
@@ -31,7 +32,10 @@ export type Ecran = 'accueil' | 'creation' | 'jeu' | 'scenarios' | 'classement';
 
 /** Mode de la prochaine partie à créer. */
 export type ModeCreation =
-  { type: 'solo' } | { type: 'equipes'; nombre: number } | { type: 'scenario'; scenarioId: string };
+  | { type: 'solo' }
+  | { type: 'equipes'; nombre: number }
+  | { type: 'scenario'; scenarioId: string }
+  | { type: 'chef' };
 
 export type Onglet =
   'tableau' | 'marketing' | 'rh' | 'finance' | 'operations' | 'ventes' | 'juridique';
@@ -149,7 +153,9 @@ export const useJeu = create<StoreJeu>((set, get) => {
     changerTutoriel: (tutoriel) => set({ tutoriel }),
 
     demarrer: (config, params) => {
-      const etat = creerPartie(config, params);
+      const cree = creerPartie(config, params);
+      // Mode chef de département : les premiers mandats sont remis dès l'ouverture.
+      const etat = config.chefDepartement ? initialiserChef(cree, config.chefDepartement) : cree;
       sauvegarder('auto', etat);
       set({
         etat,
@@ -186,7 +192,7 @@ export const useJeu = create<StoreJeu>((set, get) => {
         set({ equipeCourante: suivante, passage: true, modale: null, onglet: 'tableau' });
         return;
       }
-      const suivant = simulerMois(etat);
+      const suivant = etat.config.chefDepartement ? terminerMoisChef(etat) : simulerMois(etat);
       // Sauvegarde automatique à chaque fin de mois.
       sauvegarder('auto', suivant);
       if (emplacementCourant && emplacementCourant !== 'auto')

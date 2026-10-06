@@ -3,7 +3,9 @@ import { argentRond, moisAnnee } from '../../i18n/format';
 import { ONGLETS, useJeu, type Onglet } from '../../store/jeu';
 import { Bouton } from '../composants/Bouton';
 import { ChoixTheme } from '../composants/ChoixTheme';
+import { ONGLET_DEPARTEMENT } from '../../engine/mandats';
 import { palier } from '../../engine/simulation';
+import { NOMS_DEPARTEMENTS } from '../../i18n/mandats';
 import { NOMS_PALIERS } from '../../i18n/messages-croissance';
 import { FORMES } from '../creation/formes';
 import { useJeuCourant } from './contexte';
@@ -219,6 +221,10 @@ export function EcranJeu() {
 
 function Jeu() {
   const onglet = useJeu((s) => s.onglet);
+  const chef = useJeu((s) => s.etat?.config.chefDepartement);
+  // Mode chef de département : les autres départements sont gérés par des collègues.
+  const verrouille =
+    chef !== undefined && onglet !== 'tableau' && onglet !== ONGLET_DEPARTEMENT[chef];
   const premierRendu = useRef(true);
   useRaccourcis();
 
@@ -245,7 +251,22 @@ function Jeu() {
               </p>
             }
           >
-            <Page />
+            {verrouille && chef ? (
+              <>
+                <p className="mb-4 rounded-lg bg-accent-doux px-3 py-2 font-semibold text-accent">
+                  Ce département est géré par un collègue. Tu diriges {NOMS_DEPARTEMENTS[chef]} : tu
+                  peux consulter cette page, mais pas la modifier.
+                </p>
+                <fieldset disabled className="m-0 min-w-0 border-0 p-0">
+                  <legend className="sr-only">
+                    Département géré par un collègue (lecture seule)
+                  </legend>
+                  <Page />
+                </fieldset>
+              </>
+            ) : (
+              <Page />
+            )}
           </Suspense>
         </div>
       </main>

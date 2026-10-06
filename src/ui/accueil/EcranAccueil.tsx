@@ -55,7 +55,7 @@ export function EcranAccueil() {
         </div>
       )}
 
-      <div className="mb-8 grid gap-4 md:grid-cols-3">
+      <div className="mb-8 grid gap-4 md:grid-cols-2">
         <Carte titre="Solo">
           <p className="mb-3 text-sm">
             Ton entreprise contre 5 concurrents gérés par l’ordinateur. Tutoriel guidé offert.
@@ -97,6 +97,13 @@ export function EcranAccueil() {
             Des défis avec une situation de départ et des objectifs notés (mode Prof).
           </p>
           <Bouton onClick={() => allerA('scenarios')}>Choisir un scénario</Bouton>
+        </Carte>
+        <Carte titre="Chef de département">
+          <p className="mb-3 text-sm">
+            Dirige un seul département et fais toi-même les calculs à partir de documents. Tes
+            collègues gèrent le reste. Premier département offert : Finance et comptabilité.
+          </p>
+          <Bouton onClick={() => choisirMode({ type: 'chef' })}>Prendre un poste</Bouton>
         </Carte>
       </div>
 
