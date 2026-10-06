@@ -45,6 +45,7 @@ import {
 import { FORMATIONS_PROPRIETAIRE, gagnerCompetence, niveauCompetence } from './competences';
 import { corrigerQuiz, utiliserRabais } from './quiz';
 import { PARAMETRES_RESEAU, peutLancerReseau } from './franchise';
+import { marcheExport, peutExporter } from './exportations';
 import { MAX_SUCCURSALES, MOIS_PENALITE_FERMETURE, coutsSuccursale } from './succursales';
 import type { IdTypeEtude, LigneProduit } from './data-types';
 import { chomageVille, conjonctureInitiale, tauxPreferentiel } from './economy';
@@ -1437,5 +1438,41 @@ export function objectifFranchises(
   return action(etat, entrepriseId, (ent) => {
     if (!ent.reseau) return;
     ent.reseau.objectif = Math.round(borner(objectif, 0, PARAMETRES_RESEAU.maximum));
+  });
+}
+
+/** Ouvre un marché d'exportation (adaptation, courtier, certifications, salons). */
+export function ouvrirMarcheExport(
+  etat: EtatPartie,
+  entrepriseId: string,
+  marcheId: string,
+): EtatPartie {
+  return action(etat, entrepriseId, (ent, e) => {
+    if (!peutExporter(e.config.secteurId)) return;
+    const m = marcheExport(marcheId);
+    if (!m || ent.exportations?.marches.some((x) => x.id === m.id)) return;
+    payer(
+      ent.livre,
+      ent,
+      `Ouverture du marché : ${m.nom} (adaptation, courtier, salons)`,
+      'honoraires',
+      m.coutOuverture,
+      true,
+      'loyerEtFrais',
+    );
+    ent.exportations ??= { marches: [] };
+    ent.exportations.marches.push({ id: m.id, ouverture: indexCourant(e) });
+  });
+}
+
+/** Cesse d'exporter vers un marché. */
+export function fermerMarcheExport(
+  etat: EtatPartie,
+  entrepriseId: string,
+  marcheId: string,
+): EtatPartie {
+  return action(etat, entrepriseId, (ent) => {
+    if (!ent.exportations) return;
+    ent.exportations.marches = ent.exportations.marches.filter((x) => x.id !== marcheId);
   });
 }

@@ -496,6 +496,39 @@ satisfaction élevées), mais ils mènent aussi à beaucoup de faillites : c’e
 elle sépare quand même clairement les stratégies. Un test rapide (3 mondes, 24 mois) vérifie à chaque déploiement
 qu’une gestion active fait mieux que l’absence de gestion.
 
+## Croissance (après la version 1.0)
+
+Valeurs **À VÉRIFIER** (ordres de grandeur ou paramètres de conception) :
+
+| Élément                             | Fichier                     | Valeur                                                                                        | Remarque                                                                              |
+| ----------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Coût des formations du propriétaire | `src/data/competences.json` | 400 $ à 1 200 $                                                                               | Ordres de grandeur d’ateliers pour entrepreneurs; organismes fictifs                  |
+| Effets des compétences              | `src/engine/competences.ts` | ex. capacité +6 %, taux −0,75 point                                                           | Paramètres de conception, volontairement modérés                                      |
+| Seuils des paliers                  | `src/engine/croissance.ts`  | PME : 750 000 $ de ventes ou 15 employés; grande : 2,5 M$ et 3 établissements, ou 50 employés | Échelle du jeu (réalité : petite entreprise jusqu’à 99 employés, moyenne jusqu’à 499) |
+| Rabais de volume, examen et audit   | `src/engine/croissance.ts`  | 3 % et 6 %; 400 $ et 1 500 $ par mois                                                         | Paramètres de conception                                                              |
+| Obligations selon la taille         | `src/data/demarches.json`   | équité salariale (10), comité de santé et de sécurité (20), inscription à l’OQLF (25)         | Seuils légaux à confirmer; coûts et amendes estimés                                   |
+| Franchise                           | `src/data/franchise.json`   | droit d’entrée 25 000 $ à 30 000 $, redevances 5 % à 6 %, fonds publicitaire 2 %              | Ordres de grandeur du secteur; bannières fictives                                     |
+| Exportation                         | `src/data/export.json`      | ouverture 4 000 $ à 20 000 $, transport 6 % à 15 %                                            | Ordres de grandeur; droits de douane et accords changent souvent                      |
+
+Hypothèses :
+
+- **Compétences du propriétaire** : 5 domaines de 0 à 100. Elles progressent chaque mois selon ce que le joueur
+  fait (budget, publicité, taille de l’équipe, obligations respectées, choix devant les événements), avec les quiz et
+  avec 10 formations. Les gains ralentissent près de 100.
+- **Personnages** : 5 personnages fictifs. Au plus 3 répliques par mois, une par personnage, choisies par des règles
+  (sans hasard) selon la situation.
+- **Paliers** : on ne redescend pas de palier (la structure et les obligations restent).
+- **Succursales** : même ville, même marque, mêmes prix, achats et stocks centralisés. Chaque succursale est une
+  offre de plus sur le marché : elle attire de nouveaux clients et en prend au premier commerce (cannibalisation).
+  Seule l’équipe de service est propre à la succursale; la production est mise en commun. Le dépôt de garantie
+  est de 2 mois de loyer et la fermeture coûte 3 mois de loyer.
+- **Franchise** : le droit d’entrée du franchisé est passé en charge de démarrage (en réalité, c’est un actif
+  incorporel amorti). Les droits et les redevances sont comptabilisés sans TPS ni TVQ. Les ventes d’un franchisé du
+  réseau sont estimées à partir des ventes moyennes d’un établissement du franchiseur.
+- **Exportation** : les marchandises exportées sont achetées et expédiées au fil des commandes (hors stock), les
+  clients paient au taux de change du mois (pas de gain ou de perte de change entre la facture et le paiement), le
+  taux EUR/USD est fixe (1,08) et la TVH des ventes en Ontario n’est pas simulée.
+
 ## Accessibilité
 
 - Toutes les actions sont accessibles au clavier; le focus est toujours visible (anneau orange foncé en mode clair,

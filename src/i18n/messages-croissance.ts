@@ -54,6 +54,19 @@ export const NOMS_PALIERS: Record<string, string> = {
 /** Messages du rapport mensuel liés à la croissance. */
 export const MESSAGES_CROISSANCE: Record<string, (p: Params) => { titre: string; texte: string }> =
   {
+    exportationsMois: (p) => ({
+      titre: `Exportations : ${argentRond(n(p, 'ventes'))} de ventes`,
+      texte: `Tes ventes à l’étranger ont coûté ${argentRond(n(p, 'couts'))} (marchandises, transport, courtage et représentation). Le dollar canadien vaut ${n(p, 'taux').toFixed(3).replace('.', ',')} $ US : plus il est bas, plus tes produits sont concurrentiels à l’étranger. Les exportations hors Canada sont détaxées (TPS et TVQ à 0 %).`,
+    }),
+    franchiseVendue: (p) => ({
+      titre: `Nouveau franchisé : ${s(p, 'nom')}`,
+      texte: `Il t’a versé un droit d’entrée de ${argentRond(n(p, 'montant'))}. Tu lui offres la formation initiale; il te versera des redevances chaque mois.`,
+    }),
+    franchiseFermee: (p) => ({
+      titre: `${s(p, 'nom')} ferme ses portes`,
+      texte:
+        'Un franchisé qui ferme, c’est un revenu de moins et une tache sur la réputation de ta marque. Le soutien au réseau et le choix des franchisés comptent.',
+    }),
     palierAtteint: (p) =>
       s(p, 'palier') === 'grande'
         ? {

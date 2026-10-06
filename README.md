@@ -116,6 +116,15 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
 - **Accessibilité** : audit WCAG 2.1 AA (axe-core) sans violation, case « Animations » en plus de
   `prefers-reduced-motion`. **Performance** : chargement découpé par écran, sauvegardes compressées.
 
+### Croissance (après la version 1.0)
+
+- **Compétences du propriétaire** (gestion, finance, marketing, RH, fiscalité) : parcours de départ, progression,
+  formations, effets sur les résultats. **Fiches de personnage** du propriétaire et des employés.
+- **Personnages récurrents** (mentore, banquière, comptable, rival, fournisseure) qui réagissent à ta situation.
+- **Paliers de croissance** : petite entreprise, PME, grande entreprise, avec de nouvelles règles et obligations.
+- **Succursales** (jusqu’à 4), **franchise** (franchisé ou franchiseur) et **exportation** (Ontario, États-Unis,
+  Europe, avec le taux de change).
+
 ## Jouer au clavier
 
 Le jeu est entièrement jouable sans souris.

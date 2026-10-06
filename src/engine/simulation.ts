@@ -88,6 +88,7 @@ import {
 import { resumeDecisions } from './bilan';
 import { fusionnerResultats } from './succursales';
 import { facteurAchatsFranchise, gererFranchise } from './franchise';
+import { gererExportations } from './exportations';
 import { evoluerPalier, facteurAchatsPalier, honorairesPalier } from './croissance';
 import {
   bonusCapaciteGestion,
@@ -215,6 +216,7 @@ export { conformeHygiene } from './hr';
 export * from './bilan';
 export * from './competences';
 export * from './conseiller';
+export * from './exportations';
 export * from './franchise';
 export * from './succursales';
 export * from './croissance';
@@ -1607,6 +1609,20 @@ function simulerEntreprise(
       phase: ctx.conj.phase,
       ventesMois: ventesBrutes,
       etablissements: 1 + (ent.succursales?.length ?? 0),
+    }),
+  );
+  // Exportations : ventes à l'étranger (détaxées), marchandises, transport et représentation.
+  const lignesPrix = secteur.lignes.filter((l) => (d.prix[l.id] ?? 0) > 0);
+  messages.push(
+    ...gererExportations(L, ent, {
+      index: ctx.index,
+      tauxChange: conj.tauxChange,
+      ventesMois: ventesBrutes,
+      ratioCout:
+        lignesPrix.reduce((a, l) => a + (prep.coutLignes[l.id] ?? 0) / d.prix[l.id], 0) /
+        Math.max(1, lignesPrix.length),
+      qualite: ent.clientele.qualitePercue,
+      indicePrix: indicePrixOffre(d.prix, secteur, conj.indicePrix),
     }),
   );
   const commis = Math.min(1, heuresPoste(ent, 'administration') / 10);

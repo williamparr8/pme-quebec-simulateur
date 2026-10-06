@@ -86,7 +86,11 @@ function FicheProprietaire() {
   const rabais = rabaisPedagogique(ent);
   return (
     <Carte
-      titre={`${ent.proprietaire}, propriétaire`}
+      titre={
+        ent.proprietaire === 'Propriétaire'
+          ? 'Toi, le propriétaire'
+          : `${ent.proprietaire}, propriétaire`
+      }
       sousTitre="Tes compétences progressent avec l’expérience, les formations et les quiz"
     >
       <div className="flex flex-wrap gap-5">

@@ -760,6 +760,11 @@ export interface Entreprise {
   succursales?: Succursale[];
   /** Franchisé : bannière, redevance et fonds publicitaire (proportions des ventes). */
   franchise?: { banniere: string; redevance: number; fondsPublicitaire: number };
+  /** Marchés d'exportation ouverts et résultats du dernier mois. */
+  exportations?: {
+    marches: { id: string; ouverture: number }[];
+    dernier?: { ventes: number; couts: number };
+  };
   /** Franchiseur : réseau de franchisés de la marque. */
   reseau?: {
     lance: number;

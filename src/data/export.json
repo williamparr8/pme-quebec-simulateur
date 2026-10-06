@@ -1,0 +1,40 @@
+{
+  "_source": "Ordres de grandeur de l’exportation pour une PME québécoise : coûts d’entrée (adaptation de l’emballage et de l’étiquetage, courtier en douane, certifications, salons), transport international (6 % à 15 % de la valeur) et frais de courtage. Les exportations sont des fournitures détaxées (TPS/TVQ à 0 %). ACEUM (États-Unis) et AECG (Union européenne) : la plupart des produits admissibles entrent sans droits de douane s’ils respectent les règles d’origine. Vérifiés le 01/10/2026 (À VÉRIFIER : droits et tarifs changent souvent). Le taux de change EUR/USD est fixé à 1,08 (hypothèse).",
+  "secteurs": ["vetements", "enLigne", "atelier", "epicerie"],
+  "eurUsd": 1.08,
+  "marches": [
+    {
+      "id": "ontario",
+      "nom": "Ontario et provinces de l’Atlantique",
+      "devise": "CAD",
+      "coutOuverture": 4000,
+      "fraisMensuels": 500,
+      "potentiel": 0.25,
+      "transport": 0.06,
+      "courtage": 0,
+      "description": "Même pays, mêmes règles : étiquetage bilingue, transport et représentation. Les ventes hors Québec sont taxables (TVH), mais restent simples."
+    },
+    {
+      "id": "etatsUnis",
+      "nom": "États-Unis",
+      "devise": "USD",
+      "coutOuverture": 12000,
+      "fraisMensuels": 1500,
+      "potentiel": 0.55,
+      "transport": 0.1,
+      "courtage": 0.03,
+      "description": "Le plus grand marché, mais il faut un courtier en douane, respecter les règles d’origine de l’ACEUM et surveiller le taux de change."
+    },
+    {
+      "id": "europe",
+      "nom": "Union européenne",
+      "devise": "EUR",
+      "coutOuverture": 20000,
+      "fraisMensuels": 2000,
+      "potentiel": 0.35,
+      "transport": 0.15,
+      "courtage": 0.03,
+      "description": "L’AECG (Canada-Union européenne) élimine la plupart des droits de douane, mais les normes, la traduction et le transport coûtent cher."
+    }
+  ]
+}

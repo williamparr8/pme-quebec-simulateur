@@ -10,6 +10,10 @@ import {
   FORMATIONS_PROPRIETAIRE,
   PARAMETRES_FRANCHISE,
   affecterEmploye,
+  facteurChange,
+  fermerMarcheExport,
+  ouvrirMarcheExport,
+  peutExporter,
   lancerReseauFranchise,
   objectifFranchises,
   peutLancerReseau,
@@ -275,5 +279,44 @@ describe('A6 : franchise', () => {
     );
     expect(revenus).toBeLessThan(0); // les produits sont au crédit
     expect(totalBalance(etat.entreprises[0].livre.soldes)).toBe(0);
+  });
+});
+
+describe('A7 : exportations', () => {
+  const boutique = () => creerPartie(configTest(5, 36, 'vetements'), demarrageSecteur('vetements'));
+
+  it('seuls les secteurs de biens peuvent exporter', () => {
+    expect(peutExporter('vetements')).toBe(true);
+    expect(peutExporter('coiffure')).toBe(false);
+    const cafe = ouvrirMarcheExport(partie(), 'joueur-1', 'etatsUnis');
+    expect(cafe.entreprises[0].exportations).toBeUndefined();
+  });
+
+  it('ouvrir un marché coûte de l’argent, puis les ventes montent sur 6 mois', () => {
+    const depart = avecApport(jouerMois(boutique(), 2), 60_000);
+    let etat = ouvrirMarcheExport(depart, 'joueur-1', 'etatsUnis');
+    const ent = etat.entreprises[0];
+    expect(ent.exportations?.marches).toHaveLength(1);
+    expect(ent.livre.soldes.encaisse).toBeLessThan(depart.entreprises[0].livre.soldes.encaisse);
+    // Ouvrir deux fois le même marché ne change rien.
+    expect(
+      ouvrirMarcheExport(etat, 'joueur-1', 'etatsUnis').entreprises[0].exportations?.marches,
+    ).toHaveLength(1);
+    etat = jouerMois(etat, 1);
+    const premier = etat.entreprises[0].exportations!.dernier!.ventes;
+    etat = jouerMois(etat, 6);
+    const e2 = etat.entreprises[0];
+    expect(premier).toBeGreaterThan(0);
+    expect(e2.exportations!.dernier!.ventes).toBeGreaterThan(premier);
+    expect(e2.archives.at(-1)!.messages.some((m) => m.code === 'exportationsMois')).toBe(true);
+    expect(totalBalance(e2.livre.soldes)).toBe(0);
+    const ferme = fermerMarcheExport(etat, 'joueur-1', 'etatsUnis');
+    expect(ferme.entreprises[0].exportations?.marches).toHaveLength(0);
+  });
+
+  it('un dollar canadien faible aide les exportations en devises', () => {
+    expect(facteurChange('USD', 0.65)).toBeGreaterThan(facteurChange('USD', 0.8));
+    expect(facteurChange('CAD', 0.65)).toBe(1);
+    expect(facteurChange('EUR', 0.72)).toBeCloseTo(1);
   });
 });
