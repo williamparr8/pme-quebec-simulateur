@@ -131,7 +131,7 @@ Dirige un seul département et fais toi-même les calculs à partir de documents
 d’offre de prêt, extrait du bilan…). Chaque document indique d’où vient l’information. En Facile, tu as la formule
 et des indices, et tes erreurs te sont expliquées chaque mois; en Réaliste, la formule seulement et un rapport par
 trimestre; en Expert, aucune aide, des données inutiles à écarter et un rapport tous les 6 mois. Une erreur coûte
-tout de suite des frais et de la confiance. Premier département : **Finance et comptabilité** (10 mandats).
+tout de suite des frais et de la confiance. Départements offerts : **Finance et comptabilité** et **Fiscalité et juridique** (10 mandats chacun).
 
 ## Jouer au clavier
 

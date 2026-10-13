@@ -547,6 +547,27 @@ Hypothèses :
 - Premier département offert : Finance et comptabilité (10 mandats, 3 par mois en rotation). Les autres
   départements sont décrits dans PLAN-DEPARTEMENTS.md.
 
+### Département Fiscalité et juridique (10 mandats, T1 à T10)
+
+- **Origine des chiffres** : TPS et TVQ (T1, T2) utilisent les ventes et les achats de marchandises du dernier mois
+  de la partie; les autres mandats (facture, seuil du petit fournisseur, paie, DPA, impôt, acomptes, préavis,
+  démarches) tirent leurs montants de façon reproductible (graine et mois), parce que le jeu n’a pas de donnée
+  équivalente à montrer. Chaque document dit d’où vient l’information.
+- **Retenues à la source (T5)** : le registre de paie est fictif (2 à 4 employés); retenues et cotisations
+  viennent des mêmes fonctions que la paie du jeu (taux 2026). Le total à remettre = retenues des employés +
+  cotisations de l’employeur.
+- **DPA (T6)** : catégories 8, 10 et 50 seulement, avec le facteur de la première année du jeu (incitatif à
+  l’investissement accéléré, × 1,5 jusqu’en 2029; voir DPA dans fiscalite.ts).
+- **Impôt d’une société (T7)** : revenu imposable de 90 000 $ à 620 000 $; les heures rémunérées sont toujours
+  d’au moins 5 500 (déduction du Québec complète). La partie au-delà du plafond de 500 000 $ est imposée au taux
+  général.
+- **Acompte (T8)** : mensuel (12 versements) ou trimestriel (4, société admissible), alternativement.
+- **Préavis (T9)** : barème de la Loi sur les normes du travail (0, 1, 2, 4 ou 8 semaines selon le service);
+  la faute grave, le licenciement collectif et les ententes de travail ne sont pas simulés. À VÉRIFIER avec la
+  loi en vigueur avant de s’en servir en classe.
+- **Démarches (T10)** : seuils de 10, 20 et 25 employés (équité salariale, comité SST, francisation), comme
+  dans demarches.json.
+
 ## Accessibilité
 
 - Toutes les actions sont accessibles au clavier; le focus est toujours visible (anneau orange foncé en mode clair,

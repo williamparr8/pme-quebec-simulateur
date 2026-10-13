@@ -7,6 +7,7 @@
 import { posteParId, secteurParId } from '../data';
 import { payer } from './ecritures';
 import { MANDATS_FINANCE } from './mandats-finance';
+import { MANDATS_FISCALITE } from './mandats-fiscalite';
 import type {
   DefinitionMandat,
   DepartementChef,
@@ -22,9 +23,9 @@ import { borner } from './util';
 
 export * from './mandats-types';
 
-export const MANDATS: readonly DefinitionMandat[] = [...MANDATS_FINANCE];
+export const MANDATS: readonly DefinitionMandat[] = [...MANDATS_FINANCE, ...MANDATS_FISCALITE];
 /** Départements jouables pour l'instant (les autres suivront). */
-export const DEPARTEMENTS_DISPONIBLES: readonly DepartementChef[] = ['finance'];
+export const DEPARTEMENTS_DISPONIBLES: readonly DepartementChef[] = ['finance', 'fiscalite'];
 export const MANDATS_PAR_MOIS = 3;
 export const CONFIANCE_DEPART = 50;
 const GAIN_CONFIANCE = 3;

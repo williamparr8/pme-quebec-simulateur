@@ -101,7 +101,8 @@ export function EcranAccueil() {
         <Carte titre="Chef de département">
           <p className="mb-3 text-sm">
             Dirige un seul département et fais toi-même les calculs à partir de documents. Tes
-            collègues gèrent le reste. Premier département offert : Finance et comptabilité.
+            collègues gèrent le reste. Départements offerts : Finance et comptabilité, Fiscalité et
+            juridique.
           </p>
           <Bouton onClick={() => choisirMode({ type: 'chef' })}>Prendre un poste</Bouton>
         </Carte>

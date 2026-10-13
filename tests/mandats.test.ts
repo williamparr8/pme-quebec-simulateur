@@ -19,6 +19,8 @@ import {
   terminerMoisChef,
   titreChef,
 } from '../src/engine/mandats';
+import { semainesPreavis } from '../src/engine/mandats-fiscalite';
+import { etatResultats } from '../src/engine/statements';
 import type { Difficulte, EtatPartie } from '../src/engine/types';
 import { configTest, creerPartieTest } from './helpers';
 
@@ -185,5 +187,81 @@ describe('mandats du chef de département', () => {
     expect(totalBalance(etat.entreprises[0].livre.soldes)).toBe(0);
     // À la fin, tous les résultats restants sont rapportés.
     expect(resultatsARapporter(etat, etat.entreprises[0]).length).toBeGreaterThan(0);
+  });
+});
+
+describe('département Fiscalité et juridique (E2)', () => {
+  const partieFisc = (difficulte: Difficulte = 'realiste', graine = 5): EtatPartie =>
+    initialiserChef(creerPartieTest({ ...configTest(graine, 24), difficulte }), 'fiscalite');
+
+  it('les 10 mandats de fiscalité apparaissent, avec des réponses cohérentes avec le moteur', () => {
+    let etat = partieFisc();
+    const vus = new Map<string, number>();
+    for (let k = 0; k < 14; k++) {
+      const ent = etat.entreprises[0];
+      expect(ent.chef!.departement).toBe('fiscalite');
+      for (const m of ent.chef!.mandats) {
+        vus.set(m.id, m.attendu);
+        expect(m.id.startsWith('T')).toBe(true);
+        for (const d of m.documents) expect(d.provenance.length).toBeGreaterThan(20);
+        expect(Number.isFinite(m.attendu)).toBe(true);
+        if (m.id === 'T3') {
+          // Prix affiché dans la soumission, puis total = prix × 1,14975 (à 2 cents près).
+          const prix = Number(
+            m.documents[0].lignes[0].valeur.replace(/[^\d,]/g, '').replace(',', '.'),
+          );
+          expect(m.attendu).toBeCloseTo(prix * 1.14975, 1);
+        }
+        if (m.id === 'T1' || m.id === 'T2') {
+          const derniere = ent.archives.at(-1)!;
+          const r = etatResultats(derniere.mouvements);
+          const taux = m.id === 'T1' ? 0.05 : 0.09975;
+          expect(m.attendu).toBeCloseTo((r.ventes - r.coutMarchandises) * taux, 0);
+        }
+      }
+      etat = terminerMoisChef(repondre(etat));
+    }
+    expect([...vus.keys()].sort()).toEqual(
+      MANDATS.filter((d) => d.departement === 'fiscalite')
+        .map((d) => d.id)
+        .sort(),
+    );
+    expect(totalBalance(etat.entreprises[0].livre.soldes)).toBe(0);
+  });
+
+  it('le barème du préavis suit la Loi sur les normes du travail', () => {
+    expect(semainesPreavis(2)).toBe(0);
+    expect(semainesPreavis(3)).toBe(1);
+    expect(semainesPreavis(11)).toBe(1);
+    expect(semainesPreavis(12)).toBe(2);
+    expect(semainesPreavis(59)).toBe(2);
+    expect(semainesPreavis(60)).toBe(4);
+    expect(semainesPreavis(119)).toBe(4);
+    expect(semainesPreavis(120)).toBe(8);
+  });
+
+  it('l’impôt d’une société et les démarches suivent les règles du jeu', () => {
+    let etat = partieFisc();
+    const vus = new Map<string, { attendu: number; question: string }>();
+    for (let k = 0; k < 14; k++) {
+      for (const m of etat.entreprises[0].chef!.mandats) vus.set(m.id, m);
+      etat = terminerMoisChef(repondre(etat));
+    }
+    const t7 = vus.get('T7')!;
+    // Au moins 11,2 % (taux réduits) et au plus 26,5 % (taux généraux) du revenu imposable.
+    expect(t7.attendu).toBeGreaterThan(900_00 * 0.112 - 1);
+    const t10 = vus.get('T10')!;
+    expect(t10.attendu).toBeGreaterThanOrEqual(0);
+    expect(t10.attendu).toBeLessThanOrEqual(3);
+    const t8 = vus.get('T8')!;
+    expect(t8.attendu).toBeGreaterThan(0);
+  });
+
+  it('une partie complète de chef de la fiscalité se rend au bout, aux trois niveaux', () => {
+    for (const niveau of ['facile', 'realiste', 'expert'] as const) {
+      const etat = jouer(partieFisc(niveau, 11), 24);
+      expect(etat.terminee).toBe(true);
+      expect(totalBalance(etat.entreprises[0].livre.soldes)).toBe(0);
+    }
   });
 });
