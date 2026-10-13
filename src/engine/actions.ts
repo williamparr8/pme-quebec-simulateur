@@ -1127,7 +1127,7 @@ export function accueillirInvestisseur(
     const pre = valorisationEnCours(ent);
     const part = m / (pre + m);
     const totalAutres = ent.finance.actionnaires
-      .filter((a) => a.type === 'ange')
+      .filter((a) => a.type !== 'fondateur')
       .reduce((a, x) => a + x.part, 0);
     if (part + totalAutres * (1 - part) > 0.49) return;
     for (const a of ent.finance.actionnaires)

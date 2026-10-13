@@ -250,7 +250,7 @@ export function bilanPartie(ent: Entreprise): BilanPartie {
 
   // Note : rendement pour le propriétaire (50), clients (25), employés (10), part de marché (15).
   const richesse =
-    (ent.vente ? ent.vente.prix * partProprietaire : b.capitaux.total) +
+    (ent.vente ? (ent.vente.net ?? ent.vente.prix * partProprietaire) : b.capitaux.total) +
     prelevementsCumules -
     apportsTotal;
   const scoreFinance = Math.max(0, Math.min(50, 25 + (richesse / Math.max(1, apportsTotal)) * 25));
@@ -278,7 +278,7 @@ export function bilanPartie(ent: Entreprise): BilanPartie {
     moralMoyen,
     valeurEntreprise,
     partProprietaire,
-    valeurPourProprietaire: Math.round(valeurEntreprise * partProprietaire),
+    valeurPourProprietaire: Math.round(ent.vente?.net ?? valeurEntreprise * partProprietaire),
     vendue: ent.vente !== null && ent.vente !== undefined,
     note,
   };

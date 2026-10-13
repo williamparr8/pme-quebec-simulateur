@@ -125,6 +125,12 @@ export const PLAN_COMPTABLE = {
   },
   tpsAPayer: { numero: '2300', nom: 'TPS perçue', classe: 'passif', groupe: 'passifCourt' },
   tvqAPayer: { numero: '2310', nom: 'TVQ perçue', classe: 'passif', groupe: 'passifCourt' },
+  produitsPercusAvance: {
+    numero: '2350',
+    nom: 'Produits perçus d’avance (sociofinancement)',
+    classe: 'passif',
+    groupe: 'passifCourt',
+  },
   taxesARegulariser: {
     numero: '2320',
     nom: 'Taxes, amendes et intérêts à payer (avis de cotisation)',
@@ -207,6 +213,12 @@ export const PLAN_COMPTABLE = {
   revenusFranchise: {
     numero: '4650',
     nom: 'Revenus de franchise (droits d’entrée et redevances)',
+    classe: 'produit',
+    groupe: 'autresProduits',
+  },
+  revenusSociofinancement: {
+    numero: '4660',
+    nom: 'Revenus de sociofinancement (contreparties livrées)',
     classe: 'produit',
     groupe: 'autresProduits',
   },

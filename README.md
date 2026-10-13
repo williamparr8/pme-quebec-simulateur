@@ -125,6 +125,13 @@ Aucune installation, aucun compte : le jeu est 100 % statique et les parties son
 - **Succursales** (jusqu’à 4), **franchise** (franchisé ou franchiseur) et **exportation** (Ontario, États-Unis,
   Europe, avec le taux de change).
 
+### Capital et transmission
+
+Finance, onglets « Capital et investisseurs » et « Vendre ou transmettre » : lance une campagne de
+sociofinancement (tout ou rien, avec des produits perçus d’avance), accueille un fonds de capital de risque
+(dilution, conseil d’administration, objectif de croissance), évalue ton entreprise, prépare ta relève et compare
+une vente à un tiers, à un employé ou à la famille, après frais et impôt sur le gain en capital.
+
 ### Mode chef de département
 
 Dirige un seul département et fais toi-même les calculs à partir de documents sources (relevé bancaire, lettre

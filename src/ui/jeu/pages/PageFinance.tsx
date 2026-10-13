@@ -23,6 +23,7 @@ import { Astuce, Carte } from '../../composants/Carte';
 import { Terme } from '../../composants/Terme';
 import { TitrePage } from '../../composants/TitrePage';
 import { useJeuCourant } from '../contexte';
+import { VueCapital, VueTransmission } from './Capital';
 import { VueBudget, VueFinancement, VueInvestissements, VueTresorerie } from './FinanceVues';
 
 const GraphiqueSeuil = lazy(() =>
@@ -38,7 +39,9 @@ type Vue =
   | 'budget'
   | 'tresorerie'
   | 'investissements'
-  | 'financement';
+  | 'financement'
+  | 'capital'
+  | 'transmission';
 const VUES: { id: Vue; nom: string }[] = [
   { id: 'resultats', nom: 'État des résultats' },
   { id: 'bilan', nom: 'Bilan' },
@@ -49,9 +52,18 @@ const VUES: { id: Vue; nom: string }[] = [
   { id: 'tresorerie', nom: 'Trésorerie' },
   { id: 'investissements', nom: 'Investissements' },
   { id: 'financement', nom: 'Financement' },
+  { id: 'capital', nom: 'Capital et investisseurs' },
+  { id: 'transmission', nom: 'Vendre ou transmettre' },
 ];
 /** Vues qui ne dépendent pas d'une période. */
-const SANS_PERIODE: Vue[] = ['budget', 'tresorerie', 'investissements', 'financement'];
+const SANS_PERIODE: Vue[] = [
+  'budget',
+  'tresorerie',
+  'investissements',
+  'financement',
+  'capital',
+  'transmission',
+];
 
 /** Montant comptable : les négatifs entre parenthèses, comme dans les vrais états financiers. */
 function m(x: number): string {
@@ -565,6 +577,8 @@ export function PageFinance() {
         {vue === 'tresorerie' && <VueTresorerie />}
         {vue === 'investissements' && <VueInvestissements />}
         {vue === 'financement' && <VueFinancement />}
+        {vue === 'capital' && <VueCapital />}
+        {vue === 'transmission' && <VueTransmission />}
       </Carte>
 
       <Astuce>

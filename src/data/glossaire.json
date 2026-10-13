@@ -1026,6 +1026,13 @@
       "categorie": "Marketing",
       "definition": "Changement durable dans ce que les clients valorisent (achat local, écoresponsabilité, commande en ligne). Il modifie l'attrait des offres sur le marché.",
       "exemple": "La vogue de l’achat local favorise les commerces qui affichent l’origine de leurs produits."
+    },
+    {
+      "id": "sociofinancement",
+      "terme": "Sociofinancement (financement participatif)",
+      "categorie": "Finance",
+      "definition": "Campagne en ligne où de nombreuses personnes versent de petits montants, souvent en échange d’une contrepartie (produit, remerciement). En mode « tout ou rien », rien n’est versé si l’objectif n’est pas atteint. Les contributions sont des produits perçus d’avance jusqu’à la livraison.",
+      "exemple": "Une campagne de 10 000 $ pour lancer une nouvelle gamme : les contributeurs reçoivent le produit en primeur."
     }
   ]
 }

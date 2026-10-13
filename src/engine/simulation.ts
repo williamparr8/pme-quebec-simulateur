@@ -89,6 +89,7 @@ import { resumeDecisions } from './bilan';
 import { fusionnerResultats } from './succursales';
 import { facteurAchatsFranchise, gererFranchise } from './franchise';
 import { gererExportations } from './exportations';
+import { gererCapital } from './capital';
 import { evoluerPalier, facteurAchatsPalier, honorairesPalier } from './croissance';
 import {
   bonusCapaciteGestion,
@@ -217,6 +218,8 @@ export * from './bilan';
 export * from './competences';
 export * from './conseiller';
 export * from './exportations';
+export * from './capital';
+export * from './transmission';
 export * from './franchise';
 export * from './succursales';
 export * from './croissance';
@@ -1625,6 +1628,8 @@ function simulerEntreprise(
       indicePrix: indicePrixOffre(d.prix, secteur, conj.indicePrix),
     }),
   );
+  // Capital : sociofinancement, conseil d'administration et relève.
+  messages.push(...gererCapital(L, ent, { index: ctx.index, rng: ctx.rng }));
   const commis = Math.min(1, heuresPoste(ent, 'administration') / 10);
   for (const [cle, montant] of Object.entries(secteur.fraisFixesMensuels) as [
     keyof FraisFixesMensuels,
@@ -1815,6 +1820,8 @@ function simulerEntreprise(
         'prelevementsProprietaire',
       );
     }
+  } else if (d.dividendePonctuel > 0 && ent.capital?.conseil?.sansDividendes) {
+    messages.push({ code: 'dividendeRefuse', niveau: 'alerte' });
   } else if (d.dividendePonctuel > 0) {
     ecritureSimple(
       L,

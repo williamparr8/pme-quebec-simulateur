@@ -441,7 +441,7 @@ export interface Placement {
 export interface Actionnaire {
   nom: string;
   part: number;
-  type: 'fondateur' | 'ange';
+  type: 'fondateur' | 'ange' | 'risque';
 }
 
 export interface EtatFinance {
@@ -749,7 +749,19 @@ export interface Entreprise {
   /** Effets temporaires des événements. */
   modificateurs: Modificateur[];
   /** Vente de l'entreprise (fin de partie) : prix reçu et mois de la vente. */
-  vente: { prix: number; index: number; acheteur: string } | null;
+  vente: {
+    prix: number;
+    index: number;
+    acheteur: string;
+    /** Voie de la vente : tiers, relève, famille ou vente forcée par le conseil. */
+    route?: 'tiers' | 'releve' | 'famille' | 'forcee';
+    /** Ce que le propriétaire garde après frais et impôt (valeur actuelle du solde incluse). */
+    net?: number;
+    impot?: number;
+    frais?: number;
+    comptant?: number;
+    solde?: number;
+  } | null;
   /** Nom de l'équipe (mode équipes en alternance). */
   equipe?: string;
   journalChoix?: ChoixJournal[];
@@ -765,6 +777,23 @@ export interface Entreprise {
   franchise?: { banniere: string; redevance: number; fondsPublicitaire: number };
   /** Mode chef de département : mandats du mois, historique et confiance de la direction. */
   chef?: EtatChef;
+  /** Capital : sociofinancement et conseil d'administration (capital de risque). */
+  capital?: {
+    campagne: { objectif: number; debut: number; fin: number } | null;
+    /** Contreparties à livrer : montant restant à constater (cents) et mois restants. */
+    livraisons: { restantCents: number; mois: number }[];
+    historique: { index: number; objectif: number; montant: number; reussie: boolean }[];
+    conseil?: {
+      sieges: string[];
+      objectifCroissance: number;
+      ventesRef: number;
+      prochaineRevue: number;
+      avertissements: number;
+      sansDividendes: boolean;
+    };
+  };
+  /** Relève en préparation (employé de confiance ou membre de la famille). */
+  releve?: { type: 'employe' | 'famille'; nom: string; employeId?: string; debut: number };
   /** Marchés d'exportation ouverts et résultats du dernier mois. */
   exportations?: {
     marches: { id: string; ouverture: number }[];

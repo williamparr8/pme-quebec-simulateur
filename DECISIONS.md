@@ -529,6 +529,51 @@ Hypothèses :
   clients paient au taux de change du mois (pas de gain ou de perte de change entre la facture et le paiement), le
   taux EUR/USD est fixe (1,08) et la TVH des ventes en Ontario n’est pas simulée.
 
+## Capital et transmission (après la version 1.0)
+
+### Sociofinancement (A8)
+
+- **Campagne « tout ou rien »** de 3 000 $ à 60 000 $, durée 2 mois, une à la fois, 6 mois d’écart. Lancement : 400 $.
+  Les chances dépendent de la notoriété, de la satisfaction et de la taille de l’objectif par rapport aux ventes
+  annuelles (formule de conception, bornée entre 5 % et 95 %). Si elle réussit, les contributions dépassent
+  l’objectif de 0 à 50 %. Sinon, rien n’est versé.
+- **Comptabilité** : contributions reçues = produits perçus d’avance (compte 2350, passif) par l’encaisse; les
+  frais de la plateforme (5 %) et du paiement (4 %) sont une charge (À VÉRIFIER : ces taux varient d’une plateforme
+  à l’autre). Sur 3 mois, les produits perçus d’avance deviennent des revenus (compte 4660) et les contreparties
+  coûtent 35 % des contributions (coût des marchandises).
+- **Non simulé** : la TPS et la TVQ sur les contributions (les contreparties sont en principe des ventes taxables).
+
+### Capital de risque et conseil d’administration (A8)
+
+- Réservé aux sociétés par actions d’au moins 400 000 $ de ventes annuelles ou ayant atteint le palier PME, avec 6 mois
+  d’historique. Montant de 100 000 $ à 2 M$, sans dépasser 40 % des actions ni 60 % pour l’ensemble des investisseurs.
+- **Valeur avant la ronde** = valeur actuelle (le plus élevé de l’actif net et de 4 fois le bénéfice) × 1,4 (prime de
+  croissance, valeur de conception). Frais : 5 000 $ plus 1,5 % du montant.
+- **Conditions du fonds** : siège au conseil, objectif de croissance des ventes de 20 % par an (revue tous les
+  12 mois), aucun dividende. Deux revues sous l’objectif (avec un point de grâce quand l’objectif est atteint)
+  déclenchent la vente forcée à 85 % de la valeur, comme une clause d’entraînement.
+- Un seul fonds par partie. L’investisseur providentiel existant (10 000 $ à 250 000 $) n’a ni siège ni objectif.
+
+### Vendre ou transmettre (A9)
+
+- **Évaluation** : multiple (2,5 petite entreprise, 3,5 PME, 4,5 grande, ajusté de −0,5 à +0,5 selon la croissance
+  et de −0,4 à +0,4 selon la satisfaction, borné à 1,5–5,5) du BAIIA des 12 derniers mois. Une entreprise non
+  incorporée perd 55 000 $ (salaire d’un gestionnaire) parce que les prélèvements ne sont pas une charge. Valeur
+  des actions = valeur de rendement + encaisse − dettes, jamais moins de 60 % de l’actif net. Il faut 6 mois
+  d’historique. Ces multiples sont des valeurs de conception (À VÉRIFIER : les multiples réels varient beaucoup selon
+  le secteur).
+- **Trois voies** : tiers (comptant, 90 % à 120 % de la valeur selon le mois, courtage de 5 %), relève par un employé
+  (88 %, 25 % comptant, solde sur 60 mois à 6 %), succession familiale (75 %, 10 % comptant, solde sur 120 mois à
+  4 %, impôt réduit de 15 % par l’étalement du gain). La relève et la famille exigent 12 mois de préparation
+  (honoraires de 2 500 $).
+- **Impôt** : gain en capital = prix − frais − apports du propriétaire (part de ses actions), imposable à 50 %.
+  Exemption cumulative de 1 250 000 $ pour une société par actions (À VÉRIFIER : conditions de 24 mois et tests
+  d’actif présumés remplis). Impôt calculé avec les paliers de 2026 sur ce seul revenu.
+- **Valeur actuelle du solde** : le solde de prix de vente est actualisé à 10 % (risque et délai). Le résultat final
+  du jeu retient ce net (après frais et impôt) plutôt que le prix affiché.
+- **Non simulé** : la réserve de gain en capital sur 5 ans (sauf l’étalement fixe de la voie familiale), l’impôt
+  minimum de remplacement, les autres revenus du propriétaire l’année de la vente.
+
 ## Mode chef de département
 
 - **Principe** : le joueur dirige un seul département et fait lui-même les calculs à partir de documents sources,
